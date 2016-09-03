@@ -1,5 +1,5 @@
 module UI.View where
 
-data View f
+data ViewF f
   = Text String
   | List [f]
