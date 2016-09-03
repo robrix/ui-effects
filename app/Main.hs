@@ -5,18 +5,18 @@ import Options.Applicative
 import UI.View
 
 data Arguments = Arguments { format :: Format }
-data Format = String
+data Format = CLI
 
 main :: IO ()
 main = execParser opts >>= run
   where opts = info (helper <*>
           (fmap Arguments
-          $   flag String String (long "string" <> short 'S')))
+          $   flag CLI CLI (long "cli" <> short 'C')))
           (fullDesc <> progDesc "UI playground")
 
 run :: Arguments -> IO ()
 run Arguments{..} = case format of
-  String -> cli view
+  CLI -> cli view
   where view = list [ text "hello", input >>= text ] :: View ()
 
 cli :: View () -> IO ()
