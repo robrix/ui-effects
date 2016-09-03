@@ -2,6 +2,7 @@ module Main where
 
 import Control.Monad.Free.Church
 import Options.Applicative
+import System.IO
 import UI.View
 
 data Arguments = Arguments { format :: Format }
@@ -23,4 +24,4 @@ cli :: View () -> IO ()
 cli = iterM go
   where go (Text s) = putStrLn s
         go (List vs) = sequence_ vs
-        go (Input f) = getLine >>= f
+        go (Input f) = putStr "> " >> hFlush stdout >> getLine >>= f
