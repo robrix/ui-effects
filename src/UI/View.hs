@@ -7,3 +7,9 @@ data ViewF f
   | List [f]
 
 type View = Fix ViewF
+
+text :: String -> View
+text = Fix . Text
+
+list :: [View] -> View
+list = Fix . List
