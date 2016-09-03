@@ -17,9 +17,10 @@ library
   hs-source-dirs:      src
   exposed-modules:     UI.View
   build-depends:       base >= 4.7 && < 5
-                     , recursion-schemes
+                     , free
   default-language:    Haskell2010
   default-extensions:  DeriveFunctor
+  ghc-options:         -Wall -fno-warn-name-shadowing
 
 executable ui-effects-exe
   hs-source-dirs:      app

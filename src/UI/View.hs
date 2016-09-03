@@ -1,16 +1,16 @@
 module UI.View where
 
-import Data.Functor.Foldable
+import Control.Monad.Free.Church
 
 data ViewF f
   = Text String
   | List [f]
   deriving Functor
 
-type View = Fix ViewF
+type View a = F ViewF a
 
-text :: String -> View
-text = Fix . Text
+text :: String -> View a
+text = wrap . Text
 
-list :: [View] -> View
-list = Fix . List
+list :: [View a] -> View a
+list = wrap . List
