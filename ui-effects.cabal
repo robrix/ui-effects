@@ -22,7 +22,7 @@ library
   default-extensions:  DeriveFunctor
   ghc-options:         -Wall -fno-warn-name-shadowing
 
-executable ui-effects-exe
+executable ui-effects
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
