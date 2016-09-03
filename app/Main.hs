@@ -20,7 +20,7 @@ run :: Arguments -> IO ()
 run Arguments{..} = case format of
   String -> cli view
   HTML -> putStrLn $ toHTML view
-  where view = list [ text "hello", text "world" ] :: View ()
+  where view = list [ text "hello", input >>= text ] :: View ()
 
 cli :: View () -> IO ()
 cli = iterM go
