@@ -5,6 +5,7 @@ import Data.Functor.Foldable
 data ViewF f
   = Text String
   | List [f]
+  deriving Functor
 
 type View = Fix ViewF
 
