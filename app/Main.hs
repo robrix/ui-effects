@@ -1,6 +1,7 @@
 module Main where
 
 import Control.Monad.Free.Church
+import Data.Foldable
 import Options.Applicative
 import System.IO
 import UI.View
@@ -23,5 +24,5 @@ run Arguments{..} = case format of
 cli :: View () -> IO ()
 cli = iterM go
   where go (Text s) = putStrLn s
-        go (List vs) = sequence_ vs
+        go (List vs) = traverse_ (putStr "- " >>) vs
         go (Input f) = putStr "> " >> hFlush stdout >> getLine >>= f
