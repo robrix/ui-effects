@@ -18,8 +18,9 @@ main = execParser opts >>= run
 
 run :: Arguments -> IO ()
 run Arguments{..} = case format of
-  String -> cli (list [ text "hello", text "world" ] :: View ())
-  HTML -> putStrLn $ toHTML (list [ text "hello", text "world" ] :: View ())
+  String -> cli view
+  HTML -> putStrLn $ toHTML view
+  where view = list [ text "hello", text "world" ] :: View ()
 
 cli :: View () -> IO ()
 cli = iterM go
