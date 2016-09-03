@@ -17,14 +17,15 @@ main = execParser opts >>= run
           (fullDesc <> progDesc "UI playground")
 
 run :: Arguments -> IO ()
-run Arguments{..} = putStrLn $ case format of
-  String -> toString (list [ text "hello", text "world" ] :: View ())
-  HTML -> toHTML (list [ text "hello", text "world" ] :: View ())
+run Arguments{..} = case format of
+  String -> cli (list [ text "hello", text "world" ] :: View ())
+  HTML -> putStrLn $ toHTML (list [ text "hello", text "world" ] :: View ())
 
-toString :: Show a => View a -> String
-toString = intercalate "\n" . iter go . fmap (pure . show)
-  where go (Text s) = [ s ]
-        go (List vs) = vs >>= fmap ("- " ++)
+cli :: View () -> IO ()
+cli = iterM go
+  where go (Text s) = putStrLn s
+        go (List vs) = sequence_ vs
+        go (Input f) = getLine >>= f
 
 toHTML :: Show a => View a -> String
 toHTML = intercalate "\n" . iter go . fmap (pure . show)
