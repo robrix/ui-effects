@@ -20,6 +20,7 @@ reshape size = do
 display :: DisplayCallback
 display = do
   clear [ ColorBuffer, DepthBuffer ]
+  loadIdentity
   render $ do
     text "hello"
   swapBuffers
