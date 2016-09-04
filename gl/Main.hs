@@ -19,7 +19,7 @@ reshape size = do
 
 display :: DisplayCallback
 display = do
-  clear [ColorBuffer]
+  clear [ ColorBuffer, DepthBuffer ]
   render $ do
     text "hello"
   flush
