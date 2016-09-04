@@ -7,8 +7,8 @@ myPoints = [ (sin (2*pi*k/12), cos (2*pi*k/12), 0) | k <- [1..12] ]
 
 main :: IO ()
 main = do
-  getArgsAndInitialize
-  createWindow "Hello World"
+  _ <- getArgsAndInitialize
+  _ <- createWindow "GL"
   displayCallback $= display
   reshapeCallback $= Just reshape
   mainLoop
