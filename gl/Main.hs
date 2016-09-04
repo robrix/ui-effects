@@ -9,13 +9,7 @@ main = do
   _ <- getArgsAndInitialize
   _ <- createWindow "GL"
   displayCallback $= display
-  reshapeCallback $= Just reshape
   mainLoop
-
-reshape :: ReshapeCallback
-reshape size = do
-  viewport $= (Position 0 0, size)
-  postRedisplay Nothing
 
 display :: DisplayCallback
 display = do
