@@ -22,7 +22,7 @@ display = do
   clear [ ColorBuffer, DepthBuffer ]
   render $ do
     text "hello"
-  flush
+  swapBuffers
 
 render :: View () -> IO ()
 render = iterM $ \case
