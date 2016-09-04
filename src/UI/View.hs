@@ -2,6 +2,8 @@ module UI.View where
 
 import Control.Monad.Free.Church
 
+-- Datatypes
+
 data ViewF f
   = Text String
   | List [f]
@@ -9,6 +11,9 @@ data ViewF f
   deriving Functor
 
 type View a = F ViewF a
+
+
+-- Smart constructors
 
 text :: String -> View a
 text = wrap . Text
