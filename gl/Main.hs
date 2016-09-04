@@ -15,6 +15,7 @@ display :: DisplayCallback
 display = do
   clear [ ColorBuffer, DepthBuffer ]
   loadIdentity
+  rasterPos $ Vertex2 0 (0 :: GLdouble)
   render $ do
     text "hello"
   swapBuffers
