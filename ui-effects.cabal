@@ -44,7 +44,7 @@ executable ui-effects-gl
                      , OpenGL
                      , ui-effects
   default-language:    Haskell2010
-  default-extensions:  DeriveFunctor
+  default-extensions:  LambdaCase
 
 test-suite ui-effects-test
   type:                exitcode-stdio-1.0
