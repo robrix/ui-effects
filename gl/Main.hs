@@ -22,6 +22,6 @@ display = do
 
 render :: View () -> IO ()
 render = iterM $ \case
-  UI.Text s -> Helvetica12 `renderString` s
+  UI.Text s -> renderString Helvetica12 s
   UI.List _ -> pure ()
   UI.Input _ -> pure ()
