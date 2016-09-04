@@ -15,7 +15,7 @@ type View a = F ViewF a
 
 -- Smart constructors
 
-text :: String -> View a
+text :: String -> View ()
 text = wrap . Text
 
 list :: [View a] -> View a
