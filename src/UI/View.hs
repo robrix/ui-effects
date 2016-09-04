@@ -18,8 +18,8 @@ type View a = F ViewF a
 text :: String -> View ()
 text = wrap . Text
 
-list :: [View a] -> View a
-list = wrap . List
+list :: [View a] -> View [a]
+list = wrap . List . fmap (fmap pure)
 
 input :: View String
 input = wrap $ Input pure

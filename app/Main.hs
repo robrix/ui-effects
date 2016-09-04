@@ -19,7 +19,7 @@ main = execParser opts >>= run
 run :: Arguments -> IO ()
 run Arguments{..} = case format of
   CLI -> cli view
-  where view = list [ text "hello", input >>= text ] :: View ()
+  where view = list [ text "hello", input >>= text ] >> pure ()
 
 cli :: View () -> IO ()
 cli = iterM go
