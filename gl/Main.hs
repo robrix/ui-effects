@@ -4,9 +4,6 @@ import Control.Monad.Free.Church
 import Graphics.UI.GLUT
 import UI.View as UI
 
-myPoints :: [(GLfloat,GLfloat,GLfloat)]
-myPoints = [ (sin (2*pi*k/12), cos (2*pi*k/12), 0) | k <- [1..12] ]
-
 main :: IO ()
 main = do
   _ <- getArgsAndInitialize
@@ -23,12 +20,12 @@ reshape size = do
 display :: DisplayCallback
 display = do
   clear [ColorBuffer]
-  renderPrimitive Points $
-     mapM_ (\(x, y, z) -> vertex $ Vertex3 x y z) myPoints
+  render $ do
+    text "hello"
   flush
 
-interpret :: View () -> IO ()
-interpret = iterM $ \case
-  UI.Text _ -> pure ()
+render :: View () -> IO ()
+render = iterM $ \case
+  UI.Text s -> Helvetica12 `renderString` s
   UI.List _ -> pure ()
   UI.Input _ -> pure ()
