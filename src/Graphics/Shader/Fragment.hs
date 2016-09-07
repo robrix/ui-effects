@@ -1,5 +1,6 @@
 module Graphics.Shader.Fragment where
 
+import Control.Monad.Free.Freer
 import Linear.V2
 import Linear.V4
 
@@ -13,3 +14,5 @@ data FragmentF f
   | SamplePosition (V2 Float -> f)
   | SetFragDepth Float f
   | SetFragColour (Colour Float) f
+
+type Fragment = Freer FragmentF
