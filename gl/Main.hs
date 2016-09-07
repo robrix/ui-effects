@@ -40,7 +40,7 @@ main = runInBoundThread $ withCString "UI" $ \ name -> do
                             , SDL_WINDOW_ALLOW_HIGHDPI
                             ]
 
-  withWindow name flags (\ window -> withContext window (draw window)) `finally` do
+  withWindow name flags (\ window -> withContext window draw) `finally` do
     quit
     exitSuccess
 
@@ -50,20 +50,18 @@ withWindow name flags = bracket
   destroyWindow
   where (w, h) = (1024, 768)
 
-withContext :: Window -> (GLContext -> IO a) -> IO a
-withContext window f = bracket
+withContext :: Window -> IO a -> IO a
+withContext window draw = bracket
   (glCreateContext window >>= checkNonNull)
   glDeleteContext
   (\ context -> do
     glMakeCurrent window context >>= check
-    f context)
+    forever (draw >> glSwapWindow window))
 
-draw :: Window -> GLContext -> IO ()
-draw window _ = forever $ do
+draw :: IO ()
+draw = do
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
-
-  liftIO $ glSwapWindow window
 
 render :: View () -> IO ()
 render = iterM $ \case
