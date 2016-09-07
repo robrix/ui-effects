@@ -24,6 +24,9 @@ instance Monad (Freer g) where
 wrap :: g (Freer g a) -> Freer g a
 wrap fa = Impure fa id
 
+liftF :: g a -> Freer g a
+liftF fa = Impure fa Pure
+
 iter :: Functor g => (g a -> a) -> Freer g a -> a
 iter algebra = go
   where go (Pure a) = a
