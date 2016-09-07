@@ -20,6 +20,7 @@ data Material a
 
 data FragmentF a f
   = Coord (Vector4 a -> f)
+  | SampleID (Int -> f)
 
 data DrawingF a f
   = SetStroke (Colour a) f
