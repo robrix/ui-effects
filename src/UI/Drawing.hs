@@ -18,8 +18,8 @@ data Material a
   = Colour (Colour a)
   | Gradient (Gradient a)
 
-data FragmentF a f
-  = Coord (Vector4 a -> f)
+data FragmentF f
+  = Coord (Vector4 Float -> f)
   | SampleID (Int -> f)
 
 data DrawingF a f
