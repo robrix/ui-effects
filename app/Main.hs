@@ -1,6 +1,6 @@
 module Main where
 
-import Control.Monad.Free.Church
+import Control.Monad.Free.Freer
 import Data.Foldable
 import Options.Applicative
 import System.IO

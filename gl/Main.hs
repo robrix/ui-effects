@@ -3,7 +3,7 @@ module Main where
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.IO.Class
-import Control.Monad.Free.Church
+import Control.Monad.Free.Freer
 import Control.Monad
 import Data.Bits
 import Data.StateVar
