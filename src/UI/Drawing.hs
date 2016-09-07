@@ -2,16 +2,16 @@ module UI.Drawing where
 
 import Control.Monad.Free.Freer
 
-data Vector a = Vector !a !a
+data Vector2 a = Vector2 !a !a
 
 data Shape a
-  = Rectangle (Vector a) (Vector a)
-  | Circle (Vector a) (Vector a)
+  = Rectangle (Vector2 a) (Vector2 a)
+  | Circle (Vector2 a) (Vector2 a)
 
 data Colour a = RGBA !a !a !a !a
 
 data Gradient a
-  = Linear (Vector a) (Colour a) (Vector a) (Colour a)
+  = Linear (Vector2 a) (Colour a) (Vector2 a) (Colour a)
 
 data Material a
   = Colour (Colour a)
