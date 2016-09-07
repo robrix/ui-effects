@@ -21,8 +21,8 @@ instance Monad (Freer g) where
     where (>>>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
           f >>> g = (>>= g) . f
 
-wrap :: g a -> Freer g a
-wrap fa = Impure fa Pure
+wrap :: g (Freer g a) -> Freer g a
+wrap fa = Impure fa id
 
 iter :: Functor g => (g a -> a) -> Freer g a -> a
 iter algebra = go
