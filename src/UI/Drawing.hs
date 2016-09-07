@@ -3,6 +3,7 @@ module UI.Drawing where
 import Control.Monad.Free.Freer
 
 data Vector2 a = Vector2 !a !a
+data Vector4 a = Vector4 !a !a !a !a
 
 data Shape a
   = Rectangle (Vector2 a) (Vector2 a)
