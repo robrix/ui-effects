@@ -1,29 +1,28 @@
 module UI.Drawing where
 
 import Control.Monad.Free.Freer
-
-data Vector2 a = Vector2 !a !a
-data Vector4 a = Vector4 !a !a !a !a
+import Linear.V2
+import Linear.V4
 
 data Shape a
-  = Rectangle (Vector2 a) (Vector2 a)
-  | Circle (Vector2 a) (Vector2 a)
+  = Rectangle (V2 a) (V2 a)
+  | Circle (V2 a) (V2 a)
 
 data Colour a = RGBA !a !a !a !a
 
 data Gradient a
-  = Linear (Vector2 a) (Colour a) (Vector2 a) (Colour a)
+  = Linear (V2 a) (Colour a) (V2 a) (Colour a)
 
 data Material a
   = Colour (Colour a)
   | Gradient (Gradient a)
 
 data FragmentF f
-  = Coord (Vector4 Float -> f)
+  = Coord (V4 Float -> f)
   | SampleID (Int -> f)
   | NumSamples (Int -> f)
-  | PointCoord (Vector2 Float -> f)
-  | SamplePosition (Vector2 Float -> f)
+  | PointCoord (V2 Float -> f)
+  | SamplePosition (V2 Float -> f)
   | SetFragDepth Float f
   | SetFragColour (Colour Float) f
 
