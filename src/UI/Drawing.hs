@@ -10,6 +10,12 @@ data Shape a
 
 data Colour a = RGBA !a !a !a !a
 
+data Gradient a
+  = Linear (Vector a) (Colour a) (Vector a) (Colour a)
+
+data Material a
+  = Colour (Colour a)
+  | Gradient (Gradient a)
 
 data DrawingF a f
   = SetStroke (Colour a) f
