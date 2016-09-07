@@ -2,7 +2,6 @@ module UI.Drawing where
 
 import Control.Monad.Free.Freer
 import Linear.V2
-import Linear.V4
 
 data Shape a
   = Rectangle (V2 a) (V2 a)
@@ -16,15 +15,6 @@ data Gradient a
 data Material a
   = Colour (Colour a)
   | Gradient (Gradient a)
-
-data FragmentF f
-  = Coord (V4 Float -> f)
-  | SampleID (Int -> f)
-  | NumSamples (Int -> f)
-  | PointCoord (V2 Float -> f)
-  | SamplePosition (V2 Float -> f)
-  | SetFragDepth Float f
-  | SetFragColour (Colour Float) f
 
 data DrawingF a f
   = SetStroke (Colour a) f
