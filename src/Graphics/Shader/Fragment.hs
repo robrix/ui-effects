@@ -12,8 +12,8 @@ data FragmentF f
   | NumSamples (Int -> f)
   | PointCoord (V2 Float -> f)
   | SamplePosition (V2 Float -> f)
-  | SetFragDepth Float f
-  | SetFragColour (Colour Float) f
+  | SetDepth Float f
+  | SetColour (Colour Float) f
 
 type Fragment = Freer FragmentF
 
@@ -32,8 +32,8 @@ pointCoord = wrap $ PointCoord pure
 samplePosition :: Fragment (V2 Float)
 samplePosition = wrap $ SamplePosition pure
 
-setFragDepth :: Float -> Fragment ()
-setFragDepth d = liftF $ SetFragDepth d ()
+setDepth :: Float -> Fragment ()
+setDepth d = liftF $ SetDepth d ()
 
-setFragColour :: Colour Float -> Fragment ()
-setFragColour c = liftF $ SetFragColour c ()
+setColour :: Colour Float -> Fragment ()
+setColour c = liftF $ SetColour c ()
