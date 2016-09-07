@@ -21,4 +21,4 @@ data DrawingF a f
 type Drawing a = Freer (DrawingF a)
 
 setStroke :: Colour a -> Drawing a ()
-setStroke c = wrap $ SetStroke c (pure ())
+setStroke c = liftF $ SetStroke c ()
