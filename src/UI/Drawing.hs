@@ -18,6 +18,9 @@ data Material a
   = Colour (Colour a)
   | Gradient (Gradient a)
 
+data FragmentF a f
+  = Coord (Vector4 a -> f)
+
 data DrawingF a f
   = SetStroke (Colour a) f
   | SetFill (Colour a) f
