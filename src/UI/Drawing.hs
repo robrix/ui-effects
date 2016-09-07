@@ -23,6 +23,7 @@ data FragmentF f
   | SampleID (Int -> f)
   | NumSamples (Int -> f)
   | PointCoord (Vector2 Float -> f)
+  | SamplePosition (Vector2 Float -> f)
   | SetFragDepth Float f
 
 data DrawingF a f
