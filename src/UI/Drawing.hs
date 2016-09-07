@@ -25,6 +25,7 @@ data FragmentF f
   | PointCoord (Vector2 Float -> f)
   | SamplePosition (Vector2 Float -> f)
   | SetFragDepth Float f
+  | SetFragColour (Colour Float) f
 
 data DrawingF a f
   = SetStroke (Colour a) f
