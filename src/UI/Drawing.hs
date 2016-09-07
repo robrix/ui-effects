@@ -22,3 +22,12 @@ type Drawing a = Freer (DrawingF a)
 
 setStroke :: Colour a -> Drawing a ()
 setStroke c = liftF $ SetStroke c ()
+
+setFill :: Colour a -> Drawing a ()
+setFill c = liftF $ SetFill c ()
+
+stroke :: Shape a -> Drawing a ()
+stroke s = liftF $ Stroke s ()
+
+fill :: Shape a -> Drawing a ()
+fill s = liftF $ Fill s ()
