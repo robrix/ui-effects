@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     UI.View
+  exposed-modules:     Control.Monad.Free.Freer
+                     , UI.View
   build-depends:       base >= 4.7 && < 5
                      , free
   default-language:    Haskell2010
