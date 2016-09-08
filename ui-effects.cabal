@@ -46,6 +46,7 @@ executable ui-effects-gl
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , gl
+                     , linear
                      , mtl
                      , sdl2
                      , StateVar

@@ -15,6 +15,9 @@ import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL.Core41
+import Graphics.Shader.Fragment
+import GL.Shader.Fragment
+import Linear.V4
 import SDL.Raw as SDL
 import System.Exit
 import UI.View as UI
@@ -40,7 +43,7 @@ main = runInBoundThread $ withCString "UI" $ \ name -> do
                             , SDL_WINDOW_ALLOW_HIGHDPI
                             ]
 
-  withWindow name flags (\ window -> withContext window draw) `finally` do
+  withWindow name flags (\ window -> withContext window setup draw) `finally` do
     quit
     exitSuccess
 
@@ -50,16 +53,26 @@ withWindow name flags = bracket
   destroyWindow
   where (w, h) = (1024, 768)
 
-withContext :: Window -> IO a -> IO a
-withContext window draw = bracket
+withContext :: Window -> IO b -> (b -> IO a) -> IO a
+withContext window setup draw = bracket
   (glCreateContext window >>= checkNonNull)
   glDeleteContext
   (\ context -> do
     glMakeCurrent window context >>= check
-    forever (draw >> glSwapWindow window))
 
-draw :: IO ()
-draw = do
+    state <- setup
+
+    forever (draw state >> glSwapWindow window))
+
+newtype Rectangle = Rectangle ()
+
+setup :: IO (Shader, Rectangle)
+setup = do
+  shader <- compile $ toGLSL (setColour (V4 1 0 0 1))
+  pure (shader, Rectangle ())
+
+draw :: (Shader, Rectangle) -> IO ()
+draw (shader, rectangle) = do
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
