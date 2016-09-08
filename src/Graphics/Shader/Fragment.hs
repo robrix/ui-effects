@@ -1,5 +1,7 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Graphics.Shader.Fragment where
 
+import Control.Applicative (liftA2)
 import Control.Applicative.Free.Freer
 import Linear.V2
 import Linear.V4
@@ -38,3 +40,12 @@ setDepth d = liftF $ SetDepth d ()
 
 setColour :: Colour Float -> Fragment ()
 setColour c = liftF $ SetColour c ()
+
+
+instance Num a => Num (Freer FragmentF a) where
+  (+) = liftA2 (+)
+  (*) = liftA2 (*)
+  abs = fmap abs
+  signum = fmap signum
+  fromInteger = pure . fromInteger
+  negate = fmap negate
