@@ -16,3 +16,8 @@ instance Applicative (Freer g) where
 
 liftF :: g a -> Freer g a
 liftF fa = Impure fa (Pure id)
+
+iter :: Functor g => (g a -> a) -> Freer g a -> a
+iter algebra = go
+  where go (Pure a) = a
+        go (Impure u q) = algebra (fmap (go . (`fmap` q) . flip ($)) u)
