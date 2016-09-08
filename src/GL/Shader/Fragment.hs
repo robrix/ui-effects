@@ -4,6 +4,7 @@ module GL.Shader.Fragment where
 import Control.Exception
 import Control.Monad
 import Control.Applicative.Free.Freer
+import Data.Foldable (for_)
 import Data.List (intercalate)
 import Data.Monoid
 import Data.Typeable
@@ -42,6 +43,15 @@ compile source = do
       glShaderSource shader 1 p nullPtr
   glCompileShader shader
   checkShader (Shader shader)
+
+
+newtype Program = Program { unProgram :: GLuint }
+
+link :: [Shader] -> IO Program
+link shaders = do
+  program <- glCreateProgram
+  for_ shaders (glAttachShader program . unShader)
+  pure (Program program)
 
 
 checkShader :: Shader -> IO Shader
