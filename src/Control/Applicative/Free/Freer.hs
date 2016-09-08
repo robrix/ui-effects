@@ -21,3 +21,8 @@ iter :: Functor g => (g a -> a) -> Freer g a -> a
 iter algebra = go
   where go (Pure a) = a
         go (Impure u q) = algebra (fmap (go . (`fmap` q) . flip ($)) u)
+
+iterM :: (Functor g, Monad m) => (g (m a) -> m a) -> Freer g a -> m a
+iterM algebra = go
+  where go (Pure a) = pure a
+        go (Impure u q) = algebra (fmap (go . (`fmap` q) . flip ($)) u)
