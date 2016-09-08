@@ -1,6 +1,6 @@
 module Graphics.Shader.Fragment where
 
-import Control.Monad.Free.Freer
+import Control.Applicative.Free.Freer
 import Linear.V2
 import Linear.V4
 
@@ -18,19 +18,19 @@ data FragmentF f
 type Fragment = Freer FragmentF
 
 coord :: Fragment (V4 Float)
-coord = wrap $ Coord pure
+coord = liftF $ Coord id
 
 sampleID :: Fragment Int
-sampleID = wrap $ SampleID pure
+sampleID = liftF $ SampleID id
 
 numSamples :: Fragment Int
-numSamples = wrap $ NumSamples pure
+numSamples = liftF $ NumSamples id
 
 pointCoord :: Fragment (V2 Float)
-pointCoord = wrap $ PointCoord pure
+pointCoord = liftF $ PointCoord id
 
 samplePosition :: Fragment (V2 Float)
-samplePosition = wrap $ SamplePosition pure
+samplePosition = liftF $ SamplePosition id
 
 setDepth :: Float -> Fragment ()
 setDepth d = liftF $ SetDepth d ()
