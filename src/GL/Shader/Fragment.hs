@@ -3,6 +3,9 @@ module GL.Shader.Fragment where
 
 import Control.Exception
 import Control.Monad
+import Control.Applicative.Free.Freer
+import Data.List (intercalate)
+import Data.Monoid
 import Data.Typeable
 import Foreign.C.String
 import Foreign.Marshal.Alloc
@@ -11,6 +14,7 @@ import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
+import Linear.V4
 
 newtype Shader = Shader { unShader :: GLuint }
 
@@ -19,7 +23,14 @@ newtype ShaderException = ShaderException String
 
 
 toGLSL :: Fragment () -> String
-toGLSL _ = ""
+toGLSL shader
+  = pragma "version" "410"
+  <> main (iter go ("" <$ shader))
+  where go (SetColour c rest) = "  gl_FragColor = " <> v4 c <> ";\n" <> rest
+        go _ = ""
+        v4 (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
+        pragma k v = "#" <> k <> " " <> v <> "\n"
+        main body = "void main(void) {\n" <> body <> "}"
 
 
 compile :: Show a => a -> IO Shader
