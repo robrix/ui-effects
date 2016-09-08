@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Control.Monad.Free.Freer
+  exposed-modules:     Control.Applicative.Free.Freer
+                     , Control.Monad.Free.Freer
                      , Graphics.Shader.Fragment
                      , UI.Drawing
                      , UI.View
