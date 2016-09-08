@@ -13,3 +13,6 @@ instance Applicative (Freer g) where
   pure = Pure
   Pure f     <*> x = fmap f x
   Impure u q <*> x = Impure u (flip <$> q <*> x)
+
+liftF :: g a -> Freer g a
+liftF fa = Impure fa (Pure id)
