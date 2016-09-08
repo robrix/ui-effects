@@ -14,3 +14,4 @@ compile fragment = do
     alloca $ \ p -> do
       poke p source
       glShaderSource shader 1 p nullPtr
+  glCompileShader shader
