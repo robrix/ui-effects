@@ -17,10 +17,12 @@ library
   hs-source-dirs:      src
   exposed-modules:     Control.Applicative.Free.Freer
                      , Control.Monad.Free.Freer
+                     , GL.Shader.Fragment
                      , Graphics.Shader.Fragment
                      , UI.Drawing
                      , UI.View
   build-depends:       base >= 4.7 && < 5
+                     , gl
                      , linear
   default-language:    Haskell2010
   default-extensions:  DeriveFunctor
