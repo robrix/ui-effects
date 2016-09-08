@@ -24,6 +24,8 @@ newtype Program = Program { unProgram :: GLuint }
 newtype ShaderException = ShaderException String
   deriving (Show, Typeable)
 
+newtype ProgramException = ProgramException String
+  deriving (Show, Typeable)
 
 toGLSL :: Fragment () -> String
 toGLSL shader
@@ -53,7 +55,7 @@ link shaders = do
   for_ shaders (glAttachShader program . unShader)
   glLinkProgram program
   for_ shaders (glDetachShader program . unShader)
-  pure (Program program)
+  checkProgram (Program program)
 
 
 checkShader :: Shader -> IO Shader
@@ -71,4 +73,20 @@ checkShader Shader{..} = do
     throw $ ShaderException log
   pure (Shader unShader)
 
+checkProgram :: Program -> IO Program
+checkProgram Program{..} = do
+  success <- alloca $ \ p -> do
+    glGetProgramiv unProgram GL_LINK_STATUS p
+    peek p
+  when (success == GL_FALSE) $ do
+    l <- alloca $ \ p -> do
+      glGetProgramiv unProgram GL_INFO_LOG_LENGTH p
+      peek p
+    log <- allocaBytes (fromIntegral l) $ \ bytes -> do
+      glGetProgramInfoLog unProgram l nullPtr bytes
+      peekCString bytes
+    throw $ ProgramException log
+  pure (Program unProgram)
+
 instance Exception ShaderException
+instance Exception ProgramException
