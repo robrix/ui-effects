@@ -48,6 +48,19 @@ compile source = do
   glCompileShader shader
   checkShader (Shader shader)
 
+withCompiledShader :: String -> (Shader -> IO a) -> IO a
+withCompiledShader source body = bracket
+  (glCreateShader GL_FRAGMENT_SHADER)
+  glDeleteShader
+  (\ shader -> do
+    withCString source $ \ source -> do
+      alloca $ \ p -> do
+        poke p source
+        glShaderSource shader 1 p nullPtr
+    glCompileShader shader
+    s <- checkShader (Shader shader)
+    body s)
+
 
 link :: [Shader] -> IO Program
 link shaders = do
