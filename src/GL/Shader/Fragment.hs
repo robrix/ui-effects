@@ -36,6 +36,7 @@ toGLSL shader
         go (Add a b) = go a <> " + " <> go b
         go (Mul a b) = go a <> " * " <> go b
         go (Sub a b) = go a <> " - " <> go b
+        go (Div a b) = go a <> " / " <> go b
         go _ = ""
         pragma k v = "#" <> k <> " " <> v <> "\n"
         main body = "void main(void) {\n" <> body <> "}"
