@@ -53,23 +53,22 @@ withWindow name flags = bracket
   destroyWindow
   where (w, h) = (1024, 768)
 
-withContext :: Window -> IO b -> (b -> IO a) -> IO a
+withContext :: Window -> ((b -> IO a) -> IO a) -> (b -> IO a) -> IO a
 withContext window setup draw = bracket
   (glCreateContext window >>= checkNonNull)
   glDeleteContext
   (\ context -> do
     glMakeCurrent window context >>= check
 
-    state <- setup
-
-    forever (draw state >> glSwapWindow window))
+    setup $ \ state -> forever (draw state >> glSwapWindow window))
 
 newtype Rectangle = Rectangle ()
 
-setup :: IO (Shader, Rectangle)
-setup = do
-  shader <- compile $ toGLSL (setColour (V4 1 0 0 1))
-  pure (shader, Rectangle ())
+setup :: ((Shader, Rectangle) -> IO a) -> IO a
+setup body = bracket
+  (compile $ toGLSL (setColour (V4 1 0 0 1)))
+  (glDeleteShader . unShader)
+  (\ shader -> body (shader, Rectangle ()))
 
 draw :: (Shader, Rectangle) -> IO ()
 draw (shader, rectangle) = do
