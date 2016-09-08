@@ -32,6 +32,7 @@ toGLSL shader
   where go :: Fragment a -> String
         go (SetColour c) = "  gl_FragColor = " <> go c <> ";\n"
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
+        go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
         go _ = ""
         pragma k v = "#" <> k <> " " <> v <> "\n"
         main body = "void main(void) {\n" <> body <> "}"
