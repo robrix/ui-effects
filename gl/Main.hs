@@ -65,7 +65,7 @@ withContext window setup draw = bracket
 newtype Rectangle = Rectangle ()
 
 setup :: ((Program, Rectangle) -> IO a) -> IO a
-setup body = withBuiltProgram [ toGLSL (setColour (V4 1 0 0 1)) ] $ \ program ->
+setup body = withBuiltProgram [ toGLSL (setColour (pure (V4 1 0 0 1))) ] $ \ program ->
   body (program, Rectangle ())
 
 draw :: (Program, Rectangle) -> IO ()

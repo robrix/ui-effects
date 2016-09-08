@@ -1,51 +1,59 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, GADTs #-}
 module Graphics.Shader.Fragment where
 
-import Control.Applicative (liftA2)
-import Control.Applicative.Free.Freer
 import Linear.V2
 import Linear.V4
 
 type Colour = V4
 
-data FragmentF f
-  = Coord (V4 Float -> f)
-  | SampleID (Int -> f)
-  | NumSamples (Int -> f)
-  | PointCoord (V2 Float -> f)
-  | SamplePosition (V2 Float -> f)
-  | SetDepth Float f
-  | SetColour (Colour Float) f
-  deriving Functor
-
-type Fragment = Freer FragmentF
+data Fragment t where
+  Coord :: Fragment (V4 Float)
+  SampleID :: Fragment Int
+  NumSamples :: Fragment Int
+  PointCoord :: Fragment (V2 Float)
+  SamplePosition :: Fragment (V2 Float)
+  SetDepth :: Fragment Float -> Fragment ()
+  SetColour :: Fragment (Colour Float) -> Fragment ()
+  Pure :: a -> Fragment a
+  Add, Sub, Mul :: Num a => Fragment a -> Fragment a -> Fragment a
+  Abs, Signum:: Num a => Fragment a -> Fragment a
+  FromInteger :: Num a => Integer -> Fragment a
+  Map :: (a -> b) -> Fragment a -> Fragment b
+  App :: Fragment (a -> b) -> Fragment a -> Fragment b
 
 coord :: Fragment (V4 Float)
-coord = liftF $ Coord id
+coord = Coord
 
 sampleID :: Fragment Int
-sampleID = liftF $ SampleID id
+sampleID = SampleID
 
 numSamples :: Fragment Int
-numSamples = liftF $ NumSamples id
+numSamples = NumSamples
 
 pointCoord :: Fragment (V2 Float)
-pointCoord = liftF $ PointCoord id
+pointCoord = PointCoord
 
 samplePosition :: Fragment (V2 Float)
-samplePosition = liftF $ SamplePosition id
+samplePosition = SamplePosition
 
-setDepth :: Float -> Fragment ()
-setDepth d = liftF $ SetDepth d ()
+setDepth :: Fragment Float -> Fragment ()
+setDepth = SetDepth
 
-setColour :: Colour Float -> Fragment ()
-setColour c = liftF $ SetColour c ()
+setColour :: Fragment (Colour Float) -> Fragment ()
+setColour = SetColour
 
 
-instance Num a => Num (Freer FragmentF a) where
-  (+) = liftA2 (+)
-  (*) = liftA2 (*)
-  abs = fmap abs
-  signum = fmap signum
-  fromInteger = pure . fromInteger
-  negate = fmap negate
+instance Num a => Num (Fragment a) where
+  (+) = Add
+  (-) = Sub
+  (*) = Mul
+  abs = Abs
+  signum = Signum
+  fromInteger = FromInteger
+
+instance Functor Fragment where
+  fmap = Map
+
+instance Applicative Fragment where
+  pure = Pure
+  (<*>) = App

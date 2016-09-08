@@ -1,9 +1,8 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE GADTs, RecordWildCards #-}
 module GL.Shader.Fragment where
 
 import Control.Exception
 import Control.Monad
-import Control.Applicative.Free.Freer
 import Data.Foldable (for_)
 import Data.List (intercalate)
 import Data.Monoid
@@ -30,8 +29,9 @@ newtype ProgramException = ProgramException String
 toGLSL :: Fragment () -> String
 toGLSL shader
   = pragma "version" "410"
-  <> main (iter go ("" <$ shader))
-  where go (SetColour c rest) = "  gl_FragColor = " <> v4 c <> ";\n" <> rest
+  <> main (go shader)
+  where go :: Fragment a -> String
+        go (SetColour c) = "  gl_FragColor = " <> go c <> ";\n"
         go _ = ""
         v4 (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         pragma k v = "#" <> k <> " " <> v <> "\n"
