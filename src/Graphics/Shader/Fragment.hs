@@ -4,7 +4,7 @@ import Control.Applicative.Free.Freer
 import Linear.V2
 import Linear.V4
 
-data Colour a = RGBA !a !a !a !a
+type Colour = V4
 
 data FragmentF f
   = Coord (V4 Float -> f)
