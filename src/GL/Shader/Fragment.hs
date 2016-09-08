@@ -57,6 +57,17 @@ link shaders = do
   for_ shaders (glDetachShader program . unShader)
   checkProgram (Program program)
 
+withLinkedProgram :: [Shader] -> (Program -> IO a) -> IO a
+withLinkedProgram shaders body = bracket
+  glCreateProgram
+  glDeleteProgram
+  (\ program -> do
+    for_ shaders (glAttachShader program . unShader)
+    glLinkProgram program
+    for_ shaders (glDetachShader program . unShader)
+    p <- checkProgram (Program program)
+    body p)
+
 
 checkShader :: Shader -> IO Shader
 checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog ShaderException GL_COMPILE_STATUS . unShader
