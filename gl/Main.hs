@@ -64,14 +64,12 @@ withContext window setup draw = bracket
 
 newtype Rectangle = Rectangle ()
 
-setup :: ((Shader, Rectangle) -> IO a) -> IO a
-setup body = bracket
-  (compile $ toGLSL (setColour (V4 1 0 0 1)))
-  (glDeleteShader . unShader)
-  (\ shader -> body (shader, Rectangle ()))
+setup :: ((Program, Rectangle) -> IO a) -> IO a
+setup body = withBuiltProgram [ toGLSL (setColour (V4 1 0 0 1)) ] $ \ program ->
+  body (program, Rectangle ())
 
-draw :: (Shader, Rectangle) -> IO ()
-draw (shader, rectangle) = do
+draw :: (Program, Rectangle) -> IO ()
+draw (program, rectangle) = do
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
