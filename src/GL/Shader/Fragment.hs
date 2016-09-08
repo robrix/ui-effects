@@ -10,11 +10,17 @@ import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.GL.Types
+import Graphics.Shader.Fragment
 
 newtype Shader = Shader { unShader :: GLuint }
 
 newtype ShaderException = ShaderException String
   deriving (Show, Typeable)
+
+
+toGLSL :: Fragment () -> String
+toGLSL _ = ""
+
 
 compile :: Show a => a -> IO Shader
 compile fragment = do
