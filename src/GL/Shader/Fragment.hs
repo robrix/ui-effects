@@ -59,34 +59,26 @@ link shaders = do
 
 
 checkShader :: Shader -> IO Shader
-checkShader Shader{..} = do
-  success <- alloca $ \ p -> do
-    glGetShaderiv unShader GL_COMPILE_STATUS p
-    peek p
-  when (success == GL_FALSE) $ do
-    l <- alloca $ \ p -> do
-      glGetShaderiv unShader GL_INFO_LOG_LENGTH p
-      peek p
-    log <- allocaBytes (fromIntegral l) $ \ bytes -> do
-      glGetShaderInfoLog unShader l nullPtr bytes
-      peekCString bytes
-    throw $ ShaderException log
-  pure (Shader unShader)
+checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog ShaderException GL_COMPILE_STATUS . unShader
 
 checkProgram :: Program -> IO Program
-checkProgram Program{..} = do
+checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog ProgramException GL_LINK_STATUS . unProgram
+
+checkStatus :: Exception e => (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> (String -> e) -> GLenum -> GLuint -> IO GLuint
+checkStatus get getLog exception status object = do
   success <- alloca $ \ p -> do
-    glGetProgramiv unProgram GL_LINK_STATUS p
+    get object status p
     peek p
   when (success == GL_FALSE) $ do
     l <- alloca $ \ p -> do
-      glGetProgramiv unProgram GL_INFO_LOG_LENGTH p
+      get object GL_INFO_LOG_LENGTH p
       peek p
     log <- allocaBytes (fromIntegral l) $ \ bytes -> do
-      glGetProgramInfoLog unProgram l nullPtr bytes
+      getLog object l nullPtr bytes
       peekCString bytes
-    throw $ ProgramException log
-  pure (Program unProgram)
+    throw $ exception log
+  pure object
+
 
 instance Exception ShaderException
 instance Exception ProgramException
