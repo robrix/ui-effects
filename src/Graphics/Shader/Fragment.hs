@@ -16,9 +16,10 @@ data Fragment t where
   SetColour :: Fragment (Colour Float) -> Fragment ()
   V2 :: Show a => a -> a -> Fragment (V2 a)
   V4 :: Show a => a -> a -> a -> a -> Fragment (V4 a)
-  Add, Sub, Mul :: Num a => Fragment a -> Fragment a -> Fragment a
+  Add, Sub, Mul, Div :: Num a => Fragment a -> Fragment a -> Fragment a
   Abs, Signum:: Num a => Fragment a -> Fragment a
   FromInteger :: Num a => Integer -> Fragment a
+  FromRational :: Num a => Rational -> Fragment a
 
 coord :: Fragment (V4 Float)
 coord = Coord
@@ -49,3 +50,7 @@ instance Num a => Num (Fragment a) where
   abs = Abs
   signum = Signum
   fromInteger = FromInteger
+
+instance Fractional a => Fractional (Fragment a) where
+  (/) = Div
+  fromRational = FromRational
