@@ -61,6 +61,9 @@ withCompiledShader source body = bracket
     s <- checkShader (Shader shader)
     body s)
 
+withCompiledShaders :: [String] -> ([Shader] -> IO a) -> IO a
+withCompiledShaders sources body = traverse (`withCompiledShader` pure) sources >>= body
+
 
 link :: [Shader] -> IO Program
 link shaders = do
