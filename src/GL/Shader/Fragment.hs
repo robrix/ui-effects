@@ -51,6 +51,7 @@ link :: [Shader] -> IO Program
 link shaders = do
   program <- glCreateProgram
   for_ shaders (glAttachShader program . unShader)
+  glLinkProgram program
   pure (Program program)
 
 
