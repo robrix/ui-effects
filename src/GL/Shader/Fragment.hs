@@ -19,6 +19,8 @@ import Linear.V4
 
 newtype Shader = Shader { unShader :: GLuint }
 
+newtype Program = Program { unProgram :: GLuint }
+
 newtype ShaderException = ShaderException String
   deriving (Show, Typeable)
 
@@ -44,8 +46,6 @@ compile source = do
   glCompileShader shader
   checkShader (Shader shader)
 
-
-newtype Program = Program { unProgram :: GLuint }
 
 link :: [Shader] -> IO Program
 link shaders = do
