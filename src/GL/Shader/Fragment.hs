@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RecordWildCards #-}
+{-# LANGUAGE GADTs, RecordWildCards, MultiParamTypeClasses #-}
 module GL.Shader.Fragment where
 
 import Control.Exception
@@ -14,7 +14,6 @@ import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
-import Linear.V4
 
 newtype Shader = Shader { unShader :: GLuint }
 
@@ -32,8 +31,8 @@ toGLSL shader
   <> main (go shader)
   where go :: Fragment a -> String
         go (SetColour c) = "  gl_FragColor = " <> go c <> ";\n"
+        go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         go _ = ""
-        v4 (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         pragma k v = "#" <> k <> " " <> v <> "\n"
         main body = "void main(void) {\n" <> body <> "}"
 

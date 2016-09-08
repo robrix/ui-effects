@@ -17,7 +17,6 @@ import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.Shader.Fragment
 import GL.Shader.Fragment
-import Linear.V4
 import SDL.Raw as SDL
 import System.Exit
 import UI.View as UI
@@ -65,7 +64,7 @@ withContext window setup draw = bracket
 newtype Rectangle = Rectangle ()
 
 setup :: ((Program, Rectangle) -> IO a) -> IO a
-setup body = withBuiltProgram [ toGLSL (setColour (pure (V4 1 0 0 1))) ] $ \ program ->
+setup body = withBuiltProgram [ toGLSL (setColour (V4 1 0 0 1)) ] $ \ program ->
   body (program, Rectangle ())
 
 draw :: (Program, Rectangle) -> IO ()

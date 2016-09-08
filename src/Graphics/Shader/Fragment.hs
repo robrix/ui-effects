@@ -14,12 +14,11 @@ data Fragment t where
   SamplePosition :: Fragment (V2 Float)
   SetDepth :: Fragment Float -> Fragment ()
   SetColour :: Fragment (Colour Float) -> Fragment ()
-  Pure :: a -> Fragment a
+  V2 :: Show a => a -> a -> Fragment (V2 a)
+  V4 :: Show a => a -> a -> a -> a -> Fragment (V4 a)
   Add, Sub, Mul :: Num a => Fragment a -> Fragment a -> Fragment a
   Abs, Signum:: Num a => Fragment a -> Fragment a
   FromInteger :: Num a => Integer -> Fragment a
-  Map :: (a -> b) -> Fragment a -> Fragment b
-  App :: Fragment (a -> b) -> Fragment a -> Fragment b
 
 coord :: Fragment (V4 Float)
 coord = Coord
@@ -50,10 +49,3 @@ instance Num a => Num (Fragment a) where
   abs = Abs
   signum = Signum
   fromInteger = FromInteger
-
-instance Functor Fragment where
-  fmap = Map
-
-instance Applicative Fragment where
-  pure = Pure
-  (<*>) = App
