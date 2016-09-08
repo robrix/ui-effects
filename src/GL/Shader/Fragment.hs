@@ -85,6 +85,10 @@ withLinkedProgram shaders body = bracket
     body p)
 
 
+withBuiltProgram :: [String] -> (Program -> IO a) -> IO a
+withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
+
+
 checkShader :: Shader -> IO Shader
 checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog ShaderException GL_COMPILE_STATUS . unShader
 
