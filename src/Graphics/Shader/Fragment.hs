@@ -14,6 +14,7 @@ data FragmentF f
   | SamplePosition (V2 Float -> f)
   | SetDepth Float f
   | SetColour (Colour Float) f
+  deriving Functor
 
 type Fragment = Freer FragmentF
 
