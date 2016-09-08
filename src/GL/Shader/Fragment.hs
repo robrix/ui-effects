@@ -33,10 +33,10 @@ toGLSL shader
         main body = "void main(void) {\n" <> body <> "}"
 
 
-compile :: Show a => a -> IO Shader
-compile fragment = do
+compile :: String -> IO Shader
+compile source = do
   shader <- glCreateShader GL_FRAGMENT_SHADER
-  withCString (show fragment) $ \ source -> do
+  withCString source $ \ source -> do
     alloca $ \ p -> do
       poke p source
       glShaderSource shader 1 p nullPtr
