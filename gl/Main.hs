@@ -83,6 +83,10 @@ draw (program, vao) = do
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
+  glUseProgram $ unProgram program
+  glBindVertexArray $ unVAO vao
+  glDrawArrays GL_TRIANGLES 3 0
+
 render :: View () -> IO ()
 render = iterM $ \case
   UI.Text _ -> pure ()
