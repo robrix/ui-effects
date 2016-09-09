@@ -59,14 +59,6 @@ withCompiledShaders :: [String] -> ([Shader] -> IO a) -> IO a
 withCompiledShaders sources body = traverse (`withCompiledShader` pure) sources >>= body
 
 
-link :: [Shader] -> IO Program
-link shaders = do
-  program <- glCreateProgram
-  for_ shaders (glAttachShader program . unShader)
-  glLinkProgram program
-  for_ shaders (glDetachShader program . unShader)
-  checkProgram (Program program)
-
 withLinkedProgram :: [Shader] -> (Program -> IO a) -> IO a
 withLinkedProgram shaders body = bracket
   glCreateProgram
