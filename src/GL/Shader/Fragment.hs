@@ -14,10 +14,13 @@ import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
+import Linear.V3
 
 newtype Shader = Shader { unShader :: GLuint }
 
 newtype Program = Program { unProgram :: GLuint }
+
+newtype VAO = VAO { unVAO :: GLuint }
 
 newtype ShaderException = ShaderException String
   deriving (Show, Typeable)
@@ -41,6 +44,23 @@ toGLSL shader
         pragma k v = "#" <> k <> " " <> v <> "\n"
         main body = "void main(void) {\n" <> body <> "}"
 
+
+withVertices :: [V3 Float] -> (VAO -> IO a) -> IO a
+withVertices vertices body = alloca $ \ p -> do
+  glGenBuffers 1 p
+  vbo <- peek p
+  let bytes = length vertices * 3 * sizeOf (0 :: Float)
+  allocaBytes bytes $ \ p -> do
+    for_ (zip [0..] vertices) (uncurry (pokeElemOff p))
+    glBindBuffer GL_ARRAY_BUFFER vbo
+    glBufferData GL_ARRAY_BUFFER (fromIntegral bytes) (castPtr p) GL_STATIC_DRAW
+  glGenVertexArrays 1 p
+  vao <- peek p
+  glBindVertexArray vao
+  glEnableVertexAttribArray 0
+  glBindBuffer GL_ARRAY_BUFFER vbo
+  glVertexAttribPointer 0 3 GL_FLOAT GL_FALSE 0 nullPtr
+  body $ VAO vao
 
 withCompiledShader :: String -> (Shader -> IO a) -> IO a
 withCompiledShader source body = bracket
