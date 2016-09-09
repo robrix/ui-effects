@@ -17,6 +17,7 @@ import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.Shader.Fragment
 import GL.Shader.Fragment
+import Linear.V3
 import SDL.Raw as SDL
 import System.Exit
 import UI.View as UI
@@ -61,12 +62,17 @@ withContext window setup draw = bracket
 
     setup $ \ state -> forever (draw state >> glSwapWindow window))
 
-setup :: (Program -> IO a) -> IO a
-setup body = withBuiltProgram [ toGLSL (setColour (V4 1 0 0 1)) ] $ \ program ->
-  body program
+setup :: ((Program, VAO) -> IO a) -> IO a
+setup body = withVertices vertices $ \ vao ->
+  withBuiltProgram [ toGLSL (setColour (V4 1 0 0 1)) ] $ \ program ->
+  body (program, vao)
+  where vertices =
+          [ V3 0 0.5  0
+          , V3 0.5 (negate 0.5)  0
+          , V3 (negate 0.5) (negate 0.5)  0 ]
 
-draw :: Program -> IO ()
-draw program = do
+draw :: (Program, VAO) -> IO ()
+draw (program, vao) = do
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
