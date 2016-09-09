@@ -31,9 +31,10 @@ newtype ProgramException = ProgramException String
 toGLSL :: Fragment () -> String
 toGLSL shader
   = pragma "version" "410"
+  <> "out vec4 fragColour;\n"
   <> main (go shader)
   where go :: Fragment a -> String
-        go (SetColour c) = "  gl_FragColor = " <> go c <> ";\n"
+        go (SetColour c) = "  fragColour = " <> go c <> ";\n"
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
         go (Add a b) = go a <> " + " <> go b
