@@ -44,7 +44,7 @@ main = runInBoundThread $ withCString "UI" $ \ name -> do
                             , SDL_WINDOW_ALLOW_HIGHDPI
                             ]
 
-  withWindow name flags (\ window -> withContext window setup draw) `finally` do
+  withWindow name flags (\ window -> withContext window setup draw) `catch` (putStrLn . displayException :: SomeException -> IO ()) `finally` do
     quit
     exitSuccess
 
