@@ -62,9 +62,9 @@ withVertices vertices body = alloca $ \ p -> do
   glVertexAttribPointer 0 3 GL_FLOAT GL_FALSE 0 nullPtr
   body $ VAO vao
 
-withCompiledShader :: String -> (Shader -> IO a) -> IO a
-withCompiledShader source body = bracket
-  (glCreateShader GL_FRAGMENT_SHADER)
+withCompiledShader :: GLenum -> String -> (Shader -> IO a) -> IO a
+withCompiledShader shaderType source body = bracket
+  (glCreateShader shaderType)
   glDeleteShader
   (\ shader -> do
     withCString source $ \ source ->
@@ -75,8 +75,8 @@ withCompiledShader source body = bracket
     s <- checkShader (Shader shader)
     body s)
 
-withCompiledShaders :: [String] -> ([Shader] -> IO a) -> IO a
-withCompiledShaders sources body = traverse (`withCompiledShader` pure) sources >>= body
+withCompiledShaders :: [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
+withCompiledShaders sources body = traverse (flip (uncurry withCompiledShader) pure) sources >>= body
 
 
 withLinkedProgram :: [Shader] -> (Program -> IO a) -> IO a
@@ -91,7 +91,7 @@ withLinkedProgram shaders body = bracket
     body p)
 
 
-withBuiltProgram :: [String] -> (Program -> IO a) -> IO a
+withBuiltProgram :: [(GLenum, String)] -> (Program -> IO a) -> IO a
 withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
 
 

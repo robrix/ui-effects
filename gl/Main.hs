@@ -64,7 +64,7 @@ withContext window setup draw = bracket
 
 setup :: ((Program, VAO) -> IO a) -> IO a
 setup body = withVertices vertices $ \ vao ->
-  withBuiltProgram [ toGLSL (setColour (V4 1 0 0 1)) ] $ \ program ->
+  withBuiltProgram [ (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ] $ \ program ->
   body (program, vao)
   where vertices =
           [ V3 0 0.5  0
