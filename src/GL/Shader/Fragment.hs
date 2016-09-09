@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RecordWildCards, MultiParamTypeClasses #-}
+{-# LANGUAGE GADTs, MultiParamTypeClasses #-}
 module GL.Shader.Fragment where
 
 import Control.Exception
