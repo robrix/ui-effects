@@ -61,14 +61,12 @@ withContext window setup draw = bracket
 
     setup $ \ state -> forever (draw state >> glSwapWindow window))
 
-newtype Rectangle = Rectangle ()
-
-setup :: ((Program, Rectangle) -> IO a) -> IO a
+setup :: (Program -> IO a) -> IO a
 setup body = withBuiltProgram [ toGLSL (setColour (V4 1 0 0 1)) ] $ \ program ->
-  body (program, Rectangle ())
+  body program
 
-draw :: (Program, Rectangle) -> IO ()
-draw (program, rectangle) = do
+draw :: Program -> IO ()
+draw program = do
   glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
