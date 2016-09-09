@@ -6,6 +6,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Free.Freer
 import Control.Monad
 import Data.Bits
+import Data.List (intercalate)
 import Data.StateVar
 import Data.Typeable
 import Data.Word
@@ -64,12 +65,18 @@ withContext window setup draw = bracket
 
 setup :: ((Program, VAO) -> IO a) -> IO a
 setup body = withVertices vertices $ \ vao ->
-  withBuiltProgram [ (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ] $ \ program ->
+  withBuiltProgram [ (GL_VERTEX_SHADER, vertexShader), (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ] $ \ program ->
   body (program, vao)
   where vertices =
           [ V3 0 0.5  0
           , V3 0.5 (negate 0.5)  0
           , V3 (negate 0.5) (negate 0.5)  0 ]
+        vertexShader = intercalate "\n"
+          [ "#version 410\n"
+          , "in vec3 vp;\n"
+          , "void main () {\n"
+          , "  gl_Position = vec4 (vp, 1.0);\n"
+          , "}" ]
 
 draw :: (Program, VAO) -> IO ()
 draw (program, vao) = do
