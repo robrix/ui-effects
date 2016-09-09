@@ -64,9 +64,13 @@ withContext window setup draw = bracket
     setup $ \ state -> forever (draw state >> glSwapWindow window))
 
 setup :: ((Program, VAO) -> IO a) -> IO a
-setup body = withVertices vertices $ \ vao ->
-  withBuiltProgram [ (GL_VERTEX_SHADER, vertexShader), (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ] $ \ program ->
-  body (program, vao)
+setup body = do
+  glClearColor 0 0 0 1
+  withVertices vertices $ \ vao ->
+    withBuiltProgram
+      [ (GL_VERTEX_SHADER, vertexShader)
+      , (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ]
+      $ \ program -> body (program, vao)
   where vertices =
           [ V3 0 0.5  0
           , V3 0.5 (negate 0.5)  0
@@ -80,7 +84,6 @@ setup body = withVertices vertices $ \ vao ->
 
 draw :: (Program, VAO) -> IO ()
 draw (program, vao) = do
-  glClearColor 0 0 0 1
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
   glUseProgram $ unProgram program
