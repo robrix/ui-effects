@@ -42,16 +42,6 @@ toGLSL shader
         main body = "void main(void) {\n" <> body <> "}"
 
 
-compile :: String -> IO Shader
-compile source = do
-  shader <- glCreateShader GL_FRAGMENT_SHADER
-  withCString source $ \ source -> do
-    alloca $ \ p -> do
-      poke p source
-      glShaderSource shader 1 p nullPtr
-  glCompileShader shader
-  checkShader (Shader shader)
-
 withCompiledShader :: String -> (Shader -> IO a) -> IO a
 withCompiledShader source body = bracket
   (glCreateShader GL_FRAGMENT_SHADER)
