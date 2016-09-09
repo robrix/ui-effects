@@ -47,7 +47,7 @@ withCompiledShader source body = bracket
   (glCreateShader GL_FRAGMENT_SHADER)
   glDeleteShader
   (\ shader -> do
-    withCString source $ \ source -> do
+    withCString source $ \ source ->
       alloca $ \ p -> do
         poke p source
         glShaderSource shader 1 p nullPtr
