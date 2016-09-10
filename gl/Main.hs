@@ -61,6 +61,9 @@ withContext window setup draw = bracket
   (\ context -> do
     glMakeCurrent window context >>= check
 
+    glGetString GL_RENDERER >>= peekCString . castPtr >>= putStrLn
+    glGetString GL_VERSION >>= peekCString . castPtr >>= putStrLn
+
     setup $ \ state -> forever (draw state >> checkError >> glSwapWindow window))
 
 setup :: ((Program, VAO) -> IO a) -> IO a
