@@ -42,7 +42,10 @@ withVertices :: (Foldable v, Storable (v Float)) => [v Float] -> (VAO -> IO a) -
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
-  let bytes = length vertices * maybe 0 (length . fst) (uncons vertices) * sizeOf (0 :: Float)
+  let vertexCount = length vertices
+  let fieldCount = maybe 0 (length . fst) (uncons vertices)
+  let fieldSize = sizeOf (0 :: Float)
+  let bytes = vertexCount * fieldCount * fieldSize
   allocaBytes bytes $ \ p -> do
     for_ (zip [0..] vertices) (uncurry (pokeElemOff p))
     glBindBuffer GL_ARRAY_BUFFER vbo
