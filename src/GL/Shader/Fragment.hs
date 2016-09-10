@@ -76,17 +76,18 @@ withCompiledShader shaderType source body = bracket
 withCompiledShaders :: [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
 withCompiledShaders sources body = traverse (flip (uncurry withCompiledShader) pure) sources >>= body
 
+withProgram :: (Program -> IO a) -> IO a
+withProgram = bracket
+  (Program <$> glCreateProgram)
+  (glDeleteProgram . unProgram)
 
 withLinkedProgram :: [Shader] -> (Program -> IO a) -> IO a
-withLinkedProgram shaders body = bracket
-  glCreateProgram
-  glDeleteProgram
-  (\ program -> do
-    for_ shaders (glAttachShader program . unShader)
-    glLinkProgram program
-    for_ shaders (glDetachShader program . unShader)
-    p <- checkProgram (Program program)
-    body p)
+withLinkedProgram shaders body = withProgram $ \ (Program program) -> do
+  for_ shaders (glAttachShader program . unShader)
+  glLinkProgram program
+  for_ shaders (glDetachShader program . unShader)
+  p <- checkProgram (Program program)
+  body p
 
 
 withBuiltProgram :: [(GLenum, String)] -> (Program -> IO a) -> IO a
