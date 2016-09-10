@@ -4,7 +4,6 @@ module Main where
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.IO.Class
-import Control.Monad.Free.Freer
 import Control.Monad
 import Data.Bits
 import Data.List (intercalate)
@@ -23,7 +22,6 @@ import Linear.V3
 import Prelude hiding (IO)
 import SDL.Raw as SDL
 import System.Exit
-import UI.View as UI
 
 main :: IO ()
 main = runInBoundThread $ withCString "UI" $ \ name -> do
@@ -97,12 +95,6 @@ draw (program, vao) = do
   glUseProgram (unProgram program) >> checkGLError
   glBindVertexArray (unVAO vao) >> checkGLError
   glDrawArrays GL_TRIANGLES 3 0 >> checkGLError
-
-render :: View () -> IO ()
-render = iterM $ \case
-  UI.Text _ -> pure ()
-  UI.List _ -> pure ()
-  UI.Input _ -> pure ()
 
 check :: MonadIO m => CInt -> m ()
 check e = when (e < 0) checkSDLError
