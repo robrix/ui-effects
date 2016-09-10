@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Main where
 
 import Control.Concurrent
@@ -19,6 +20,7 @@ import Graphics.GL.Core41
 import Graphics.Shader.Fragment
 import GL.Shader.Fragment
 import Linear.V3
+import Prelude hiding (IO)
 import SDL.Raw as SDL
 import System.Exit
 import UI.View as UI

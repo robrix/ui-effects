@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, MultiParamTypeClasses #-}
+{-# LANGUAGE GADTs, MultiParamTypeClasses, RankNTypes #-}
 module GL.Shader.Fragment where
 
 import Control.Exception
@@ -16,6 +16,10 @@ import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
 import Linear.V3
+import Prelude hiding (IO)
+import qualified System.IO as IO
+
+type IO a = HasCallStack => IO.IO a
 
 newtype Shader = Shader { unShader :: GLuint }
 
@@ -133,7 +137,7 @@ checkGLError = glGetError >>= \ e -> case e of
 
 instance Show GLException where
   showsPrec p (GLException s e) = showString "GLException " . showsPrec p e . showChar '\n' . showsCallStack s
-    where showsCallStack = foldr (.) id . fmap showsLoc . tail . tail . getCallStack
+    where showsCallStack = foldr (.) id . fmap showsLoc . getCallStack
           showsLoc (function, location) = foldr (.) id
             [ showString (srcLocFile location)
             , showChar ':'
