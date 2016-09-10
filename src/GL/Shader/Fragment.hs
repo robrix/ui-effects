@@ -45,11 +45,11 @@ withVertices vertices body = alloca $ \ p -> do
   let vertexCount = length vertices
   let fieldCount = maybe 0 (length . fst) (uncons vertices)
   let fieldSize = sizeOf (0 :: Float)
-  let bytes = vertexCount * fieldCount * fieldSize
-  allocaBytes bytes $ \ p -> do
+  let byteCount = vertexCount * fieldCount * fieldSize
+  allocaBytes byteCount $ \ p -> do
     for_ (zip [0..] (vertices >>= toList)) (uncurry (pokeElemOff p))
     glBindBuffer GL_ARRAY_BUFFER vbo
-    glBufferData GL_ARRAY_BUFFER (fromIntegral bytes) (castPtr p) GL_STATIC_DRAW
+    glBufferData GL_ARRAY_BUFFER (fromIntegral byteCount) (castPtr p) GL_STATIC_DRAW
   glGenVertexArrays 1 p
   vao <- peek p
   glBindVertexArray vao
