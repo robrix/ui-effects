@@ -11,7 +11,6 @@ import Foreign.C.String
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
-import GHC.SrcLoc
 import GHC.Stack
 import Graphics.GL.Core41
 import Graphics.GL.Types
@@ -45,7 +44,7 @@ toGLSL shader
         main body = "void main(void) {\n" <> body <> "}"
 
 
-withVertices :: (?loc :: CallStack) => [V3 Float] -> (VAO -> IO a) -> IO a
+withVertices :: [V3 Float] -> (VAO -> IO a) -> IO a
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
@@ -62,12 +61,12 @@ withVertices vertices body = alloca $ \ p -> do
   glVertexAttribPointer 0 3 GL_FLOAT GL_FALSE 0 nullPtr
   body $ VAO vao
 
-withShader :: (?loc :: CallStack) => GLenum -> (Shader -> IO a) -> IO a
+withShader :: GLenum -> (Shader -> IO a) -> IO a
 withShader shaderType = bracket
   (Shader <$> glCreateShader shaderType)
   (glDeleteShader . unShader)
 
-withCompiledShader :: (?loc :: CallStack) => GLenum -> String -> (Shader -> IO a) -> IO a
+withCompiledShader :: HasCallStack => GLenum -> String -> (Shader -> IO a) -> IO a
 withCompiledShader shaderType source body = withShader shaderType $ \ (Shader shader) -> do
     withCString source $ \ source ->
       alloca $ \ p -> do
@@ -77,15 +76,15 @@ withCompiledShader shaderType source body = withShader shaderType $ \ (Shader sh
     s <- checkShader (Shader shader)
     body s
 
-withCompiledShaders :: (?loc :: CallStack) => [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
+withCompiledShaders :: [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
 withCompiledShaders sources body = traverse (flip (uncurry withCompiledShader) pure) sources >>= body
 
-withProgram :: (?loc :: CallStack) => (Program -> IO a) -> IO a
+withProgram :: (Program -> IO a) -> IO a
 withProgram = bracket
   (Program <$> glCreateProgram)
   (glDeleteProgram . unProgram)
 
-withLinkedProgram :: (?loc :: CallStack) => [Shader] -> (Program -> IO a) -> IO a
+withLinkedProgram :: [Shader] -> (Program -> IO a) -> IO a
 withLinkedProgram shaders body = withProgram $ \ (Program program) -> do
   for_ shaders (glAttachShader program . unShader)
   glLinkProgram program
@@ -94,17 +93,17 @@ withLinkedProgram shaders body = withProgram $ \ (Program program) -> do
   body p
 
 
-withBuiltProgram :: (?loc :: CallStack) => [(GLenum, String)] -> (Program -> IO a) -> IO a
+withBuiltProgram :: [(GLenum, String)] -> (Program -> IO a) -> IO a
 withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
 
 
-checkShader :: (?loc :: CallStack) => Shader -> IO Shader
+checkShader :: HasCallStack => Shader -> IO Shader
 checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unShader
 
-checkProgram :: (?loc :: CallStack) => Program -> IO Program
+checkProgram :: HasCallStack => Program -> IO Program
 checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unProgram
 
-checkStatus :: (?loc :: CallStack) => (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> GLenum -> GLuint -> IO GLuint
+checkStatus :: HasCallStack => (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> GLenum -> GLuint -> IO GLuint
 checkStatus get getLog status object = do
   success <- alloca $ \ p -> do
     get object status p
@@ -119,15 +118,15 @@ checkStatus get getLog status object = do
     throw $ GLException ?loc log
   pure object
 
-checkGLError :: (?loc :: CallStack) => IO ()
+checkGLError :: HasCallStack => IO ()
 checkGLError = glGetError >>= \ e -> case e of
   GL_NO_ERROR -> pure ()
-  GL_INVALID_ENUM -> throw $ GLException ?loc "Invalid enum"
-  GL_INVALID_VALUE -> throw $ GLException ?loc  "Invalid value"
-  GL_INVALID_OPERATION -> throw $ GLException ?loc "Invalid operation"
-  GL_INVALID_FRAMEBUFFER_OPERATION -> throw $ GLException ?loc "Invalid framebuffer operation"
-  GL_OUT_OF_MEMORY -> throw $ GLException ?loc "Out of memory"
-  _ -> throw $ GLException ?loc "Unknown exception"
+  GL_INVALID_ENUM -> throw $ GLException callStack "Invalid enum"
+  GL_INVALID_VALUE -> throw $ GLException callStack  "Invalid value"
+  GL_INVALID_OPERATION -> throw $ GLException callStack "Invalid operation"
+  GL_INVALID_FRAMEBUFFER_OPERATION -> throw $ GLException callStack "Invalid framebuffer operation"
+  GL_OUT_OF_MEMORY -> throw $ GLException callStack "Out of memory"
+  _ -> throw $ GLException callStack "Unknown exception"
 
 
 instance Show GLException where
