@@ -94,7 +94,7 @@ draw (program, vao) = do
 
   glUseProgram (unProgram program) >> checkGLError
   glBindVertexArray (unVAO vao) >> checkGLError
-  glDrawArrays GL_TRIANGLES 3 0 >> checkGLError
+  glDrawArrays GL_TRIANGLES 0 3 >> checkGLError
 
 check :: MonadIO m => CInt -> m ()
 check e = when (e < 0) checkSDLError
