@@ -5,7 +5,6 @@ import Control.Monad
 import Data.Foldable (for_, toList)
 import Data.List (intercalate, uncons)
 import Data.Monoid
-import Data.Proxy
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
@@ -16,9 +15,6 @@ import Graphics.Shader.Fragment
 import Prelude hiding (IO)
 
 newtype GLArray n = GLArray { unGLArray :: GLuint }
-
-class Num n => GLScalar n where
-  glType :: Proxy n -> GLenum
 
 
 toGLSL :: Fragment () -> String
@@ -58,10 +54,3 @@ withVertices vertices body = alloca $ \ p -> do
   glBindBuffer GL_ARRAY_BUFFER vbo
   glVertexAttribPointer 0 (fromIntegral fieldCount) GL_FLOAT GL_FALSE 0 nullPtr
   body $ GLArray array
-
-
-instance GLScalar Float where
-  glType _ = GL_FLOAT
-
-instance GLScalar Double where
-  glType _ = GL_DOUBLE

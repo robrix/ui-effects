@@ -19,6 +19,7 @@ library
                      , Control.Monad.Free.Freer
                      , GL.Exception
                      , GL.Program
+                     , GL.Scalar
                      , GL.Shader
                      , GL.Shader.Fragment
                      , Graphics.Shader.Fragment
