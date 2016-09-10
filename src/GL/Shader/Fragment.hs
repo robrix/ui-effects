@@ -1,14 +1,16 @@
-{-# LANGUAGE GADTs, MultiParamTypeClasses, RankNTypes #-}
+{-# LANGUAGE GADTs, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables #-}
 module GL.Shader.Fragment where
 
 import Control.Monad
 import Data.Foldable (for_, toList)
 import Data.List (intercalate, uncons)
 import Data.Monoid
+import Data.Proxy
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import GL.Exception
+import GL.Scalar
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
@@ -35,13 +37,13 @@ toGLSL shader
         main body = "void main(void) {\n" <> body <> "}"
 
 
-withVertices :: Foldable v => [v Float] -> (GLArray Float -> IO a) -> IO a
+withVertices :: forall v n a. (Foldable v, GLScalar n) => [v n] -> (GLArray n -> IO a) -> IO a
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
   let vertexCount = length vertices
   let fieldCount = maybe 1 (length . fst) (uncons vertices)
-  let fieldSize = sizeOf (0 :: Float)
+  let fieldSize = sizeOf (0 :: n)
   let byteCount = vertexCount * fieldCount * fieldSize
   allocaBytes byteCount $ \ p -> do
     for_ (zip [0..] (vertices >>= toList)) (uncurry (pokeElemOff p))
@@ -52,5 +54,5 @@ withVertices vertices body = alloca $ \ p -> do
   glBindVertexArray array
   glEnableVertexAttribArray 0
   glBindBuffer GL_ARRAY_BUFFER vbo
-  glVertexAttribPointer 0 (fromIntegral fieldCount) GL_FLOAT GL_FALSE 0 nullPtr
+  glVertexAttribPointer 0 (fromIntegral fieldCount) (glType (Proxy :: Proxy n)) GL_FALSE 0 nullPtr
   body $ GLArray array
