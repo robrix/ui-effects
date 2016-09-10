@@ -18,7 +18,6 @@ data Fragment t where
   V4 :: Show a => a -> a -> a -> a -> Fragment (V4 a)
   Add, Sub, Mul, Div :: Num a => Fragment a -> Fragment a -> Fragment a
   Abs, Signum:: Num a => Fragment a -> Fragment a
-  FromInteger :: Num a => Integer -> Fragment a
   FromRational :: Num a => Rational -> Fragment a
 
 coord :: Fragment (V4 Float)
@@ -49,7 +48,7 @@ instance Num a => Num (Fragment a) where
   (*) = Mul
   abs = Abs
   signum = Signum
-  fromInteger = FromInteger
+  fromInteger = FromRational . fromInteger
 
 instance Fractional a => Fractional (Fragment a) where
   (/) = Div
