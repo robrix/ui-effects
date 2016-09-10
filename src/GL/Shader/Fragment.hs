@@ -3,7 +3,7 @@ module GL.Shader.Fragment where
 
 import Control.Exception
 import Control.Monad
-import Data.Foldable (for_)
+import Data.Foldable (for_, toList)
 import Data.List (intercalate, uncons)
 import Data.Monoid
 import Foreign.Marshal.Alloc
@@ -38,7 +38,7 @@ toGLSL shader
         main body = "void main(void) {\n" <> body <> "}"
 
 
-withVertices :: (Foldable v, Storable (v Float)) => [v Float] -> (VAO -> IO a) -> IO a
+withVertices :: Foldable v => [v Float] -> (VAO -> IO a) -> IO a
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
@@ -47,7 +47,7 @@ withVertices vertices body = alloca $ \ p -> do
   let fieldSize = sizeOf (0 :: Float)
   let bytes = vertexCount * fieldCount * fieldSize
   allocaBytes bytes $ \ p -> do
-    for_ (zip [0..] vertices) (uncurry (pokeElemOff p))
+    for_ (zip [0..] (vertices >>= toList)) (uncurry (pokeElemOff p))
     glBindBuffer GL_ARRAY_BUFFER vbo
     glBufferData GL_ARRAY_BUFFER (fromIntegral bytes) (castPtr p) GL_STATIC_DRAW
   glGenVertexArrays 1 p
