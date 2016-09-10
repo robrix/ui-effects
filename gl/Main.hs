@@ -17,6 +17,7 @@ import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.Shader.Fragment
+import GL.Array
 import GL.Exception
 import GL.Program
 import GL.Shader.Fragment
