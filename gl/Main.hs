@@ -17,6 +17,7 @@ import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.Shader.Fragment
+import GL.Exception
 import GL.Shader.Fragment
 import Linear.V3
 import Prelude hiding (IO)
