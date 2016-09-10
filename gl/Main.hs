@@ -64,7 +64,7 @@ withContext window setup draw = bracket
     glGetString GL_RENDERER >>= peekCString . castPtr >>= putStrLn
     glGetString GL_VERSION >>= peekCString . castPtr >>= putStrLn
 
-    setup $ \ state -> forever (draw state >> checkError >> glSwapWindow window))
+    setup $ \ state -> forever (draw state >> checkSDLError >> glSwapWindow window))
 
 setup :: ((Program, VAO) -> IO a) -> IO a
 setup body = do
@@ -102,15 +102,15 @@ render = iterM $ \case
   UI.Input _ -> pure ()
 
 check :: MonadIO m => CInt -> m ()
-check e = when (e < 0) checkError
+check e = when (e < 0) checkSDLError
 
 checkNonNull :: MonadIO m => Ptr a -> m (Ptr a)
 checkNonNull p = do
-  when (p == nullPtr) checkError
+  when (p == nullPtr) checkSDLError
   pure p
 
-checkError :: MonadIO m => m ()
-checkError = liftIO $ do
+checkSDLError :: MonadIO m => m ()
+checkSDLError = liftIO $ do
   msg <- getError >>= peekCString
   clearError
   when (msg /= "") $ throw $ SDLException msg
