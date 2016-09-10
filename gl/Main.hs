@@ -78,9 +78,9 @@ setup body = do
       , (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ]
       $ \ program -> checkGLError >> body (program, vao)
   where vertices =
-          [ V3 0 0.5  0
-          , V3 0.5 (negate 0.5)  0
-          , V3 (negate 0.5) (negate 0.5)  0 ]
+          [ V3 0 0.5 0
+          , V3 0.5 (negate 0.5) 0
+          , V3 (negate 0.5) (negate 0.5) 0 ]
         vertexShader = intercalate "\n"
           [ "#version 410\n"
           , "in vec3 vp;\n"
