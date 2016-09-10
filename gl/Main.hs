@@ -63,6 +63,7 @@ withContext window setup draw = bracket
 
     glGetString GL_RENDERER >>= peekCString . castPtr >>= putStrLn
     glGetString GL_VERSION >>= peekCString . castPtr >>= putStrLn
+    glGetString GL_SHADING_LANGUAGE_VERSION >>= peekCString . castPtr >>= putStrLn
 
     setup $ \ state -> forever (draw state >> checkGLError >> glSwapWindow window))
 
