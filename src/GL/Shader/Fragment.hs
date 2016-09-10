@@ -60,18 +60,20 @@ withVertices vertices body = alloca $ \ p -> do
   glVertexAttribPointer 0 3 GL_FLOAT GL_FALSE 0 nullPtr
   body $ VAO vao
 
+withShader :: GLenum -> (Shader -> IO a) -> IO a
+withShader shaderType = bracket
+  (Shader <$> glCreateShader shaderType)
+  (glDeleteShader . unShader)
+
 withCompiledShader :: GLenum -> String -> (Shader -> IO a) -> IO a
-withCompiledShader shaderType source body = bracket
-  (glCreateShader shaderType)
-  glDeleteShader
-  (\ shader -> do
+withCompiledShader shaderType source body = withShader shaderType $ \ (Shader shader) -> do
     withCString source $ \ source ->
       alloca $ \ p -> do
         poke p source
         glShaderSource shader 1 p nullPtr
     glCompileShader shader
     s <- checkShader (Shader shader)
-    body s)
+    body s
 
 withCompiledShaders :: [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
 withCompiledShaders sources body = traverse (flip (uncurry withCompiledShader) pure) sources >>= body
