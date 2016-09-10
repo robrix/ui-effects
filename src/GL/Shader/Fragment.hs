@@ -17,7 +17,7 @@ import Graphics.GL.Types
 import Graphics.Shader.Fragment
 import Prelude hiding (IO)
 
-newtype Program = Program { unProgram :: GLuint }
+newtype GLProgram = GLProgram { unGLProgram :: GLuint }
 
 newtype GLArray n = GLArray { unGLArray :: GLuint }
 
@@ -63,26 +63,26 @@ withVertices vertices body = alloca $ \ p -> do
   glVertexAttribPointer 0 (fromIntegral fieldCount) GL_FLOAT GL_FALSE 0 nullPtr
   body $ GLArray array
 
-withProgram :: (Program -> IO a) -> IO a
+withProgram :: (GLProgram -> IO a) -> IO a
 withProgram = bracket
-  (Program <$> glCreateProgram)
-  (glDeleteProgram . unProgram)
+  (GLProgram <$> glCreateProgram)
+  (glDeleteProgram . unGLProgram)
 
-withLinkedProgram :: [GLShader] -> (Program -> IO a) -> IO a
-withLinkedProgram shaders body = withProgram $ \ (Program program) -> do
+withLinkedProgram :: [GLShader] -> (GLProgram -> IO a) -> IO a
+withLinkedProgram shaders body = withProgram $ \ (GLProgram program) -> do
   for_ shaders (glAttachShader program . unGLShader)
   glLinkProgram program
   for_ shaders (glDetachShader program . unGLShader)
-  p <- checkProgram (Program program)
+  p <- checkProgram (GLProgram program)
   body p
 
 
-withBuiltProgram :: [(GLenum, String)] -> (Program -> IO a) -> IO a
+withBuiltProgram :: [(GLenum, String)] -> (GLProgram -> IO a) -> IO a
 withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
 
 
-checkProgram :: Program -> IO Program
-checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unProgram
+checkProgram :: GLProgram -> IO GLProgram
+checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unGLProgram
 
 
 instance GLScalar Float where
