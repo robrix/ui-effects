@@ -14,7 +14,6 @@ import GL.Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
-import Linear.V3
 import Prelude hiding (IO)
 
 newtype Program = Program { unProgram :: GLuint }
@@ -39,7 +38,7 @@ toGLSL shader
         main body = "void main(void) {\n" <> body <> "}"
 
 
-withVertices :: [V3 Float] -> (VAO -> IO a) -> IO a
+withVertices :: (Foldable v, Storable (v Float)) => [v Float] -> (VAO -> IO a) -> IO a
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
