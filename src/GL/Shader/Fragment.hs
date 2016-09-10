@@ -6,6 +6,7 @@ import Control.Monad
 import Data.Foldable (for_, toList)
 import Data.List (intercalate, uncons)
 import Data.Monoid
+import Data.Proxy
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
@@ -19,6 +20,12 @@ import Prelude hiding (IO)
 newtype Program = Program { unProgram :: GLuint }
 
 newtype GLArray n = GLArray { unGLArray :: GLuint }
+
+class Num n => GLScalar n where
+  glType :: Proxy n -> GLenum
+
+instance GLScalar Float where
+  glType _ = GL_FLOAT
 
 toGLSL :: Fragment () -> String
 toGLSL shader
