@@ -4,7 +4,7 @@ module GL.Shader.Fragment where
 import Control.Exception
 import Control.Monad
 import Data.Foldable (for_)
-import Data.List (intercalate)
+import Data.List (intercalate, uncons)
 import Data.Monoid
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
@@ -43,7 +43,7 @@ withVertices :: [V3 Float] -> (VAO -> IO a) -> IO a
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
-  let bytes = length vertices * 3 * sizeOf (0 :: Float)
+  let bytes = length vertices * maybe 0 (length . fst) (uncons vertices) * sizeOf (0 :: Float)
   allocaBytes bytes $ \ p -> do
     for_ (zip [0..] vertices) (uncurry (pokeElemOff p))
     glBindBuffer GL_ARRAY_BUFFER vbo
