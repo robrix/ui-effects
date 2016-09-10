@@ -24,8 +24,6 @@ newtype GLArray n = GLArray { unGLArray :: GLuint }
 class Num n => GLScalar n where
   glType :: Proxy n -> GLenum
 
-instance GLScalar Float where
-  glType _ = GL_FLOAT
 
 toGLSL :: Fragment () -> String
 toGLSL shader
@@ -85,3 +83,7 @@ withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram`
 
 checkProgram :: Program -> IO Program
 checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unProgram
+
+
+instance GLScalar Float where
+  glType _ = GL_FLOAT
