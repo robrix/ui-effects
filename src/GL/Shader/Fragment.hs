@@ -131,7 +131,7 @@ checkGLError = glGetError >>= \ e -> case e of
 
 
 instance Show GLException where
-  showsPrec p (GLException s e) = showsPrec p e . showChar '\n' . showsCallStack s
+  showsPrec p (GLException s e) = showString "GLException " . showsPrec p e . showChar '\n' . showsCallStack s
     where showsCallStack = foldr (.) id . fmap showsLoc . tail . tail . getCallStack
           showsLoc (function, location) = foldr (.) id
             [ showString (srcLocFile location)
