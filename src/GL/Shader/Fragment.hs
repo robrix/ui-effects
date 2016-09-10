@@ -1,7 +1,6 @@
 {-# LANGUAGE GADTs, MultiParamTypeClasses, RankNTypes #-}
 module GL.Shader.Fragment where
 
-import Control.Exception
 import Control.Monad
 import Data.Foldable (for_, toList)
 import Data.List (intercalate, uncons)
@@ -11,13 +10,10 @@ import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import GL.Exception
-import GL.Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
 import Prelude hiding (IO)
-
-newtype GLProgram = GLProgram { unGLProgram :: GLuint }
 
 newtype GLArray n = GLArray { unGLArray :: GLuint }
 
@@ -62,27 +58,6 @@ withVertices vertices body = alloca $ \ p -> do
   glBindBuffer GL_ARRAY_BUFFER vbo
   glVertexAttribPointer 0 (fromIntegral fieldCount) GL_FLOAT GL_FALSE 0 nullPtr
   body $ GLArray array
-
-withProgram :: (GLProgram -> IO a) -> IO a
-withProgram = bracket
-  (GLProgram <$> glCreateProgram)
-  (glDeleteProgram . unGLProgram)
-
-withLinkedProgram :: [GLShader] -> (GLProgram -> IO a) -> IO a
-withLinkedProgram shaders body = withProgram $ \ (GLProgram program) -> do
-  for_ shaders (glAttachShader program . unGLShader)
-  glLinkProgram program
-  for_ shaders (glDetachShader program . unGLShader)
-  p <- checkProgram (GLProgram program)
-  body p
-
-
-withBuiltProgram :: [(GLenum, String)] -> (GLProgram -> IO a) -> IO a
-withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
-
-
-checkProgram :: GLProgram -> IO GLProgram
-checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unGLProgram
 
 
 instance GLScalar Float where
