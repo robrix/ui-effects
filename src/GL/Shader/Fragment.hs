@@ -22,10 +22,7 @@ newtype Program = Program { unProgram :: GLuint }
 
 newtype VAO = VAO { unVAO :: GLuint }
 
-newtype ShaderException = ShaderException String
-  deriving (Show, Typeable)
-
-newtype ProgramException = ProgramException String
+newtype GLException = GLException String
   deriving (Show, Typeable)
 
 toGLSL :: Fragment () -> String
@@ -97,13 +94,13 @@ withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram`
 
 
 checkShader :: Shader -> IO Shader
-checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog ShaderException GL_COMPILE_STATUS . unShader
+checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unShader
 
 checkProgram :: Program -> IO Program
-checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog ProgramException GL_LINK_STATUS . unProgram
+checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unProgram
 
-checkStatus :: Exception e => (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> (String -> e) -> GLenum -> GLuint -> IO GLuint
-checkStatus get getLog exception status object = do
+checkStatus :: (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> GLenum -> GLuint -> IO GLuint
+checkStatus get getLog status object = do
   success <- alloca $ \ p -> do
     get object status p
     peek p
@@ -114,9 +111,7 @@ checkStatus get getLog exception status object = do
     log <- allocaBytes (fromIntegral l) $ \ bytes -> do
       getLog object l nullPtr bytes
       peekCString bytes
-    throw $ exception log
+    throw $ GLException log
   pure object
 
-
-instance Exception ShaderException
-instance Exception ProgramException
+instance Exception GLException
