@@ -61,7 +61,7 @@ withContext window setup draw = bracket
   (\ context -> do
     glMakeCurrent window context >>= check
 
-    setup $ \ state -> forever (draw state >> glSwapWindow window))
+    setup $ \ state -> forever (draw state >> checkError >> glSwapWindow window))
 
 setup :: ((Program, VAO) -> IO a) -> IO a
 setup body = do
