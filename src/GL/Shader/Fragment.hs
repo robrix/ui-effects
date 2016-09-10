@@ -33,6 +33,7 @@ data GLError
   | InvalidOperation
   | InvalidFramebufferOperation
   | OutOfMemory
+  | Other String
   deriving Show
 
 data GLException = GLException CallStack String
