@@ -114,4 +114,15 @@ checkStatus get getLog status object = do
     throw $ GLException log
   pure object
 
+checkGLError :: IO ()
+checkGLError = glGetError >>= \ e -> case e of
+  GL_NO_ERROR -> pure ()
+  GL_INVALID_ENUM -> throw $ GLException "Invalid enum"
+  GL_INVALID_VALUE -> throw $ GLException "Invalid value"
+  GL_INVALID_OPERATION -> throw $ GLException "Invalid operation"
+  GL_INVALID_FRAMEBUFFER_OPERATION -> throw $ GLException "Invalid framebuffer operation"
+  GL_OUT_OF_MEMORY -> throw $ GLException "Out of memory"
+  _ -> throw $ GLException "Unknown exception"
+
+
 instance Exception GLException
