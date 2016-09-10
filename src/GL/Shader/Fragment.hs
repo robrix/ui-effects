@@ -66,7 +66,7 @@ withShader shaderType = bracket
   (Shader <$> glCreateShader shaderType)
   (glDeleteShader . unShader)
 
-withCompiledShader :: HasCallStack => GLenum -> String -> (Shader -> IO a) -> IO a
+withCompiledShader :: GLenum -> String -> (Shader -> IO a) -> IO a
 withCompiledShader shaderType source body = withShader shaderType $ \ (Shader shader) -> do
     withCString source $ \ source ->
       alloca $ \ p -> do
@@ -99,13 +99,13 @@ withBuiltProgram :: [(GLenum, String)] -> (Program -> IO a) -> IO a
 withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
 
 
-checkShader :: HasCallStack => Shader -> IO Shader
+checkShader :: Shader -> IO Shader
 checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unShader
 
-checkProgram :: HasCallStack => Program -> IO Program
+checkProgram :: Program -> IO Program
 checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unProgram
 
-checkStatus :: HasCallStack => (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> GLenum -> GLuint -> IO GLuint
+checkStatus :: (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> GLenum -> GLuint -> IO GLuint
 checkStatus get getLog status object = do
   success <- alloca $ \ p -> do
     get object status p
@@ -120,7 +120,7 @@ checkStatus get getLog status object = do
     throw $ GLException callStack log
   pure object
 
-checkGLError :: HasCallStack => IO ()
+checkGLError :: IO ()
 checkGLError = glGetError >>= \ e -> case e of
   GL_NO_ERROR -> pure ()
   GL_INVALID_ENUM -> throw $ GLException callStack "Invalid enum"
