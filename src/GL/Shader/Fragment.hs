@@ -90,7 +90,9 @@ withCompiledShader shaderType source body = withShader shaderType $ \ (Shader sh
     body s
 
 withCompiledShaders :: [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
-withCompiledShaders sources body = traverse (flip (uncurry withCompiledShader) pure) sources >>= body
+withCompiledShaders sources body = go sources []
+  where go [] shaders = body shaders
+        go ((t, source):xs) shaders = withCompiledShader t source (\ shader -> go xs (shader : shaders))
 
 withProgram :: (Program -> IO a) -> IO a
 withProgram = bracket
