@@ -87,3 +87,6 @@ checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog GL_
 
 instance GLScalar Float where
   glType _ = GL_FLOAT
+
+instance GLScalar Double where
+  glType _ = GL_DOUBLE
