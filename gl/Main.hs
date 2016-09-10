@@ -65,6 +65,8 @@ withContext window setup draw = bracket
 
 setup :: ((Program, VAO) -> IO a) -> IO a
 setup body = do
+  glEnable GL_DEPTH_TEST
+  glDepthFunc GL_LESS
   glClearColor 0 0 0 1
   withVertices vertices $ \ vao ->
     withBuiltProgram
