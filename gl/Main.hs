@@ -64,7 +64,7 @@ withContext window setup draw = bracket
     glGetString GL_RENDERER >>= peekCString . castPtr >>= putStrLn
     glGetString GL_VERSION >>= peekCString . castPtr >>= putStrLn
 
-    setup $ \ state -> forever (draw state >> checkSDLError >> glSwapWindow window))
+    setup $ \ state -> forever (draw state >> checkGLError >> glSwapWindow window))
 
 setup :: ((Program, VAO) -> IO a) -> IO a
 setup body = do
