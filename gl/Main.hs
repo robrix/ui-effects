@@ -68,7 +68,7 @@ withContext window setup draw = bracket
 
     setup $ \ state -> forever (draw state >> checkGLError >> glSwapWindow window))
 
-setup :: ((Program, GLArray) -> IO a) -> IO a
+setup :: ((Program, GLArray Float) -> IO a) -> IO a
 setup body = do
   glEnable GL_DEPTH_TEST
   glDepthFunc GL_LESS
@@ -89,7 +89,7 @@ setup body = do
           , "  gl_Position = vec4 (vp, 1.0);\n"
           , "}" ]
 
-draw :: (Program, GLArray) -> IO ()
+draw :: (Program, GLArray Float) -> IO ()
 draw (program, array) = do
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
