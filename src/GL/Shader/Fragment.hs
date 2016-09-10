@@ -27,6 +27,14 @@ newtype Program = Program { unProgram :: GLuint }
 
 newtype VAO = VAO { unVAO :: GLuint }
 
+data GLError
+  = InvalidEnum
+  | InvalidValue
+  | InvalidOperation
+  | InvalidFramebufferOperation
+  | OutOfMemory
+  deriving Show
+
 data GLException = GLException CallStack String
   deriving (Typeable)
 
