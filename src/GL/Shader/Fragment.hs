@@ -6,18 +6,16 @@ import Control.Monad
 import Data.Foldable (for_)
 import Data.List (intercalate)
 import Data.Monoid
-import Foreign.C.String
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import GL.Exception
+import GL.Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader.Fragment
 import Linear.V3
 import Prelude hiding (IO)
-
-newtype Shader = Shader { unShader :: GLuint }
 
 newtype Program = Program { unProgram :: GLuint }
 
@@ -58,26 +56,6 @@ withVertices vertices body = alloca $ \ p -> do
   glVertexAttribPointer 0 3 GL_FLOAT GL_FALSE 0 nullPtr
   body $ VAO vao
 
-withShader :: GLenum -> (Shader -> IO a) -> IO a
-withShader shaderType = bracket
-  (Shader <$> glCreateShader shaderType)
-  (glDeleteShader . unShader)
-
-withCompiledShader :: GLenum -> String -> (Shader -> IO a) -> IO a
-withCompiledShader shaderType source body = withShader shaderType $ \ (Shader shader) -> do
-    withCString source $ \ source ->
-      alloca $ \ p -> do
-        poke p source
-        glShaderSource shader 1 p nullPtr
-    glCompileShader shader
-    s <- checkShader (Shader shader)
-    body s
-
-withCompiledShaders :: [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
-withCompiledShaders sources body = go sources []
-  where go [] shaders = body shaders
-        go ((t, source):xs) shaders = withCompiledShader t source (\ shader -> go xs (shader : shaders))
-
 withProgram :: (Program -> IO a) -> IO a
 withProgram = bracket
   (Program <$> glCreateProgram)
@@ -95,9 +73,6 @@ withLinkedProgram shaders body = withProgram $ \ (Program program) -> do
 withBuiltProgram :: [(GLenum, String)] -> (Program -> IO a) -> IO a
 withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
 
-
-checkShader :: Shader -> IO Shader
-checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unShader
 
 checkProgram :: Program -> IO Program
 checkProgram = fmap Program . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unProgram
