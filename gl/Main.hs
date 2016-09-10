@@ -76,7 +76,7 @@ setup body = do
     withBuiltProgram
       [ (GL_VERTEX_SHADER, vertexShader)
       , (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ]
-      $ \ program -> body (program, vao)
+      $ \ program -> checkGLError >> body (program, vao)
   where vertices =
           [ V3 0 0.5  0
           , V3 0.5 (negate 0.5)  0
@@ -92,9 +92,9 @@ draw :: (Program, VAO) -> IO ()
 draw (program, vao) = do
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
-  glUseProgram $ unProgram program
-  glBindVertexArray $ unVAO vao
-  glDrawArrays GL_TRIANGLES 3 0
+  glUseProgram (unProgram program) >> checkGLError
+  glBindVertexArray (unVAO vao) >> checkGLError
+  glDrawArrays GL_TRIANGLES 3 0 >> checkGLError
 
 render :: View () -> IO ()
 render = iterM $ \case
