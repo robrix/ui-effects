@@ -11,27 +11,27 @@ import Graphics.GL.Core41
 import Graphics.GL.Types
 import Prelude hiding (IO)
 
-newtype Shader = Shader { unShader :: GLuint }
+newtype GLShader = GLShader { unGLShader :: GLuint }
 
-withShader :: GLenum -> (Shader -> IO a) -> IO a
+withShader :: GLenum -> (GLShader -> IO a) -> IO a
 withShader shaderType = bracket
-  (Shader <$> glCreateShader shaderType)
-  (glDeleteShader . unShader)
+  (GLShader <$> glCreateShader shaderType)
+  (glDeleteShader . unGLShader)
 
-withCompiledShader :: GLenum -> String -> (Shader -> IO a) -> IO a
-withCompiledShader shaderType source body = withShader shaderType $ \ (Shader shader) -> do
+withCompiledShader :: GLenum -> String -> (GLShader -> IO a) -> IO a
+withCompiledShader shaderType source body = withShader shaderType $ \ (GLShader shader) -> do
     withCString source $ \ source ->
       alloca $ \ p -> do
         poke p source
         glShaderSource shader 1 p nullPtr
     glCompileShader shader
-    s <- checkShader (Shader shader)
+    s <- checkShader (GLShader shader)
     body s
 
-withCompiledShaders :: [(GLenum, String)] -> ([Shader] -> IO a) -> IO a
+withCompiledShaders :: [(GLenum, String)] -> ([GLShader] -> IO a) -> IO a
 withCompiledShaders sources body = go sources []
   where go [] shaders = body shaders
         go ((t, source):xs) shaders = withCompiledShader t source (\ shader -> go xs (shader : shaders))
 
-checkShader :: Shader -> IO Shader
-checkShader = fmap Shader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unShader
+checkShader :: GLShader -> IO GLShader
+checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unGLShader

@@ -61,11 +61,11 @@ withProgram = bracket
   (Program <$> glCreateProgram)
   (glDeleteProgram . unProgram)
 
-withLinkedProgram :: [Shader] -> (Program -> IO a) -> IO a
+withLinkedProgram :: [GLShader] -> (Program -> IO a) -> IO a
 withLinkedProgram shaders body = withProgram $ \ (Program program) -> do
-  for_ shaders (glAttachShader program . unShader)
+  for_ shaders (glAttachShader program . unGLShader)
   glLinkProgram program
-  for_ shaders (glDetachShader program . unShader)
+  for_ shaders (glDetachShader program . unGLShader)
   p <- checkProgram (Program program)
   body p
 
