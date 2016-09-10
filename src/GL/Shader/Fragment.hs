@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, ImplicitParams, MultiParamTypeClasses #-}
+{-# LANGUAGE GADTs, MultiParamTypeClasses #-}
 module GL.Shader.Fragment where
 
 import Control.Exception
@@ -117,7 +117,7 @@ checkStatus get getLog status object = do
     log <- allocaBytes (fromIntegral l) $ \ bytes -> do
       getLog object l nullPtr bytes
       peekCString bytes
-    throw $ GLException ?loc log
+    throw $ GLException callStack log
   pure object
 
 checkGLError :: HasCallStack => IO ()
