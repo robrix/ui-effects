@@ -68,16 +68,16 @@ withContext window setup draw = bracket
 
     setup $ \ state -> forever (draw state >> checkGLError >> glSwapWindow window))
 
-setup :: ((Program, VAO) -> IO a) -> IO a
+setup :: ((Program, Array) -> IO a) -> IO a
 setup body = do
   glEnable GL_DEPTH_TEST
   glDepthFunc GL_LESS
   glClearColor 0 0 0 1
-  withVertices vertices $ \ vao ->
+  withVertices vertices $ \ array ->
     withBuiltProgram
       [ (GL_VERTEX_SHADER, vertexShader)
       , (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ]
-      $ \ program -> checkGLError >> body (program, vao)
+      $ \ program -> checkGLError >> body (program, array)
   where vertices =
           [ V3 0 0.5 0
           , V3 0.5 (negate 0.5) 0
@@ -89,12 +89,12 @@ setup body = do
           , "  gl_Position = vec4 (vp, 1.0);\n"
           , "}" ]
 
-draw :: (Program, VAO) -> IO ()
-draw (program, vao) = do
+draw :: (Program, Array) -> IO ()
+draw (program, array) = do
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
   glUseProgram (unProgram program) >> checkGLError
-  glBindVertexArray (unVAO vao) >> checkGLError
+  glBindVertexArray (unArray array) >> checkGLError
   glDrawArrays GL_TRIANGLES 0 3 >> checkGLError
 
 check :: MonadIO m => CInt -> m ()

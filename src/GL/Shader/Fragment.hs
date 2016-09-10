@@ -18,7 +18,7 @@ import Prelude hiding (IO)
 
 newtype Program = Program { unProgram :: GLuint }
 
-newtype VAO = VAO { unVAO :: GLuint }
+newtype Array = Array { unArray :: GLuint }
 
 toGLSL :: Fragment () -> String
 toGLSL shader
@@ -38,7 +38,7 @@ toGLSL shader
         main body = "void main(void) {\n" <> body <> "}"
 
 
-withVertices :: Foldable v => [v Float] -> (VAO -> IO a) -> IO a
+withVertices :: Foldable v => [v Float] -> (Array -> IO a) -> IO a
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
@@ -51,12 +51,12 @@ withVertices vertices body = alloca $ \ p -> do
     glBindBuffer GL_ARRAY_BUFFER vbo
     glBufferData GL_ARRAY_BUFFER (fromIntegral byteCount) (castPtr p) GL_STATIC_DRAW
   glGenVertexArrays 1 p
-  vao <- peek p
-  glBindVertexArray vao
+  array <- peek p
+  glBindVertexArray array
   glEnableVertexAttribArray 0
   glBindBuffer GL_ARRAY_BUFFER vbo
   glVertexAttribPointer 0 3 GL_FLOAT GL_FALSE 0 nullPtr
-  body $ VAO vao
+  body $ Array array
 
 withProgram :: (Program -> IO a) -> IO a
 withProgram = bracket
