@@ -43,7 +43,7 @@ withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p
   let vertexCount = length vertices
-  let fieldCount = maybe 0 (length . fst) (uncons vertices)
+  let fieldCount = maybe 1 (length . fst) (uncons vertices)
   let fieldSize = sizeOf (0 :: Float)
   let byteCount = vertexCount * fieldCount * fieldSize
   allocaBytes byteCount $ \ p -> do
