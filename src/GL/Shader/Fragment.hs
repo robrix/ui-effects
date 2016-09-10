@@ -102,10 +102,8 @@ withProgram = bracket
 withLinkedProgram :: [Shader] -> (Program -> IO a) -> IO a
 withLinkedProgram shaders body = withProgram $ \ (Program program) -> do
   for_ shaders (glAttachShader program . unShader)
-  checkGLError
   glLinkProgram program
   for_ shaders (glDetachShader program . unShader)
-  checkGLError
   p <- checkProgram (Program program)
   body p
 
