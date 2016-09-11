@@ -17,7 +17,7 @@ data Fragment t where
   V2 :: Show a => a -> a -> Fragment (V2 a)
   V4 :: Show a => a -> a -> a -> a -> Fragment (V4 a)
   Add, Sub, Mul, Div :: Num a => Fragment a -> Fragment a -> Fragment a
-  Abs, Signum:: Num a => Fragment a -> Fragment a
+  Abs, Signum :: Num a => Fragment a -> Fragment a
   FromRational :: Num a => Rational -> Fragment a
 
 coord :: Fragment (V4 Float)
