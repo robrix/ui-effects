@@ -78,7 +78,7 @@ setup body = do
   withVertices vertices $ \ array ->
     withBuiltProgram
       [ (GL_VERTEX_SHADER, vertexShader)
-      , (GL_FRAGMENT_SHADER, toGLSL (setColour (V4 1 0 0 1))) ]
+      , (GL_FRAGMENT_SHADER, toGLSL fragmentShader) ]
       $ \ program -> checkGLError >> body (program, array)
   where vertices =
           [ V3 0 0.5 0
@@ -90,6 +90,7 @@ setup body = do
           , "void main () {\n"
           , "  gl_Position = vec4 (vp, 1.0);\n"
           , "}" ]
+        fragmentShader = setColour (V4 1 0 0 1)
 
 draw :: (GLProgram, GLArray Float) -> IO ()
 draw (program, array) = do
