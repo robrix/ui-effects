@@ -54,6 +54,7 @@ executable ui-effects-gl
                      , mtl
                      , sdl2
                      , StateVar
+                     , time
                      , transformers
                      , ui-effects
   default-language:    Haskell2010

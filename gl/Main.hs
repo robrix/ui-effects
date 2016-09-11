@@ -7,6 +7,7 @@ import Control.Monad.IO.Class
 import Control.Monad
 import Data.Bits
 import Data.StateVar hiding (get)
+import Data.Time.Clock.POSIX
 import Data.Typeable
 import Data.Word
 import Foreign.C.String
@@ -82,12 +83,16 @@ setup body = do
           [ [ 0, 0.5, 0 ]
           , [ 0.5, negate 0.5, 0 ]
           , [ negate 0.5, negate 0.5, 0 ] ]
-        vertexShader = lambda "position" (set position . get)
+        vertexShader = lambda "position" (set position . (sin (get (uniform "time")) +) . get)
         fragmentShader = set (out "colour") (v4 1 0 0 1.0)
 
 draw :: (GLProgram, GLArray Float) -> IO ()
 draw (program, array) = do
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
+
+  currentTime <- getPOSIXTime
+  timeU <- getUniform program "time"
+  maybe (pure ()) (`setUniformValue` currentTime) timeU
 
   glUseProgram (unGLProgram program) >> checkGLError
   glBindVertexArray (unGLArray array) >> checkGLError
