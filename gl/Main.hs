@@ -84,7 +84,7 @@ setup body = do
           , V3 0.5 (negate 0.5) 0
           , V3 (negate 0.5) (negate 0.5) 0 ]
         vertexShader = lambda "position" (set position . get)
-        fragmentShader = setColour (V4 1 0 0 1)
+        fragmentShader = set (out "colour") (V4 1 0 0 1.0)
 
 draw :: (GLProgram, GLArray Float) -> IO ()
 draw (program, array) = do
