@@ -63,6 +63,7 @@ toGLSL shader
         go (Sub a b) = showParen True $ go a . showString " - " . go b
         go (Div a b) = showParen True $ go a . showString " / " . go b
         go (Sin a) = showString "sin" . showParen True (go a)
+        go (Abs a) = showString "abs" . showParen True (go a)
         go _ = id
 
         vector vs = showString "vec" . shows (length vs) . showParen True (foldr (.) id (intersperse (showString ", ") (shows <$> vs)))
@@ -103,6 +104,7 @@ toGLSL shader
         uniforms (Add a b) = uniforms a <> uniforms b
         uniforms (Mul a b) = uniforms a <> uniforms b
         uniforms (Sin a) = uniforms a
+        uniforms (Abs a) = uniforms a
         uniforms _ = []
 
         pragma k v = showString $ "#" <> k <> " " <> v <> "\n"
