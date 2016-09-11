@@ -52,6 +52,9 @@ pointCoord = PointCoord
 position :: Var 'Out 'Vertex (V4 Float)
 position = Position
 
+pointSize :: Var 'Out 'Vertex Float
+pointSize = PointSize
+
 samplePosition :: Shader 'Fragment (V2 Float)
 samplePosition = SamplePosition
 
