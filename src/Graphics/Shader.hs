@@ -12,7 +12,7 @@ data Shader t where
   SampleID :: Shader Int
   NumSamples :: Shader Int
   PointCoord :: Shader (V2 Float)
-  Position :: Shader (V2 Float)
+  Position :: Shader (V4 Float)
   SamplePosition :: Shader (V2 Float)
   SetDepth :: Shader Float -> Shader ()
   SetColour :: Shader (Colour Float) -> Shader ()
@@ -38,7 +38,7 @@ numSamples = NumSamples
 pointCoord :: Shader (V2 Float)
 pointCoord = PointCoord
 
-position :: Shader (V2 Float)
+position :: Shader (V4 Float)
 position = Position
 
 samplePosition :: Shader (V2 Float)
