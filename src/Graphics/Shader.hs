@@ -8,10 +8,11 @@ import qualified Linear.V4 as Linear
 type Colour = Linear.V4
 
 data ShaderType = Fragment | Vertex
-data VarType = In | Out | Uniform
+data VarType = In | Out
 
 data Var (t :: VarType) (k :: ShaderType) a where
   Var :: String -> Var t k a
+  Uniform :: String -> Var t k a
 
   Position :: Var 'Out 'Vertex (Linear.V4 Float)
   PointSize :: Var 'Out 'Vertex Float
@@ -75,8 +76,8 @@ set = Set
 out :: String -> Var 'Out k a
 out = Var
 
-uniform :: String -> Var 'Uniform k a
-uniform = Var
+uniform :: String -> Var 'In k a
+uniform = Uniform
 
 
 v2 :: Show a => a -> a -> Shader k (Linear.V2 a)
