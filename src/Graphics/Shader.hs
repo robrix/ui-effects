@@ -98,9 +98,9 @@ instance Num a => Num (Shader k a) where
   signum = Signum
   fromInteger = FromRational . fromInteger
 
-instance Fractional a => Fractional (Shader k a) where
+instance (Show a, Fractional a) => Fractional (Shader k a) where
   (/) = Div
-  fromRational = FromRational
+  fromRational = Scalar . fromRational
 
 instance (Show a, Floating a) => Floating (Shader k a) where
   sin = Sin
