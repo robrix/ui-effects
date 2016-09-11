@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures #-}
+{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, StandaloneDeriving #-}
 module Graphics.Shader where
 
 import Linear.V2
@@ -108,3 +108,5 @@ instance (Show a, Floating a) => Floating (Shader k a) where
   pi = Scalar pi
   exp = Exp
   log = Log
+
+deriving instance Eq (Var t k a)
