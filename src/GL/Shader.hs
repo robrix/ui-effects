@@ -2,7 +2,7 @@
 module GL.Shader where
 
 import Control.Exception
-import Data.List (intercalate)
+import Data.List (intersperse)
 import Data.Monoid ((<>))
 import Foreign.C.String
 import Foreign.Marshal.Alloc
@@ -46,23 +46,25 @@ checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLo
 toGLSL :: Shader k a -> String
 toGLSL shader
   = pragma "version" "410"
-  <> (uniforms shader >>= (<> "\n"))
-  <> (inputs shader >>= (<> "\n"))
-  <> (outputs shader >>= (<> "\n"))
-  <> main (go shader)
-  where go :: Shader k a -> String
-        go (Set v value) = "  " <> set v <> " = " <> go value <> ";\n"
-        go (Get v) = get v
+  . foldr (.) id ((. showString "\n") <$> uniforms shader)
+  . foldr (.) id ((. showString "\n") <$> inputs shader)
+  . foldr (.) id ((. showString "\n") <$> outputs shader)
+  . main (go shader) $ ""
+  where go :: Shader k a -> ShowS
+        go (Set v value) = showString "  " . showString (set v) . showString " = " . go value . showString ";\n"
+        go (Get v) = showString $ get v
         go (Lambda _ a) = go a
-        go (V4 (Linear.V4 x y z w)) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
-        go (V3 (Linear.V3 x y z)) = "vec3(" <> intercalate ", " (show <$> [ x, y, z ]) <> ")"
-        go (V2 (Linear.V2 x y)) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
-        go (Scalar x) = show x
-        go (Add a b) = go a <> " + " <> go b
-        go (Mul a b) = go a <> " * " <> go b
-        go (Sub a b) = go a <> " - " <> go b
-        go (Div a b) = go a <> " / " <> go b
-        go _ = ""
+        go (V4 (Linear.V4 x y z w)) = vector [ x, y, z, w ]
+        go (V3 (Linear.V3 x y z)) = vector [ x, y, z ]
+        go (V2 (Linear.V2 x y)) = vector [ x, y ]
+        go (Scalar x) = shows x
+        go (Add a b) = go a . showString " + " . go b
+        go (Mul a b) = go a . showString " * " . go b
+        go (Sub a b) = go a . showString " - " . go b
+        go (Div a b) = go a . showString " / " . go b
+        go _ = id
+
+        vector vs = showString "vec" . shows (length vs) . showParen True (foldr (.) id (intersperse (showString ", ") (shows <$> vs)))
 
         set :: Var 'Out k a -> String
         set Position = "gl_Position"
@@ -78,28 +80,28 @@ toGLSL shader
         get (Var s) = s
         get (Uniform s) = s
 
-        inputs :: Shader k a -> [String]
+        inputs :: Shader k a -> [ShowS]
         inputs (Set _ p) = inputs p
-        inputs (Get (Var s)) = [ "in vec4 " <> s <> ";" ]
+        inputs (Get (Var s)) = [ showString $ "in vec4 " <> s <> ";" ]
         inputs (Lambda _ a) = inputs a
         inputs (Add a b) = inputs a <> inputs b
         inputs (Mul a b) = inputs a <> inputs b
         inputs _ = []
 
-        outputs :: Shader k a -> [String]
-        outputs (Set (Var s) c) = ("out vec4 " <> s <> ";") : outputs c
+        outputs :: Shader k a -> [ShowS]
+        outputs (Set (Var s) c) = showString ("out vec4 " <> s <> ";") : outputs c
         outputs (Lambda _ a) = outputs a
         outputs (Add a b) = outputs a <> outputs b
         outputs (Mul a b) = outputs a <> outputs b
         outputs _ = []
 
-        uniforms :: Shader k a -> [String]
+        uniforms :: Shader k a -> [ShowS]
         uniforms (Set _ v) = uniforms v
         uniforms (Lambda _ a) = uniforms a
-        uniforms (Get (Uniform s)) = [ "uniform vec4 " <> s <> ";" ]
+        uniforms (Get (Uniform s)) = [ showString $ "uniform vec4 " <> s <> ";" ]
         uniforms (Add a b) = uniforms a <> uniforms b
         uniforms (Mul a b) = uniforms a <> uniforms b
         uniforms _ = []
 
-        pragma k v = "#" <> k <> " " <> v <> "\n"
-        main body = "void main(void) {\n" <> body <> "}"
+        pragma k v = showString $ "#" <> k <> " " <> v <> "\n"
+        main body = showString "void main(void) {\n" . body . showString "}"
