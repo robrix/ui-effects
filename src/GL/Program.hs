@@ -44,6 +44,6 @@ getUniform program name = do
     then Nothing
     else Just (GLUniform location)
 
-setUniformValue :: GLUniform (V4 a) -> V4 a -> IO ()
-setUniformValue uniform v = do
+setUniformValue :: GLProgram -> GLUniform (V4 Float) -> V4 Float -> IO ()
+setUniformValue program uniform v = do
   pure ()
