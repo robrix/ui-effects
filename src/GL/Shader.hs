@@ -79,6 +79,7 @@ toGLSL shader
 
         outputs :: Shader k a -> [String]
         outputs (SetColour c) = "out vec4 fragColour;" : outputs c
+        outputs (Set (Var s) c) = ("out vec4 " <> s <> ";") : outputs c
         outputs (Lambda s f) = outputs (f (Var s))
         outputs _ = []
 
