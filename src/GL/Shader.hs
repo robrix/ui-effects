@@ -12,6 +12,9 @@ import GL.Exception
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import Graphics.Shader
+import qualified Linear.V2 as Linear
+import qualified Linear.V3 as Linear
+import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
@@ -51,9 +54,9 @@ toGLSL shader
         go (Set v value) = "  " <> set v <> " = " <> go value <> ";\n"
         go (Get v) = get v
         go (Lambda _ a) = go a
-        go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
-        go (V3 x y z) = "vec3(" <> intercalate ", " (show <$> [ x, y, z ]) <> ")"
-        go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
+        go (V4 (Linear.V4 x y z w)) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
+        go (V3 (Linear.V3 x y z)) = "vec3(" <> intercalate ", " (show <$> [ x, y, z ]) <> ")"
+        go (V2 (Linear.V2 x y)) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
         go (Scalar x) = show x
         go (Add a b) = go a <> " + " <> go b
         go (Mul a b) = go a <> " * " <> go b

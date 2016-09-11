@@ -28,9 +28,9 @@ data Shader (k :: ShaderType) t where
 
   -- Literals
   Scalar :: Show a => a -> Shader k a
-  V2 :: Show a => a -> a -> Shader k (Linear.V2 a)
-  V3 :: Show a => a -> a -> a -> Shader k (Linear.V3 a)
-  V4 :: Show a => a -> a -> a -> a -> Shader k (Linear.V4 a)
+  V2 :: Show a => Linear.V2 a -> Shader k (Linear.V2 a)
+  V3 :: Show a => Linear.V3 a -> Shader k (Linear.V3 a)
+  V4 :: Show a => Linear.V4 a -> Shader k (Linear.V4 a)
 
   -- Arithmetic
   Add, Sub, Mul, Div :: Num a => Shader k a -> Shader k a -> Shader k a
@@ -79,6 +79,16 @@ uniform :: String -> Var 'Uniform k a
 uniform = Var
 
 
+v2 :: Show a => a -> a -> Shader k (Linear.V2 a)
+v2 x y = V2 $ Linear.V2 x y
+
+v3 :: Show a => a -> a -> a -> Shader k (Linear.V3 a)
+v3 x y z = V3 $ Linear.V3 x y z
+
+v4 :: Show a => a -> a -> a -> a -> Shader k (Linear.V4 a)
+v4 x y z w = V4 $ Linear.V4 x y z w
+
+
 instance Num a => Num (Shader k a) where
   (+) = Add
   (-) = Sub
@@ -117,9 +127,9 @@ instance Eq a => Eq (Shader k a) where
   Set v1 p1 == Set v2 p2 = v1 == v2 && p1 == p2
 
   Scalar x1 == Scalar x2 = x1 == x2
-  V2 x1 y1 == V2 x2 y2 = Linear.V2 x1 y1 == Linear.V2 x2 y2
-  V3 x1 y1 z1 == V3 x2 y2 z2 = Linear.V3 x1 y1 z1 == Linear.V3 x2 y2 z2
-  V4 x1 y1 z1 w1 == V4 x2 y2 z2 w2 = Linear.V4 x1 y1 z1 w1 == Linear.V4 x2 y2 z2 w2
+  V2 v1 == V2 v2 = v1 == v2
+  V3 v1 == V3 v2 = v1 == v2
+  V4 v1 == V4 v2 = v1 == v2
 
   Add x1 y1 == Add x2 y2 = x1 == x2 && y1 == y2
   Sub x1 y1 == Sub x2 y2 = x1 == x2 && y1 == y2
