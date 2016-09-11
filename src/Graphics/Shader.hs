@@ -75,8 +75,8 @@ set = Set
 out :: String -> Var 'Out k a
 out = Var
 
-uniform :: String -> Var 'In k a
-uniform = Uniform
+uniform :: String -> Shader k a
+uniform = Get . Uniform
 
 
 v2 :: Show a => a -> a -> Shader k (Linear.V2 a)
