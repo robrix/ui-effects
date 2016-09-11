@@ -16,6 +16,7 @@ data Shader t where
   SamplePosition :: Shader (V2 Float)
   SetDepth :: Shader Float -> Shader ()
   SetColour :: Shader (Colour Float) -> Shader ()
+  SetPosition :: Shader (V4 Float) -> Shader ()
 
   -- Literals
   V2 :: Show a => a -> a -> Shader (V2 a)
@@ -49,6 +50,9 @@ setDepth = SetDepth
 
 setColour :: Shader (Colour Float) -> Shader ()
 setColour = SetColour
+
+setPosition :: Shader (V4 Float) -> Shader ()
+setPosition = SetPosition
 
 
 instance Num a => Num (Shader a) where
