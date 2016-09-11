@@ -95,7 +95,7 @@ draw (program, array) = do
   glUseProgram (unGLProgram program) >> checkGLError
 
   t <- realToFrac <$> getPOSIXTime
-  setUniformValue program "time" (Linear.V4 t t t 1.0)
+  setUniformValue program "time" (Linear.V4 t 0 0 0)
 
   glBindVertexArray (unGLArray array) >> checkGLError
   glDrawArrays GL_TRIANGLES 0 3 >> checkGLError
