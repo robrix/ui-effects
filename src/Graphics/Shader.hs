@@ -15,7 +15,7 @@ data Shader (k :: ShaderType) t where
   NumSamples :: Shader k Int
   PointCoord :: Shader k (V2 Float)
   Position :: Shader k (V4 Float)
-  SamplePosition :: Shader k (V2 Float)
+  SamplePosition :: Shader 'Fragment (V2 Float)
   SetDepth :: Shader 'Fragment Float -> Shader 'Fragment ()
   SetColour :: Shader 'Fragment (Colour Float) -> Shader 'Fragment ()
   SetPosition :: Shader k (V4 Float) -> Shader k ()
@@ -44,7 +44,7 @@ pointCoord = PointCoord
 position :: Shader k (V4 Float)
 position = Position
 
-samplePosition :: Shader k (V2 Float)
+samplePosition :: Shader 'Fragment (V2 Float)
 samplePosition = SamplePosition
 
 setDepth :: Shader 'Fragment Float -> Shader 'Fragment ()
