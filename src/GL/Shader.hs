@@ -52,6 +52,7 @@ toGLSL shader
         go Position = "position"
         go (Set v value) = "  " <> set v <> " = " <> go value <> ";\n"
         go (Get v) = get v
+        go (Lambda s f) = go (f (Var s))
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
         go (Add a b) = go a <> " + " <> go b
