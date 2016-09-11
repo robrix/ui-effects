@@ -40,7 +40,7 @@ checkShader :: GLShader -> IO GLShader
 checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unGLShader
 
 
-toGLSL :: Shader k () -> String
+toGLSL :: Shader k a -> String
 toGLSL shader
   = pragma "version" "410"
   <> (uniforms shader >>= (<> "\n"))
