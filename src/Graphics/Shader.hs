@@ -79,6 +79,9 @@ get = Get
 set :: Var 'Out k a -> Shader k a -> Shader k ()
 set = Set
 
+out :: String -> Var 'Out k a
+out = Var
+
 
 instance Num a => Num (Shader k a) where
   (+) = Add
