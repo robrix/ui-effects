@@ -40,12 +40,12 @@ checkShader :: GLShader -> IO GLShader
 checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unGLShader
 
 
-toGLSL :: Fragment () -> String
+toGLSL :: Shader () -> String
 toGLSL shader
   = pragma "version" "410"
   <> "out vec4 fragColour;\n"
   <> main (go shader)
-  where go :: Fragment a -> String
+  where go :: Shader a -> String
         go (SetColour c) = "  fragColour = " <> go c <> ";\n"
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"

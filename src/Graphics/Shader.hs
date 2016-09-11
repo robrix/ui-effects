@@ -6,43 +6,43 @@ import Linear.V4
 
 type Colour = V4
 
-data Fragment t where
-  Coord :: Fragment (V4 Float)
-  SampleID :: Fragment Int
-  NumSamples :: Fragment Int
-  PointCoord :: Fragment (V2 Float)
-  SamplePosition :: Fragment (V2 Float)
-  SetDepth :: Fragment Float -> Fragment ()
-  SetColour :: Fragment (Colour Float) -> Fragment ()
-  V2 :: Show a => a -> a -> Fragment (V2 a)
-  V4 :: Show a => a -> a -> a -> a -> Fragment (V4 a)
-  Add, Sub, Mul, Div :: Num a => Fragment a -> Fragment a -> Fragment a
-  Abs, Signum :: Num a => Fragment a -> Fragment a
-  FromRational :: Num a => Rational -> Fragment a
+data Shader t where
+  Coord :: Shader (V4 Float)
+  SampleID :: Shader Int
+  NumSamples :: Shader Int
+  PointCoord :: Shader (V2 Float)
+  SamplePosition :: Shader (V2 Float)
+  SetDepth :: Shader Float -> Shader ()
+  SetColour :: Shader (Colour Float) -> Shader ()
+  V2 :: Show a => a -> a -> Shader (V2 a)
+  V4 :: Show a => a -> a -> a -> a -> Shader (V4 a)
+  Add, Sub, Mul, Div :: Num a => Shader a -> Shader a -> Shader a
+  Abs, Signum :: Num a => Shader a -> Shader a
+  FromRational :: Num a => Rational -> Shader a
 
-coord :: Fragment (V4 Float)
+coord :: Shader (V4 Float)
 coord = Coord
 
-sampleID :: Fragment Int
+sampleID :: Shader Int
 sampleID = SampleID
 
-numSamples :: Fragment Int
+numSamples :: Shader Int
 numSamples = NumSamples
 
-pointCoord :: Fragment (V2 Float)
+pointCoord :: Shader (V2 Float)
 pointCoord = PointCoord
 
-samplePosition :: Fragment (V2 Float)
+samplePosition :: Shader (V2 Float)
 samplePosition = SamplePosition
 
-setDepth :: Fragment Float -> Fragment ()
+setDepth :: Shader Float -> Shader ()
 setDepth = SetDepth
 
-setColour :: Fragment (Colour Float) -> Fragment ()
+setColour :: Shader (Colour Float) -> Shader ()
 setColour = SetColour
 
 
-instance Num a => Num (Fragment a) where
+instance Num a => Num (Shader a) where
   (+) = Add
   (-) = Sub
   (*) = Mul
@@ -50,6 +50,6 @@ instance Num a => Num (Fragment a) where
   signum = Signum
   fromInteger = FromRational . fromInteger
 
-instance Fractional a => Fractional (Fragment a) where
+instance Fractional a => Fractional (Shader a) where
   (/) = Div
   fromRational = FromRational
