@@ -6,7 +6,6 @@ import Control.Exception
 import Control.Monad.IO.Class
 import Control.Monad
 import Data.Bits
-import Data.List (intercalate)
 import Data.StateVar
 import Data.Typeable
 import Data.Word
@@ -77,19 +76,14 @@ setup body = do
   glClearColor 0 0 0 1
   withVertices vertices $ \ array ->
     withBuiltProgram
-      [ (GL_VERTEX_SHADER, vertexShader)
+      [ (GL_VERTEX_SHADER, toGLSL vertexShader)
       , (GL_FRAGMENT_SHADER, toGLSL fragmentShader) ]
       $ \ program -> checkGLError >> body (program, array)
   where vertices =
           [ V3 0 0.5 0
           , V3 0.5 (negate 0.5) 0
           , V3 (negate 0.5) (negate 0.5) 0 ]
-        vertexShader = intercalate "\n"
-          [ "#version 410\n"
-          , "in vec4 vp;\n"
-          , "void main () {\n"
-          , "  gl_Position = vp;\n"
-          , "}" ]
+        vertexShader = setPosition position
         fragmentShader = setColour (V4 1 0 0 1)
 
 draw :: (GLProgram, GLArray Float) -> IO ()
