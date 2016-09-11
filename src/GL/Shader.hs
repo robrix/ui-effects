@@ -50,7 +50,7 @@ toGLSL shader
   where go :: Shader k a -> String
         go (Set v value) = "  " <> set v <> " = " <> go value <> ";\n"
         go (Get v) = get v
-        go (Lambda s f) = go (f (Var s))
+        go (Lambda _ a) = go a
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         go (V3 x y z) = "vec3(" <> intercalate ", " (show <$> [ x, y, z ]) <> ")"
         go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
@@ -76,17 +76,17 @@ toGLSL shader
         inputs :: Shader k a -> [String]
         inputs (Set _ p) = inputs p
         inputs (Get (Var s)) = [ "in vec4 " <> s <> ";" ]
-        inputs (Lambda s f) = inputs (f (Var s))
+        inputs (Lambda _ a) = inputs a
         inputs _ = []
 
         outputs :: Shader k a -> [String]
         outputs (Set (Var s) c) = ("out vec4 " <> s <> ";") : outputs c
-        outputs (Lambda s f) = outputs (f (Var s))
+        outputs (Lambda _ a) = outputs a
         outputs _ = []
 
         uniforms :: Shader k a -> [String]
         uniforms (Set _ v) = uniforms v
-        uniforms (Lambda s f) = uniforms (f (Var s))
+        uniforms (Lambda _ a) = uniforms a
         uniforms _ = []
 
         pragma k v = "#" <> k <> " " <> v <> "\n"

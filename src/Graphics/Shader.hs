@@ -22,7 +22,7 @@ data Var (t :: VarType) (k :: ShaderType) a where
   Depth :: Var 'Out 'Fragment Float
 
 data Shader (k :: ShaderType) t where
-  Lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
+  Lambda :: String -> Shader k a -> Shader k a
   Get :: Var 'In k a -> Shader k a
   Set :: Var 'Out k a -> Shader k a -> Shader k a
 
@@ -64,7 +64,7 @@ depth :: Var 'Out 'Fragment Float
 depth = Depth
 
 lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
-lambda = Lambda
+lambda s f = Lambda s (f (Var s))
 
 get :: Var 'In k a -> Shader k a
 get = Get
@@ -112,7 +112,7 @@ instance (Show a, Floating a) => Floating (Shader k a) where
 deriving instance Eq (Var t k a)
 
 instance Eq a => Eq (Shader k a) where
-  Lambda s1 f1 == Lambda s2 f2 = s1 == s2 && f1 (Var s1) == f2 (Var s2)
+  Lambda s1 a1 == Lambda s2 a2 = s1 == s2 && a1 == a2
   Get v1 == Get v2 = v1 == v2
   Set v1 p1 == Set v2 p2 = v1 == v2 && p1 == p2
 
