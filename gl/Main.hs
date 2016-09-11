@@ -21,6 +21,7 @@ import GL.Array
 import GL.Exception
 import GL.Program
 import GL.Shader
+import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 import SDL.Raw as SDL
 import System.Exit
@@ -83,18 +84,18 @@ setup body = do
           [ [ 0, 0.5, 0 ]
           , [ 0.5, negate 0.5, 0 ]
           , [ negate 0.5, negate 0.5, 0 ] ]
-        vertexShader = lambda "position" (set position . ((v4 10 10 10 10.0 * sin (get (uniform "time"))) +) . get)
+        vertexShader = lambda "position" (set position . ((v4 10 10 10 1.0 * sin (get (uniform "time"))) +) . get)
         fragmentShader = set (out "colour") (v4 1 0 0 1.0)
 
 draw :: (GLProgram, GLArray Float) -> IO ()
 draw (program, array) = do
   glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
 
-  currentTime <- getPOSIXTime
-  timeU <- getUniform program "time"
-  maybe (pure ()) (flip (setUniformValue program) (realToFrac currentTime)) timeU
-
   glUseProgram (unGLProgram program) >> checkGLError
+
+  t <- realToFrac <$> getPOSIXTime
+  setUniformValue program "time" (Linear.V4 t t t 1.0)
+
   glBindVertexArray (unGLArray array) >> checkGLError
   glDrawArrays GL_TRIANGLES 0 3 >> checkGLError
 

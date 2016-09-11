@@ -44,5 +44,8 @@ getUniform program name = do
     then Nothing
     else Just (GLUniform location)
 
-setUniformValue :: GLProgram -> GLUniform (V4 Float) -> V4 Float -> IO ()
-setUniformValue program uniform (V4 x y z w) = glProgramUniform4f (unGLProgram program) (unGLUniform uniform) x y z w
+setUniformValue :: GLProgram -> String -> V4 Float -> IO ()
+setUniformValue program name (V4 x y z w) = do
+  location <- withCString name (glGetUniformLocation (unGLProgram program))
+  glProgramUniform4f (unGLProgram program) location x y z w
+  checkGLError
