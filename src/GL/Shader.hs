@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RankNTypes #-}
+{-# LANGUAGE DataKinds, GADTs, RankNTypes #-}
 module GL.Shader where
 
 import Control.Exception
@@ -58,9 +58,14 @@ toGLSL shader
         go (Div a b) = go a <> " / " <> go b
         go _ = ""
 
+        get :: Var 'In k a -> String
+        get (Var s) = s
+
         inputs :: Shader k a -> [String]
         inputs (SetPosition p) = inputs p
         inputs Position = [ "in vec4 position;" ]
+        inputs (Set _ p) = inputs p
+        inputs (Get v) = [ "in vec4 " <> get v <> ";" ]
         inputs _ = []
 
         outputs :: Shader k a -> [String]
