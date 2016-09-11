@@ -88,6 +88,7 @@ toGLSL shader
         inputs (Lambda _ a) = inputs a
         inputs (Add a b) = inputs a <> inputs b
         inputs (Mul a b) = inputs a <> inputs b
+        inputs (Div a b) = inputs a <> inputs b
         inputs _ = []
 
         outputs :: Shader k a -> [ShowS]
@@ -95,6 +96,7 @@ toGLSL shader
         outputs (Lambda _ a) = outputs a
         outputs (Add a b) = outputs a <> outputs b
         outputs (Mul a b) = outputs a <> outputs b
+        outputs (Div a b) = outputs a <> outputs b
         outputs _ = []
 
         uniforms :: Shader k a -> [ShowS]
@@ -103,6 +105,7 @@ toGLSL shader
         uniforms (Get (Uniform s)) = [ showString $ "uniform vec4 " <> s <> ";" ]
         uniforms (Add a b) = uniforms a <> uniforms b
         uniforms (Mul a b) = uniforms a <> uniforms b
+        uniforms (Div a b) = uniforms a <> uniforms b
         uniforms (Sin a) = uniforms a
         uniforms (Abs a) = uniforms a
         uniforms _ = []
