@@ -43,6 +43,7 @@ checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_CO
 toGLSL :: Shader k () -> String
 toGLSL shader
   = pragma "version" "410"
+  <> intercalate "\n" (inputs shader)
   <> intercalate "\n" (outputs shader)
   <> main (go shader)
   where go :: Shader k a -> String
@@ -56,6 +57,10 @@ toGLSL shader
         go (Sub a b) = go a <> " - " <> go b
         go (Div a b) = go a <> " / " <> go b
         go _ = ""
+
+        inputs :: Shader k a -> [String]
+        inputs Position = [ "in vec4 position;" ]
+        inputs _ = []
 
         outputs :: Shader k a -> [String]
         outputs (SetColour c) = "out vec4 fragColour;" : outputs c
