@@ -16,11 +16,11 @@ import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL.Core41
-import Graphics.Shader.Fragment
+import Graphics.Shader
 import GL.Array
 import GL.Exception
 import GL.Program
-import GL.Shader.Fragment
+import GL.Shader
 import Linear.V3
 import Prelude hiding (IO)
 import SDL.Raw as SDL

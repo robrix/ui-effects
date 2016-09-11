@@ -1,8 +1,8 @@
-module GL.Shader.Fragment.Spec where
+module GL.Shader.Spec where
 
 import Data.List (intercalate)
-import GL.Shader.Fragment
-import Graphics.Shader.Fragment
+import GL.Shader
+import Graphics.Shader
 import Test.Hspec
 
 spec :: Spec

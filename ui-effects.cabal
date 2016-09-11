@@ -22,8 +22,7 @@ library
                      , GL.Program
                      , GL.Scalar
                      , GL.Shader
-                     , GL.Shader.Fragment
-                     , Graphics.Shader.Fragment
+                     , Graphics.Shader
                      , UI.Drawing
                      , UI.View
   build-depends:       base >= 4.7 && < 5
@@ -64,7 +63,7 @@ test-suite ui-effects-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       GL.Shader.Fragment.Spec
+  other-modules:       GL.Shader.Spec
   build-depends:       base
                      , hspec
                      , ui-effects

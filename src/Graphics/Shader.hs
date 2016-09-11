@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, GADTs #-}
-module Graphics.Shader.Fragment where
+module Graphics.Shader where
 
 import Linear.V2
 import Linear.V4

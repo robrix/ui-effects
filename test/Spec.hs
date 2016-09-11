@@ -1,6 +1,6 @@
 import Test.Hspec
-import GL.Shader.Fragment.Spec
+import GL.Shader.Spec
 
 main :: IO ()
 main = hspec . parallel $ do
-  describe "GL.Shader.Fragment.Spec" $ GL.Shader.Fragment.Spec.spec
+  describe "GL.Shader.Spec" $ GL.Shader.Spec.spec
