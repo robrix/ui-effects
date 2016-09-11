@@ -24,7 +24,7 @@ data Var (t :: VarType) (k :: ShaderType) a where
 data Shader (k :: ShaderType) t where
   Lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
   Get :: Var 'In k a -> Shader k a
-  Set :: Var 'Out k a -> Shader k a -> Shader k ()
+  Set :: Var 'Out k a -> Shader k a -> Shader k a
 
   -- Literals
   Scalar :: Show a => a -> Shader k a
@@ -69,7 +69,7 @@ lambda = Lambda
 get :: Var 'In k a -> Shader k a
 get = Get
 
-set :: Var 'Out k a -> Shader k a -> Shader k ()
+set :: Var 'Out k a -> Shader k a -> Shader k a
 set = Set
 
 out :: String -> Var 'Out k a
