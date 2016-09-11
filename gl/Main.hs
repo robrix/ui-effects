@@ -80,9 +80,9 @@ setup body = do
       , (GL_FRAGMENT_SHADER, toGLSL fragmentShader) ]
       $ \ program -> checkGLError >> body (program, array)
   where vertices =
-          [ V3 0 0.5 0
-          , V3 0.5 (negate 0.5) 0
-          , V3 (negate 0.5) (negate 0.5) 0 ]
+          [ [ 0, 0.5, 0 ]
+          , [ 0.5, negate 0.5, 0 ]
+          , [ negate 0.5, negate 0.5, 0 ] ]
         vertexShader = lambda "position" (set position . get)
         fragmentShader = set (out "colour") (V4 1 0 0 1.0)
 
