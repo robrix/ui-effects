@@ -47,6 +47,7 @@ toGLSL shader
   <> main (go shader)
   where go :: Shader a -> String
         go (SetColour c) = "  fragColour = " <> go c <> ";\n"
+        go (SetPosition v) = "  gl_Position = " <> go v <> ";\n"
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
         go (Add a b) = go a <> " + " <> go b
