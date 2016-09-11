@@ -62,6 +62,7 @@ toGLSL shader
         go (Mul a b) = showParen True $ go a . showString " * " . go b
         go (Sub a b) = showParen True $ go a . showString " - " . go b
         go (Div a b) = showParen True $ go a . showString " / " . go b
+        go (Sin a) = showString "sin" . showParen True (go a)
         go _ = id
 
         vector vs = showString "vec" . shows (length vs) . showParen True (foldr (.) id (intersperse (showString ", ") (shows <$> vs)))
