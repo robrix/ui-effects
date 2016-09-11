@@ -120,40 +120,4 @@ instance (Show a, Floating a) => Floating (Shader k a) where
   log = Log
 
 deriving instance Eq (Var t k a)
-
-instance Eq a => Eq (Shader k a) where
-  Lambda s1 a1 == Lambda s2 a2 = s1 == s2 && a1 == a2
-  Get v1 == Get v2 = v1 == v2
-  Set v1 p1 == Set v2 p2 = v1 == v2 && p1 == p2
-
-  Scalar x1 == Scalar x2 = x1 == x2
-  V2 v1 == V2 v2 = v1 == v2
-  V3 v1 == V3 v2 = v1 == v2
-  V4 v1 == V4 v2 = v1 == v2
-
-  Add x1 y1 == Add x2 y2 = x1 == x2 && y1 == y2
-  Sub x1 y1 == Sub x2 y2 = x1 == x2 && y1 == y2
-  Mul x1 y1 == Mul x2 y2 = x1 == x2 && y1 == y2
-  Div x1 y1 == Div x2 y2 = x1 == x2 && y1 == y2
-
-  Abs x1 == Abs x2 = x1 == x2
-  Signum x1 == Signum x2 = x1 == x2
-  FromRational x1 == FromRational x2 = x1 == x2
-
-  Sin x1 == Sin x2 = x1 == x2
-  Cos x1 == Cos x2 = x1 == x2
-  Tan x1 == Tan x2 = x1 == x2
-  ASin x1 == ASin x2 = x1 == x2
-  ACos x1 == ACos x2 = x1 == x2
-  ATan x1 == ATan x2 = x1 == x2
-  SinH x1 == SinH x2 = x1 == x2
-  CosH x1 == CosH x2 = x1 == x2
-  TanH x1 == TanH x2 = x1 == x2
-  ASinH x1 == ASinH x2 = x1 == x2
-  ACosH x1 == ACosH x2 = x1 == x2
-  ATanH x1 == ATanH x2 = x1 == x2
-
-  Exp x1 == Exp x2 = x1 == x2
-  Log x1 == Log x2 = x1 == x2
-
-  _ == _ = False
+deriving instance Eq a => Eq (Shader k a)
