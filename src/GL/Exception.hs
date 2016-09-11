@@ -16,8 +16,14 @@ import qualified System.IO as IO
 
 type IO a = HasCallStack => IO.IO a
 
-checkStatus :: (GLenum -> GLuint -> Ptr GLint -> IO ()) -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ()) -> GLenum -> GLuint -> IO GLuint
-checkStatus get getLog status object = do
+checkStatus
+  :: (GLenum -> GLuint -> Ptr GLint -> IO ())
+  -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ())
+  -> (String -> GLError)
+  -> GLenum
+  -> GLuint
+  -> IO GLuint
+checkStatus get getLog error status object = do
   success <- alloca $ \ p -> do
     get object status p
     peek p
@@ -28,7 +34,7 @@ checkStatus get getLog status object = do
     log <- allocaBytes (fromIntegral l) $ \ bytes -> do
       getLog object l nullPtr bytes
       peekCString bytes
-    throw $ GLException (Other log) callStack
+    throw $ GLException (error log) callStack
   pure object
 
 checkGLError :: IO ()

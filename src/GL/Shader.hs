@@ -40,7 +40,7 @@ withCompiledShaders sources body = go sources []
         go ((t, source):xs) shaders = withCompiledShader t source (\ shader -> go xs (shader : shaders))
 
 checkShader :: GLShader -> IO GLShader
-checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unGLShader
+checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog Other GL_COMPILE_STATUS . unGLShader
 
 
 toGLSL :: Shader k a -> String

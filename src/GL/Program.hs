@@ -33,7 +33,7 @@ withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram`
 
 
 checkProgram :: GLProgram -> IO GLProgram
-checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog GL_LINK_STATUS . unGLProgram
+checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog Other GL_LINK_STATUS . unGLProgram
 
 
 getUniform :: GLProgram -> String -> IO (Maybe (GLUniform a))
