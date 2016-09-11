@@ -120,4 +120,6 @@ instance (Show a, Floating a) => Floating (Shader k a) where
   log = Log
 
 deriving instance Eq (Var t k a)
+deriving instance Ord (Var t k a)
 deriving instance Eq a => Eq (Shader k a)
+deriving instance Ord a => Ord (Shader k a)
