@@ -43,7 +43,7 @@ checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_CO
 toGLSL :: Shader k () -> String
 toGLSL shader
   = pragma "version" "410"
-  <> "out vec4 fragColour;\n"
+  <> intercalate "\n" (outputs shader)
   <> main (go shader)
   where go :: Shader k a -> String
         go (SetColour c) = "  fragColour = " <> go c <> ";\n"
@@ -56,5 +56,10 @@ toGLSL shader
         go (Sub a b) = go a <> " - " <> go b
         go (Div a b) = go a <> " / " <> go b
         go _ = ""
+
+        outputs :: Shader k a -> [String]
+        outputs (SetColour c) = "out vec4 fragColour;" : outputs c
+        outputs _ = []
+
         pragma k v = "#" <> k <> " " <> v <> "\n"
         main body = "void main(void) {\n" <> body <> "}"
