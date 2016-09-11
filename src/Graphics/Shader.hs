@@ -37,6 +37,14 @@ data Shader (k :: ShaderType) t where
   Abs, Signum :: Num a => Shader k a -> Shader k a
   FromRational :: Num a => Rational -> Shader k a
 
+  -- Trigonometric
+  Sin, Cos, Tan :: Num a => Shader k a -> Shader k a
+  ASin, ACos, ATan :: Num a => Shader k a -> Shader k a
+  SinH, CosH, TanH :: Num a => Shader k a -> Shader k a
+  ASinH, ACosH, ATanH :: Num a => Shader k a -> Shader k a
+
+  Exp, Log :: Num a => Shader k a -> Shader k a
+
 position :: Var 'Out 'Vertex (V4 Float)
 position = Position
 
@@ -82,3 +90,21 @@ instance Num a => Num (Shader k a) where
 instance Fractional a => Fractional (Shader k a) where
   (/) = Div
   fromRational = FromRational
+
+instance (Show a, Floating a) => Floating (Shader k a) where
+  sin = Sin
+  cos = Cos
+  tan = Tan
+  asin = ASin
+  acos = ACos
+  atan = ATan
+  sinh = SinH
+  cosh = CosH
+  tanh = TanH
+  asinh = ASinH
+  acosh = ACosH
+  atanh = ATanH
+
+  pi = Scalar pi
+  exp = Exp
+  log = Log
