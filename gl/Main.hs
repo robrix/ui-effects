@@ -20,7 +20,6 @@ import GL.Array
 import GL.Exception
 import GL.Program
 import GL.Shader
-import Linear.V3
 import Prelude hiding (IO)
 import SDL.Raw as SDL
 import System.Exit
