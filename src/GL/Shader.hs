@@ -82,17 +82,20 @@ toGLSL shader
         inputs (Set _ p) = inputs p
         inputs (Get (Var s)) = [ "in vec4 " <> s <> ";" ]
         inputs (Lambda _ a) = inputs a
+        inputs (Add a b) = inputs a <> inputs b
         inputs _ = []
 
         outputs :: Shader k a -> [String]
         outputs (Set (Var s) c) = ("out vec4 " <> s <> ";") : outputs c
         outputs (Lambda _ a) = outputs a
+        outputs (Add a b) = outputs a <> outputs b
         outputs _ = []
 
         uniforms :: Shader k a -> [String]
         uniforms (Set _ v) = uniforms v
         uniforms (Lambda _ a) = uniforms a
         uniforms (Get (Uniform s)) = [ "uniform vec4 " <> s <> ";" ]
+        uniforms (Add a b) = uniforms a <> uniforms b
         uniforms _ = []
 
         pragma k v = "#" <> k <> " " <> v <> "\n"
