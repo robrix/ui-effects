@@ -8,6 +8,7 @@ import GL.Exception
 import GL.Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
+import Linear.V4
 import Prelude hiding (IO)
 
 newtype GLProgram = GLProgram { unGLProgram :: GLuint }
@@ -43,6 +44,6 @@ getUniform program name = do
     then Nothing
     else Just (GLUniform location)
 
-setUniformValue :: GLUniform a -> a -> IO ()
+setUniformValue :: GLUniform (V4 a) -> V4 a -> IO ()
 setUniformValue uniform v = do
   pure ()

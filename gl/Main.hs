@@ -92,7 +92,7 @@ draw (program, array) = do
 
   currentTime <- getPOSIXTime
   timeU <- getUniform program "time"
-  maybe (pure ()) (`setUniformValue` currentTime) timeU
+  maybe (pure ()) (`setUniformValue` realToFrac currentTime) timeU
 
   glUseProgram (unGLProgram program) >> checkGLError
   glBindVertexArray (unGLArray array) >> checkGLError
