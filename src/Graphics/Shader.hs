@@ -7,6 +7,10 @@ import Linear.V4
 type Colour = V4
 
 data ShaderType = Fragment | Vertex
+data VarType = In | Out
+
+data Var (t :: VarType) (k :: ShaderType) a where
+  Var :: String -> Var t k a
 
 data Shader (k :: ShaderType) t where
   -- Globals
