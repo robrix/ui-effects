@@ -58,6 +58,9 @@ coord = Coord
 pointCoord :: Var 'In 'Fragment (V2 Float)
 pointCoord = PointCoord
 
+frontFacing :: Var 'In 'Fragment Bool
+frontFacing = FrontFacing
+
 samplePosition :: Shader 'Fragment (V2 Float)
 samplePosition = SamplePosition
 
