@@ -7,7 +7,7 @@ import Linear.V4
 type Colour = V4
 
 data ShaderType = Fragment | Vertex
-data VarType = In | Out
+data VarType = In | Out | Uniform
 
 data Var (t :: VarType) (k :: ShaderType) a where
   Var :: String -> Var t k a
@@ -63,6 +63,9 @@ set = Set
 
 out :: String -> Var 'Out k a
 out = Var
+
+uniform :: String -> Var 'Uniform k a
+uniform = Var
 
 
 instance Num a => Num (Shader k a) where

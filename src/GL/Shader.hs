@@ -43,6 +43,7 @@ checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_CO
 toGLSL :: Shader k () -> String
 toGLSL shader
   = pragma "version" "410"
+  <> intercalate "\n" (uniforms shader)
   <> intercalate "\n" (inputs shader)
   <> intercalate "\n" (outputs shader)
   <> main (go shader)
@@ -80,6 +81,10 @@ toGLSL shader
         outputs (Set (Var s) c) = ("out vec4 " <> s <> ";") : outputs c
         outputs (Lambda s f) = outputs (f (Var s))
         outputs _ = []
+
+        uniforms :: Shader k a -> [String]
+        uniforms (Set _ v) = uniforms v
+        uniforms _ = []
 
         pragma k v = "#" <> k <> " " <> v <> "\n"
         main body = "void main(void) {\n" <> body <> "}"
