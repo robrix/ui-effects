@@ -11,15 +11,17 @@ data VarType = In | Out
 
 data Var (t :: VarType) (k :: ShaderType) a where
   Var :: String -> Var t k a
+
   Position :: Var 'Out 'Vertex (V4 Float)
   PointSize :: Var 'Out 'Vertex Float
 
+  Coord :: Var 'In 'Fragment (V4 Float)
+  PointCoord :: Var 'In 'Fragment (V2 Float)
+
 data Shader (k :: ShaderType) t where
   -- Globals
-  Coord :: Shader k (V4 Float)
   SampleID :: Shader k Int
   NumSamples :: Shader k Int
-  PointCoord :: Shader k (V2 Float)
   SamplePosition :: Shader 'Fragment (V2 Float)
   SetDepth :: Shader 'Fragment Float -> Shader 'Fragment ()
   SetColour :: Shader 'Fragment (Colour Float) -> Shader 'Fragment ()
@@ -37,23 +39,23 @@ data Shader (k :: ShaderType) t where
   Abs, Signum :: Num a => Shader k a -> Shader k a
   FromRational :: Num a => Rational -> Shader k a
 
-coord :: Shader k (V4 Float)
-coord = Coord
-
 sampleID :: Shader k Int
 sampleID = SampleID
 
 numSamples :: Shader k Int
 numSamples = NumSamples
 
-pointCoord :: Shader k (V2 Float)
-pointCoord = PointCoord
-
 position :: Var 'Out 'Vertex (V4 Float)
 position = Position
 
 pointSize :: Var 'Out 'Vertex Float
 pointSize = PointSize
+
+coord :: Var 'In 'Fragment (V4 Float)
+coord = Coord
+
+pointCoord :: Var 'In 'Fragment (V2 Float)
+pointCoord = PointCoord
 
 samplePosition :: Shader 'Fragment (V2 Float)
 samplePosition = SamplePosition

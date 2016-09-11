@@ -65,6 +65,8 @@ toGLSL shader
         set (Var s) = s
 
         get :: Var 'In k a -> String
+        get Coord = "gl_FragCoord"
+        get PointCoord = "gl_PointCoord"
         get (Var s) = s
 
         inputs :: Shader k a -> [String]
