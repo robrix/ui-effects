@@ -7,6 +7,7 @@ import Linear.V4
 type Colour = V4
 
 data Shader t where
+  -- Globals
   Coord :: Shader (V4 Float)
   SampleID :: Shader Int
   NumSamples :: Shader Int
@@ -14,8 +15,12 @@ data Shader t where
   SamplePosition :: Shader (V2 Float)
   SetDepth :: Shader Float -> Shader ()
   SetColour :: Shader (Colour Float) -> Shader ()
+
+  -- Literals
   V2 :: Show a => a -> a -> Shader (V2 a)
   V4 :: Show a => a -> a -> a -> a -> Shader (V4 a)
+
+  -- Arithmetic
   Add, Sub, Mul, Div :: Num a => Shader a -> Shader a -> Shader a
   Abs, Signum :: Num a => Shader a -> Shader a
   FromRational :: Num a => Rational -> Shader a
