@@ -83,7 +83,7 @@ setup body = do
           [ [ 0, 0.5, 0 ]
           , [ 0.5, negate 0.5, 0 ]
           , [ negate 0.5, negate 0.5, 0 ] ]
-        vertexShader = lambda "position" (set position . (sin (get (uniform "time")) +) . get)
+        vertexShader = lambda "position" (set position . ((v4 10 10 10 10.0 * sin (get (uniform "time"))) +) . get)
         fragmentShader = set (out "colour") (v4 1 0 0 1.0)
 
 draw :: (GLProgram, GLArray Float) -> IO ()
