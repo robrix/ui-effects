@@ -58,10 +58,10 @@ toGLSL shader
         go (V3 (Linear.V3 x y z)) = vector [ x, y, z ]
         go (V2 (Linear.V2 x y)) = vector [ x, y ]
         go (Scalar x) = shows x
-        go (Add a b) = go a . showString " + " . go b
-        go (Mul a b) = go a . showString " * " . go b
-        go (Sub a b) = go a . showString " - " . go b
-        go (Div a b) = go a . showString " / " . go b
+        go (Add a b) = showParen True $ go a . showString " + " . go b
+        go (Mul a b) = showParen True $ go a . showString " * " . go b
+        go (Sub a b) = showParen True $ go a . showString " - " . go b
+        go (Div a b) = showParen True $ go a . showString " / " . go b
         go _ = id
 
         vector vs = showString "vec" . shows (length vs) . showParen True (foldr (.) id (intersperse (showString ", ") (shows <$> vs)))
