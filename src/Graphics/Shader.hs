@@ -27,6 +27,7 @@ data Shader (k :: ShaderType) t where
   Set :: Var 'Out k a -> Shader k a -> Shader k ()
 
   -- Literals
+  Scalar :: Show a => a -> Shader k a
   V2 :: Show a => a -> a -> Shader k (V2 a)
   V3 :: Show a => a -> a -> a -> Shader k (V3 a)
   V4 :: Show a => a -> a -> a -> a -> Shader k (V4 a)
