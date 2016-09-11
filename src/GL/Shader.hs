@@ -102,6 +102,7 @@ toGLSL shader
         uniforms (Get (Uniform s)) = [ showString $ "uniform vec4 " <> s <> ";" ]
         uniforms (Add a b) = uniforms a <> uniforms b
         uniforms (Mul a b) = uniforms a <> uniforms b
+        uniforms (Sin a) = uniforms a
         uniforms _ = []
 
         pragma k v = showString $ "#" <> k <> " " <> v <> "\n"
