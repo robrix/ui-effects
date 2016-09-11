@@ -47,7 +47,6 @@ toGLSL shader
   <> intercalate "\n" (outputs shader)
   <> main (go shader)
   where go :: Shader k a -> String
-        go (SetColour c) = "  fragColour = " <> go c <> ";\n"
         go (Set v value) = "  " <> set v <> " = " <> go value <> ";\n"
         go (Get v) = get v
         go (Lambda s f) = go (f (Var s))
@@ -78,7 +77,6 @@ toGLSL shader
         inputs _ = []
 
         outputs :: Shader k a -> [String]
-        outputs (SetColour c) = "out vec4 fragColour;" : outputs c
         outputs (Set (Var s) c) = ("out vec4 " <> s <> ";") : outputs c
         outputs (Lambda s f) = outputs (f (Var s))
         outputs _ = []

@@ -25,7 +25,6 @@ data Shader (k :: ShaderType) t where
   SampleID :: Shader k Int
   NumSamples :: Shader k Int
   SamplePosition :: Shader 'Fragment (V2 Float)
-  SetColour :: Shader 'Fragment (Colour Float) -> Shader 'Fragment ()
 
   Lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
   Get :: Var 'In k a -> Shader k a
@@ -66,9 +65,6 @@ depth = Depth
 
 samplePosition :: Shader 'Fragment (V2 Float)
 samplePosition = SamplePosition
-
-setColour :: Shader 'Fragment (Colour Float) -> Shader 'Fragment ()
-setColour = SetColour
 
 lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
 lambda = Lambda
