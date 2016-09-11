@@ -86,9 +86,9 @@ setup body = do
           , V3 (negate 0.5) (negate 0.5) 0 ]
         vertexShader = intercalate "\n"
           [ "#version 410\n"
-          , "in vec3 vp;\n"
+          , "in vec4 vp;\n"
           , "void main () {\n"
-          , "  gl_Position = vec4 (vp, 1.0);\n"
+          , "  gl_Position = vp;\n"
           , "}" ]
         fragmentShader = setColour (V4 1 0 0 1)
 
