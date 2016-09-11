@@ -24,6 +24,9 @@ data Shader (k :: ShaderType) t where
   SetColour :: Shader 'Fragment (Colour Float) -> Shader 'Fragment ()
   SetPosition :: Shader 'Vertex (V4 Float) -> Shader 'Vertex ()
 
+  Get :: Var 'In k a -> Shader k a
+  Set :: Var 'Out k a -> Shader k a -> Shader k ()
+
   -- Literals
   V2 :: Show a => a -> a -> Shader k (V2 a)
   V4 :: Show a => a -> a -> a -> a -> Shader k (V4 a)
@@ -59,6 +62,12 @@ setColour = SetColour
 
 setPosition :: Shader 'Vertex (V4 Float) -> Shader 'Vertex ()
 setPosition = SetPosition
+
+get :: Var 'In k a -> Shader k a
+get = Get
+
+set :: Var 'Out k a -> Shader k a -> Shader k ()
+set = Set
 
 
 instance Num a => Num (Shader k a) where
