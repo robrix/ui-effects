@@ -84,6 +84,7 @@ toGLSL shader
 
         uniforms :: Shader k a -> [String]
         uniforms (Set _ v) = uniforms v
+        uniforms (Lambda s f) = uniforms (f (Var s))
         uniforms _ = []
 
         pragma k v = "#" <> k <> " " <> v <> "\n"
