@@ -31,7 +31,7 @@ withCompiledShader shaderType source body = withShader shaderType $ \ (GLShader 
         poke p source
         glShaderSource shader 1 p nullPtr
     glCompileShader shader
-    s <- checkShader (GLShader shader)
+    s <- checkShader source (GLShader shader)
     body s
 
 withCompiledShaders :: [(GLenum, String)] -> ([GLShader] -> IO a) -> IO a
@@ -39,8 +39,8 @@ withCompiledShaders sources body = go sources []
   where go [] shaders = body shaders
         go ((t, source):xs) shaders = withCompiledShader t source (\ shader -> go xs (shader : shaders))
 
-checkShader :: GLShader -> IO GLShader
-checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog Other GL_COMPILE_STATUS . unGLShader
+checkShader :: String -> GLShader -> IO GLShader
+checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog (Source source) GL_COMPILE_STATUS . unGLShader
 
 
 toGLSL :: Shader k a -> String

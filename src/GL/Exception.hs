@@ -59,6 +59,7 @@ data GLError
   | InvalidOperation
   | InvalidFramebufferOperation
   | OutOfMemory
+  | Source String String
   | Other String
   deriving Show
 
