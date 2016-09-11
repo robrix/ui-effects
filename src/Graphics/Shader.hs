@@ -90,13 +90,13 @@ v4 :: Show a => a -> a -> a -> a -> Shader k (Linear.V4 a)
 v4 x y z w = V4 $ Linear.V4 x y z w
 
 
-instance Num a => Num (Shader k a) where
+instance (Show a, Num a) => Num (Shader k a) where
   (+) = Add
   (-) = Sub
   (*) = Mul
   abs = Abs
   signum = Signum
-  fromInteger = FromRational . fromInteger
+  fromInteger = Scalar . fromInteger
 
 instance (Show a, Fractional a) => Fractional (Shader k a) where
   (/) = Div
