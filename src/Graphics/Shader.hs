@@ -21,11 +21,6 @@ data Var (t :: VarType) (k :: ShaderType) a where
   Depth :: Var 'Out 'Fragment Float
 
 data Shader (k :: ShaderType) t where
-  -- Globals
-  SampleID :: Shader k Int
-  NumSamples :: Shader k Int
-  SamplePosition :: Shader 'Fragment (V2 Float)
-
   Lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
   Get :: Var 'In k a -> Shader k a
   Set :: Var 'Out k a -> Shader k a -> Shader k ()
@@ -38,12 +33,6 @@ data Shader (k :: ShaderType) t where
   Add, Sub, Mul, Div :: Num a => Shader k a -> Shader k a -> Shader k a
   Abs, Signum :: Num a => Shader k a -> Shader k a
   FromRational :: Num a => Rational -> Shader k a
-
-sampleID :: Shader k Int
-sampleID = SampleID
-
-numSamples :: Shader k Int
-numSamples = NumSamples
 
 position :: Var 'Out 'Vertex (V4 Float)
 position = Position
@@ -62,9 +51,6 @@ frontFacing = FrontFacing
 
 depth :: Var 'Out 'Fragment Float
 depth = Depth
-
-samplePosition :: Shader 'Fragment (V2 Float)
-samplePosition = SamplePosition
 
 lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
 lambda = Lambda
