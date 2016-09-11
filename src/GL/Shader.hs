@@ -52,7 +52,9 @@ toGLSL shader
         go (Get v) = get v
         go (Lambda s f) = go (f (Var s))
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
+        go (V3 x y z) = "vec3(" <> intercalate ", " (show <$> [ x, y, z ]) <> ")"
         go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
+        go (Scalar x) = show x
         go (Add a b) = go a <> " + " <> go b
         go (Mul a b) = go a <> " * " <> go b
         go (Sub a b) = go a <> " - " <> go b
