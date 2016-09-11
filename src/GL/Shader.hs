@@ -59,6 +59,7 @@ toGLSL shader
         go _ = ""
 
         inputs :: Shader k a -> [String]
+        inputs (SetPosition p) = inputs p
         inputs Position = [ "in vec4 position;" ]
         inputs _ = []
 
