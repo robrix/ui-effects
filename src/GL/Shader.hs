@@ -69,12 +69,14 @@ toGLSL shader
         set PointSize = "gl_PointSize"
         set Depth = "gl_FragDepth"
         set (Var s) = s
+        set (Uniform s) = s
 
         get :: Var 'In k a -> String
         get Coord = "gl_FragCoord"
         get PointCoord = "gl_PointCoord"
         get FrontFacing = "gl_FrontFacing"
         get (Var s) = s
+        get (Uniform s) = s
 
         inputs :: Shader k a -> [String]
         inputs (Set _ p) = inputs p
@@ -90,6 +92,7 @@ toGLSL shader
         uniforms :: Shader k a -> [String]
         uniforms (Set _ v) = uniforms v
         uniforms (Lambda _ a) = uniforms a
+        uniforms (Get (Uniform s)) = [ "uniform vec4 " <> s <> ";" ]
         uniforms _ = []
 
         pragma k v = "#" <> k <> " " <> v <> "\n"
