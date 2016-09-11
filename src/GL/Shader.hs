@@ -69,7 +69,7 @@ toGLSL shader
 
         inputs :: Shader k a -> [String]
         inputs (Set _ p) = inputs p
-        inputs (Get v) = [ "in vec4 " <> get v <> ";" ]
+        inputs (Get (Var s)) = [ "in vec4 " <> s <> ";" ]
         inputs (Lambda s f) = inputs (f (Var s))
         inputs _ = []
 
