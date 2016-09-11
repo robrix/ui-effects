@@ -61,6 +61,7 @@ toGLSL shader
 
         set :: Var 'Out k a -> String
         set Position = "gl_Position"
+        set PointSize = "gl_PointSize"
         set (Var s) = s
 
         get :: Var 'In k a -> String

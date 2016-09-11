@@ -12,6 +12,7 @@ data VarType = In | Out
 data Var (t :: VarType) (k :: ShaderType) a where
   Var :: String -> Var t k a
   Position :: Var 'Out 'Vertex (V4 Float)
+  PointSize :: Var 'Out 'Vertex Float
 
 data Shader (k :: ShaderType) t where
   -- Globals
