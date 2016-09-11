@@ -1,11 +1,11 @@
 {-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, StandaloneDeriving #-}
 module Graphics.Shader where
 
-import Linear.V2
-import Linear.V3
-import Linear.V4
+import qualified Linear.V2 as Linear
+import qualified Linear.V3 as Linear
+import qualified Linear.V4 as Linear
 
-type Colour = V4
+type Colour = Linear.V4
 
 data ShaderType = Fragment | Vertex
 data VarType = In | Out | Uniform
@@ -13,11 +13,11 @@ data VarType = In | Out | Uniform
 data Var (t :: VarType) (k :: ShaderType) a where
   Var :: String -> Var t k a
 
-  Position :: Var 'Out 'Vertex (V4 Float)
+  Position :: Var 'Out 'Vertex (Linear.V4 Float)
   PointSize :: Var 'Out 'Vertex Float
 
-  Coord :: Var 'In 'Fragment (V4 Float)
-  PointCoord :: Var 'In 'Fragment (V2 Float)
+  Coord :: Var 'In 'Fragment (Linear.V4 Float)
+  PointCoord :: Var 'In 'Fragment (Linear.V2 Float)
   FrontFacing :: Var 'In 'Fragment Bool
   Depth :: Var 'Out 'Fragment Float
 
@@ -28,9 +28,9 @@ data Shader (k :: ShaderType) t where
 
   -- Literals
   Scalar :: Show a => a -> Shader k a
-  V2 :: Show a => a -> a -> Shader k (V2 a)
-  V3 :: Show a => a -> a -> a -> Shader k (V3 a)
-  V4 :: Show a => a -> a -> a -> a -> Shader k (V4 a)
+  V2 :: Show a => a -> a -> Shader k (Linear.V2 a)
+  V3 :: Show a => a -> a -> a -> Shader k (Linear.V3 a)
+  V4 :: Show a => a -> a -> a -> a -> Shader k (Linear.V4 a)
 
   -- Arithmetic
   Add, Sub, Mul, Div :: Num a => Shader k a -> Shader k a -> Shader k a
@@ -45,16 +45,16 @@ data Shader (k :: ShaderType) t where
 
   Exp, Log :: Num a => Shader k a -> Shader k a
 
-position :: Var 'Out 'Vertex (V4 Float)
+position :: Var 'Out 'Vertex (Linear.V4 Float)
 position = Position
 
 pointSize :: Var 'Out 'Vertex Float
 pointSize = PointSize
 
-coord :: Var 'In 'Fragment (V4 Float)
+coord :: Var 'In 'Fragment (Linear.V4 Float)
 coord = Coord
 
-pointCoord :: Var 'In 'Fragment (V2 Float)
+pointCoord :: Var 'In 'Fragment (Linear.V2 Float)
 pointCoord = PointCoord
 
 frontFacing :: Var 'In 'Fragment Bool
