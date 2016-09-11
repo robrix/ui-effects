@@ -17,6 +17,7 @@ data Var (t :: VarType) (k :: ShaderType) a where
 
   Coord :: Var 'In 'Fragment (V4 Float)
   PointCoord :: Var 'In 'Fragment (V2 Float)
+  FrontFacing :: Var 'In 'Fragment Bool
 
 data Shader (k :: ShaderType) t where
   -- Globals
