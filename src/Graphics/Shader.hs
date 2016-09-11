@@ -36,7 +36,6 @@ data Shader (k :: ShaderType) t where
   -- Arithmetic
   Add, Sub, Mul, Div :: Num a => Shader k a -> Shader k a -> Shader k a
   Abs, Signum :: Num a => Shader k a -> Shader k a
-  FromRational :: Num a => Rational -> Shader k a
 
   -- Trigonometric
   Sin, Cos, Tan :: Num a => Shader k a -> Shader k a
