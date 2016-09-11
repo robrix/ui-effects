@@ -2,6 +2,7 @@
 module Graphics.Shader where
 
 import Linear.V2
+import Linear.V3
 import Linear.V4
 
 type Colour = V4
@@ -27,6 +28,7 @@ data Shader (k :: ShaderType) t where
 
   -- Literals
   V2 :: Show a => a -> a -> Shader k (V2 a)
+  V3 :: Show a => a -> a -> a -> Shader k (V3 a)
   V4 :: Show a => a -> a -> a -> a -> Shader k (V4 a)
 
   -- Arithmetic
