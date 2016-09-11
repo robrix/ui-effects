@@ -40,12 +40,12 @@ checkShader :: GLShader -> IO GLShader
 checkShader = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog GL_COMPILE_STATUS . unGLShader
 
 
-toGLSL :: Shader () -> String
+toGLSL :: Shader k () -> String
 toGLSL shader
   = pragma "version" "410"
   <> "out vec4 fragColour;\n"
   <> main (go shader)
-  where go :: Shader a -> String
+  where go :: Shader k a -> String
         go (SetColour c) = "  fragColour = " <> go c <> ";\n"
         go (SetPosition v) = "  gl_Position = " <> go v <> ";\n"
         go Position = "position"

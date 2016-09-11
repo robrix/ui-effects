@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs #-}
+{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures #-}
 module Graphics.Shader where
 
 import Linear.V2
@@ -6,56 +6,58 @@ import Linear.V4
 
 type Colour = V4
 
-data Shader t where
+data ShaderType = Fragment | Vertex
+
+data Shader (k :: ShaderType) t where
   -- Globals
-  Coord :: Shader (V4 Float)
-  SampleID :: Shader Int
-  NumSamples :: Shader Int
-  PointCoord :: Shader (V2 Float)
-  Position :: Shader (V4 Float)
-  SamplePosition :: Shader (V2 Float)
-  SetDepth :: Shader Float -> Shader ()
-  SetColour :: Shader (Colour Float) -> Shader ()
-  SetPosition :: Shader (V4 Float) -> Shader ()
+  Coord :: Shader k (V4 Float)
+  SampleID :: Shader k Int
+  NumSamples :: Shader k Int
+  PointCoord :: Shader k (V2 Float)
+  Position :: Shader k (V4 Float)
+  SamplePosition :: Shader k (V2 Float)
+  SetDepth :: Shader k Float -> Shader k ()
+  SetColour :: Shader k (Colour Float) -> Shader k ()
+  SetPosition :: Shader k (V4 Float) -> Shader k ()
 
   -- Literals
-  V2 :: Show a => a -> a -> Shader (V2 a)
-  V4 :: Show a => a -> a -> a -> a -> Shader (V4 a)
+  V2 :: Show a => a -> a -> Shader k (V2 a)
+  V4 :: Show a => a -> a -> a -> a -> Shader k (V4 a)
 
   -- Arithmetic
-  Add, Sub, Mul, Div :: Num a => Shader a -> Shader a -> Shader a
-  Abs, Signum :: Num a => Shader a -> Shader a
-  FromRational :: Num a => Rational -> Shader a
+  Add, Sub, Mul, Div :: Num a => Shader k a -> Shader k a -> Shader k a
+  Abs, Signum :: Num a => Shader k a -> Shader k a
+  FromRational :: Num a => Rational -> Shader k a
 
-coord :: Shader (V4 Float)
+coord :: Shader k (V4 Float)
 coord = Coord
 
-sampleID :: Shader Int
+sampleID :: Shader k Int
 sampleID = SampleID
 
-numSamples :: Shader Int
+numSamples :: Shader k Int
 numSamples = NumSamples
 
-pointCoord :: Shader (V2 Float)
+pointCoord :: Shader k (V2 Float)
 pointCoord = PointCoord
 
-position :: Shader (V4 Float)
+position :: Shader k (V4 Float)
 position = Position
 
-samplePosition :: Shader (V2 Float)
+samplePosition :: Shader k (V2 Float)
 samplePosition = SamplePosition
 
-setDepth :: Shader Float -> Shader ()
+setDepth :: Shader k Float -> Shader k ()
 setDepth = SetDepth
 
-setColour :: Shader (Colour Float) -> Shader ()
+setColour :: Shader k (Colour Float) -> Shader k ()
 setColour = SetColour
 
-setPosition :: Shader (V4 Float) -> Shader ()
+setPosition :: Shader k (V4 Float) -> Shader k ()
 setPosition = SetPosition
 
 
-instance Num a => Num (Shader a) where
+instance Num a => Num (Shader k a) where
   (+) = Add
   (-) = Sub
   (*) = Mul
@@ -63,6 +65,6 @@ instance Num a => Num (Shader a) where
   signum = Signum
   fromInteger = FromRational . fromInteger
 
-instance Fractional a => Fractional (Shader a) where
+instance Fractional a => Fractional (Shader k a) where
   (/) = Div
   fromRational = FromRational
