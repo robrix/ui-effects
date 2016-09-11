@@ -50,6 +50,7 @@ toGLSL shader
         go (SetColour c) = "  fragColour = " <> go c <> ";\n"
         go (SetPosition v) = "  gl_Position = " <> go v <> ";\n"
         go Position = "position"
+        go (Set v value) = "  " <> set v <> " = " <> go value <> ";\n"
         go (V4 x y z w) = "vec4(" <> intercalate ", " (show <$> [ x, y, z, w ]) <> ")"
         go (V2 x y) = "vec2(" <> intercalate ", " (show <$> [ x, y ]) <> ")"
         go (Add a b) = go a <> " + " <> go b
@@ -57,6 +58,10 @@ toGLSL shader
         go (Sub a b) = go a <> " - " <> go b
         go (Div a b) = go a <> " / " <> go b
         go _ = ""
+
+        set :: Var 'Out k a -> String
+        set Position = "gl_Position"
+        set (Var s) = s
 
         get :: Var 'In k a -> String
         get (Var s) = s
