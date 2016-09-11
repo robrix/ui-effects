@@ -18,6 +18,7 @@ data Var (t :: VarType) (k :: ShaderType) a where
   Coord :: Var 'In 'Fragment (V4 Float)
   PointCoord :: Var 'In 'Fragment (V2 Float)
   FrontFacing :: Var 'In 'Fragment Bool
+  Depth :: Var 'Out 'Fragment Float
 
 data Shader (k :: ShaderType) t where
   -- Globals
@@ -61,11 +62,11 @@ pointCoord = PointCoord
 frontFacing :: Var 'In 'Fragment Bool
 frontFacing = FrontFacing
 
+depth :: Var 'Out 'Fragment Float
+depth = Depth
+
 samplePosition :: Shader 'Fragment (V2 Float)
 samplePosition = SamplePosition
-
-setDepth :: Shader 'Fragment Float -> Shader 'Fragment ()
-setDepth = SetDepth
 
 setColour :: Shader 'Fragment (Colour Float) -> Shader 'Fragment ()
 setColour = SetColour
