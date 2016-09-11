@@ -72,10 +72,12 @@ toGLSL shader
         inputs Position = [ "in vec4 position;" ]
         inputs (Set _ p) = inputs p
         inputs (Get v) = [ "in vec4 " <> get v <> ";" ]
+        inputs (Lambda s f) = inputs (f (Var s))
         inputs _ = []
 
         outputs :: Shader k a -> [String]
         outputs (SetColour c) = "out vec4 fragColour;" : outputs c
+        outputs (Lambda s f) = outputs (f (Var s))
         outputs _ = []
 
         pragma k v = "#" <> k <> " " <> v <> "\n"
