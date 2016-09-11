@@ -48,8 +48,6 @@ toGLSL shader
   <> main (go shader)
   where go :: Shader k a -> String
         go (SetColour c) = "  fragColour = " <> go c <> ";\n"
-        go (SetPosition v) = "  gl_Position = " <> go v <> ";\n"
-        go Position = "position"
         go (Set v value) = "  " <> set v <> " = " <> go value <> ";\n"
         go (Get v) = get v
         go (Lambda s f) = go (f (Var s))
@@ -69,8 +67,6 @@ toGLSL shader
         get (Var s) = s
 
         inputs :: Shader k a -> [String]
-        inputs (SetPosition p) = inputs p
-        inputs Position = [ "in vec4 position;" ]
         inputs (Set _ p) = inputs p
         inputs (Get v) = [ "in vec4 " <> get v <> ";" ]
         inputs (Lambda s f) = inputs (f (Var s))

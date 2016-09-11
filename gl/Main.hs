@@ -6,7 +6,7 @@ import Control.Exception
 import Control.Monad.IO.Class
 import Control.Monad
 import Data.Bits
-import Data.StateVar
+import Data.StateVar hiding (get)
 import Data.Typeable
 import Data.Word
 import Foreign.C.String
@@ -83,7 +83,7 @@ setup body = do
           [ V3 0 0.5 0
           , V3 0.5 (negate 0.5) 0
           , V3 (negate 0.5) (negate 0.5) 0 ]
-        vertexShader = setPosition position
+        vertexShader = lambda "position" (set position . get)
         fragmentShader = setColour (V4 1 0 0 1)
 
 draw :: (GLProgram, GLArray Float) -> IO ()
