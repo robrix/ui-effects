@@ -1,2 +1,6 @@
+import Test.Hspec
+import GL.Shader.Spec
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec . parallel $ do
+  describe "GL.Shader.Spec" $ GL.Shader.Spec.spec

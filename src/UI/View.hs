@@ -1,6 +1,8 @@
 module UI.View where
 
-import Control.Monad.Free.Church
+import Control.Monad.Free.Freer
+
+-- Datatypes
 
 data ViewF f
   = Text String
@@ -8,12 +10,15 @@ data ViewF f
   | Input (String -> f)
   deriving Functor
 
-type View a = F ViewF a
+type View a = Freer ViewF a
 
-text :: String -> View a
+
+-- Smart constructors
+
+text :: String -> View ()
 text = wrap . Text
 
-list :: [View a] -> View a
+list :: [View ()] -> View ()
 list = wrap . List
 
 input :: View String
