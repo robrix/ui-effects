@@ -37,13 +37,6 @@ checkProgram :: GLProgram -> IO GLProgram
 checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog Other GL_LINK_STATUS . unGLProgram
 
 
-getUniform :: GLProgram -> String -> IO (Maybe (GLUniform a))
-getUniform program name = do
-  location <- withCString name (glGetUniformLocation (unGLProgram program))
-  pure  $! if location == negate 1
-    then Nothing
-    else Just (GLUniform location)
-
 setUniformValue :: GLProgram -> String -> V4 Float -> IO ()
 setUniformValue program name (V4 x y z w) = do
   location <- withCString name (glGetUniformLocation (unGLProgram program))
