@@ -86,7 +86,7 @@ setup body = do
           , [ negate 0.5, negate 0.5, 0 ] ]
         vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
-        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 1.0)
+        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Double))
 
 draw :: (GLProgram, GLArray Float) -> IO ()
 draw (program, array) = do
@@ -94,7 +94,7 @@ draw (program, array) = do
 
   glUseProgram (unGLProgram program) >> checkGLError
 
-  t <- realToFrac . snd . properFraction <$> getPOSIXTime
+  t <- realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime
   setUniformValue program "time" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
 
   glBindVertexArray (unGLArray array) >> checkGLError
