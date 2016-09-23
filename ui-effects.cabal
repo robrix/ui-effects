@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Control.Applicative.Free.Freer
+  exposed-modules:     Control.Action
+                     , Control.Applicative.Free.Freer
                      , Control.Monad.Free.Freer
                      , GL.Array
                      , GL.Exception
