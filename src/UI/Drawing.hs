@@ -1,6 +1,7 @@
 module UI.Drawing where
 
-import Control.Monad.Free.Freer
+import Control.Action
+import Control.Applicative.Free.Freer
 import Linear.V2
 
 data Shape a
@@ -16,23 +17,22 @@ data Material a
   = Colour (Colour a)
   | Gradient (Gradient a)
 
-data DrawingF a f
-  = SetStroke (Colour a) f
-  | SetFill (Colour a) f
-  | Stroke (Shape a) f
-  | Fill (Shape a) f
-  deriving Functor
+data DrawingF a
+  = SetStroke (Colour a)
+  | SetFill (Colour a)
+  | Stroke (Shape a)
+  | Fill (Shape a)
 
-type Drawing a = Freer (DrawingF a)
+type Drawing a = Freer (Action DrawingF) a
 
-setStroke :: Colour a -> Drawing a ()
-setStroke c = liftF $ SetStroke c ()
+setStroke :: Colour a -> Drawing a
+setStroke c = liftF . liftAction $ SetStroke c
 
-setFill :: Colour a -> Drawing a ()
-setFill c = liftF $ SetFill c ()
+setFill :: Colour a -> Drawing a
+setFill c = liftF . liftAction $ SetFill c
 
-stroke :: Shape a -> Drawing a ()
-stroke s = liftF $ Stroke s ()
+stroke :: Shape a -> Drawing a
+stroke s = liftF . liftAction $ Stroke s
 
-fill :: Shape a -> Drawing a ()
-fill s = liftF $ Fill s ()
+fill :: Shape a -> Drawing a
+fill s = liftF . liftAction $ Fill s
