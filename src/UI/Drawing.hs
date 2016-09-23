@@ -6,7 +6,7 @@ import Linear.V2
 
 data Shape a
   = Rectangle (V2 a) (V2 a)
-  | Circle (V2 a) (V2 a)
+  | Circle a (V2 a)
 
 data Colour a = RGBA !a !a !a !a
 
