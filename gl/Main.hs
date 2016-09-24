@@ -91,7 +91,7 @@ setup body = do
       [ (GL_VERTEX_SHADER, toGLSL vertexShader)
       , (GL_FRAGMENT_SHADER, toGLSL fragmentShader) ]
       $ \ program -> checkGLError >> body (program, array)
-  where shape = Rectangle (Linear.V2 0 0) (Linear.V2 0.5 0.5)
+  where shape = Rectangle (Linear.V2 (negate 0.5) (negate 0.5)) (Linear.V2 0.5 0.5)
         vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Double))
