@@ -86,15 +86,12 @@ setup body = do
   glEnable GL_DEPTH_TEST
   glDepthFunc GL_LESS
   glClearColor 0 0 0 1
-  withVertices vertices $ \ array ->
+  withVertices (vertices shape) $ \ array ->
     withBuiltProgram
       [ (GL_VERTEX_SHADER, toGLSL vertexShader)
       , (GL_FRAGMENT_SHADER, toGLSL fragmentShader) ]
       $ \ program -> checkGLError >> body (program, array)
-  where vertices =
-          [ [ 0, 0.5, 0 ]
-          , [ 0.5, negate 0.5, 0 ]
-          , [ negate 0.5, negate 0.5, 0 ] ]
+  where shape = Rectangle (Linear.V2 0 0) (Linear.V2 0.5 0.5)
         vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Double))
@@ -109,7 +106,7 @@ draw (program, array) = do
   setUniformValue program "time" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
 
   glBindVertexArray (unGLArray array) >> checkGLError
-  glDrawArrays GL_TRIANGLES 0 3 >> checkGLError
+  glDrawArrays GL_TRIANGLE_STRIP 0 4 >> checkGLError
 
 check :: MonadIO m => CInt -> m ()
 check e = when (e < 0) checkSDLError
