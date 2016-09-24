@@ -3,6 +3,8 @@ module GL.Setup where
 
 import Control.Action
 import Control.Applicative.Free.Freer
+import GL.Array
+import GL.Scalar
 import Graphics.GL.Core41
 import qualified Linear.V4 as Linear
 
@@ -13,6 +15,7 @@ data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
   SetDepthFunc :: Func -> SetupF ()
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
+  BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
 
 type Setup = Freer (Action SetupF)
 
@@ -41,4 +44,5 @@ runSetup = iterM $ \ s -> case s of
   Action (SetClearColour (Linear.V4 r g b a)) rest -> do
     glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
     rest ()
+  Action (BindArray vertices) rest -> withVertices vertices rest
   where toggle b = if b then glEnable else glDisable
