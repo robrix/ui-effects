@@ -10,7 +10,7 @@ data Func = Less
 
 data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
-  DepthFunc :: Func -> SetupF ()
+  SetDepthFunc :: Func -> SetupF ()
   SetClearColour :: Linear.V4 n -> SetupF ()
 
 type Setup = Freer (Action SetupF)
@@ -23,3 +23,6 @@ disable = liftF . liftAction . (`Flag` False)
 
 setClearColour :: Linear.V4 Float -> Setup ()
 setClearColour = liftF . liftAction . SetClearColour
+
+setDepthFunc :: Func -> Setup ()
+setDepthFunc = liftF . liftAction . SetDepthFunc
