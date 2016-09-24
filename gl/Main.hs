@@ -57,8 +57,8 @@ vertices :: Num n => Shape n -> [Linear.V4 n]
 vertices (Rectangle (Linear.V2 ax ay) (Linear.V2 bx by)) =
   [ Linear.V4 ax ay 0 1
   , Linear.V4 ax by 0 1
-  , Linear.V4 bx by 0 1
   , Linear.V4 bx ay 0 1
+  , Linear.V4 bx by 0 1
   ]
 vertices Circle{} = []
 
