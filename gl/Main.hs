@@ -21,10 +21,12 @@ import GL.Array
 import GL.Exception
 import GL.Program
 import GL.Shader
+import qualified Linear.V2 as Linear
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 import SDL.Raw as SDL
 import System.Exit
+import UI.Drawing
 
 main :: IO ()
 main = runInBoundThread $ withCString "UI" $ \ name -> do
@@ -50,6 +52,15 @@ main = runInBoundThread $ withCString "UI" $ \ name -> do
   withWindow name flags (\ window -> withContext window setup draw) `catch` (putStrLn . displayException :: SomeException -> IO ()) `finally` do
     quit
     exitSuccess
+
+vertices :: Num n => Shape n -> [Linear.V4 n]
+vertices (Rectangle (Linear.V2 ax ay) (Linear.V2 bx by)) =
+  [ Linear.V4 ax ay 0 1
+  , Linear.V4 ax by 0 1
+  , Linear.V4 bx by 0 1
+  , Linear.V4 bx ay 0 1
+  ]
+vertices Circle{} = []
 
 withWindow :: CString -> Word32 -> (Window -> IO a) -> IO a
 withWindow name flags = bracket
