@@ -20,3 +20,6 @@ enable = liftF . liftAction . (`Flag` True)
 
 disable :: Flag -> Setup ()
 disable = liftF . liftAction . (`Flag` False)
+
+setClearColour :: Linear.V4 Float -> Setup ()
+setClearColour = liftF . liftAction . SetClearColour
