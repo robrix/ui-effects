@@ -17,3 +17,6 @@ type Setup = Freer (Action SetupF)
 
 enable :: Flag -> Setup ()
 enable = liftF . liftAction . (`Flag` True)
+
+disable :: Flag -> Setup ()
+disable = liftF . liftAction . (`Flag` False)
