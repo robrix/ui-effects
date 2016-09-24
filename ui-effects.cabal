@@ -22,6 +22,7 @@ library
                      , GL.Exception
                      , GL.Program
                      , GL.Scalar
+                     , GL.Setup
                      , GL.Shader
                      , Graphics.Shader
                      , UI.Drawing
