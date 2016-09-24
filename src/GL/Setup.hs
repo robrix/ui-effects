@@ -14,3 +14,6 @@ data SetupF a where
   SetClearColour :: Linear.V4 n -> SetupF ()
 
 type Setup = Freer (Action SetupF)
+
+enable :: Flag -> Setup ()
+enable = liftF . liftAction . (`Flag` True)
