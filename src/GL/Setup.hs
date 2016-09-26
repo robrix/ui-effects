@@ -39,6 +39,12 @@ setClearColour = liftF . liftAction . SetClearColour
 setDepthFunc :: Func -> Setup ()
 setDepthFunc = liftF . liftAction . SetDepthFunc
 
+bindArray :: (Foldable v, GLScalar n) => [v n] -> Setup (GLArray n)
+bindArray = liftF . liftAction . BindArray
+
+buildProgram :: [Shader a] -> Setup GLProgram
+buildProgram = liftF . liftAction . BuildProgram
+
 runSetup :: Setup () -> IO ()
 runSetup = iterM $ \ s -> case s of
   Action (Flag f b) rest -> do
