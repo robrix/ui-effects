@@ -1,21 +1,29 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DataKinds, GADTs, LambdaCase #-}
 module GL.Setup where
 
 import Control.Action
 import Control.Applicative.Free.Freer
 import GL.Array
+import GL.Program
 import GL.Scalar
+import GL.Shader
 import Graphics.GL.Core41
+import qualified Graphics.Shader as Graphics
 import qualified Linear.V4 as Linear
 
 data Flag = DepthTest
 data Func = Less
+
+data Shader a where
+  Vertex :: Graphics.Shader 'Graphics.Vertex a -> Shader a
+  Fragment :: Graphics.Shader 'Graphics.Fragment a -> Shader a
 
 data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
   SetDepthFunc :: Func -> SetupF ()
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
+  BuildProgram :: [Shader a] -> SetupF GLProgram
 
 type Setup = Freer (Action SetupF)
 
@@ -45,4 +53,7 @@ runSetup = iterM $ \ s -> case s of
     glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
     rest ()
   Action (BindArray vertices) rest -> withVertices vertices rest
+  Action (BuildProgram shaders) rest -> (`withBuiltProgram` rest) $ (<$> shaders) $ \case
+    Vertex shader -> (GL_VERTEX_SHADER, toGLSL shader)
+    Fragment shader -> (GL_FRAGMENT_SHADER, toGLSL shader)
   where toggle b = if b then glEnable else glDisable
