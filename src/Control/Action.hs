@@ -14,3 +14,7 @@ lowerAction (Action m f) = f <$> m
 
 instance Functor (Action f) where
   fmap f (Action functor run) = Action functor (f . run)
+
+instance Applicative f => Applicative (Action f) where
+  pure = liftAction . pure
+  a <*> b = liftAction (lowerAction a <*> lowerAction b)
