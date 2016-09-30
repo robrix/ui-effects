@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ApplicativeDo, RankNTypes #-}
 module Main where
 
 import Control.Concurrent
@@ -21,6 +21,7 @@ import GL.Array
 import GL.Exception
 import GL.Program
 import GL.Shader
+import GL.Setup
 import qualified Linear.V2 as Linear
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
@@ -80,6 +81,19 @@ withContext window setup draw = bracket
     glGetString GL_SHADING_LANGUAGE_VERSION >>= peekCString . castPtr >>= putStrLn
 
     setup $ \ state -> forever (draw state >> checkGLError >> glSwapWindow window))
+
+setup' :: Setup (GLProgram, GLArray Float)
+setup' = do
+  _ <- enable DepthTest
+  _ <- setDepthFunc Less
+  _ <- setClearColour (Linear.V4 0 0 0 (1 :: Float))
+  program <- buildProgram [ GL.Setup.Vertex vertexShader, GL.Setup.Fragment fragmentShader ]
+  array <- bindArray (vertices shape :: [Linear.V4 Float])
+  pure (program, array)
+  where shape = Rectangle (Linear.V2 (negate 0.5) (negate 0.5)) (Linear.V2 0.5 0.5)
+        vertexShader = lambda "position" $ \ p ->
+          set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
+        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Float))
 
 setup :: ((GLProgram, GLArray Float) -> IO a) -> IO a
 setup body = do
