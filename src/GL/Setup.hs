@@ -45,7 +45,7 @@ bindArray = liftF . liftAction . BindArray
 buildProgram :: [Shader a] -> Setup GLProgram
 buildProgram = liftF . liftAction . BuildProgram
 
-runSetup :: Setup () -> IO ()
+runSetup :: Setup a -> IO a
 runSetup = iterM $ \ s -> case s of
   Action (Flag f b) rest -> do
     toggle b $ case f of
