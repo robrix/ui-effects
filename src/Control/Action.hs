@@ -18,3 +18,7 @@ instance Functor (Action f) where
 instance Applicative f => Applicative (Action f) where
   pure = liftAction . pure
   a <*> b = liftAction (lowerAction a <*> lowerAction b)
+
+instance Monad m => Monad (Action m) where
+  return = pure
+  a >>= f = liftAction (lowerAction a >>= lowerAction . f)
