@@ -8,6 +8,7 @@ import GL.Program
 import GL.Scalar
 import GL.Shader
 import Graphics.GL.Core41
+import Graphics.GL.Types
 import qualified Graphics.Shader as Graphics
 import qualified Linear.V4 as Linear
 
@@ -59,7 +60,9 @@ runSetup = iterM $ \ s -> case s of
     glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
     rest ()
   Action (BindArray vertices) rest -> withVertices vertices rest
-  Action (BuildProgram shaders) rest -> (`withBuiltProgram` rest) $ (<$> shaders) $ \case
-    Vertex shader -> (GL_VERTEX_SHADER, toGLSL shader)
-    Fragment shader -> (GL_FRAGMENT_SHADER, toGLSL shader)
+  Action (BuildProgram shaders) rest -> withBuiltProgram (compileShader <$> shaders) rest
   where toggle b = if b then glEnable else glDisable
+
+compileShader :: Shader a -> (GLenum, String)
+compileShader (Vertex shader) = (GL_VERTEX_SHADER, toGLSL shader)
+compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, toGLSL shader)
