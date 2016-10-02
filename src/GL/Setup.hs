@@ -46,8 +46,8 @@ bindArray = liftF . liftAction . BindArray
 buildProgram :: [Shader a] -> Setup GLProgram
 buildProgram = liftF . liftAction . BuildProgram
 
-runIO :: IO a -> Setup a
-runIO = liftF . liftAction . RunIO
+setupIO :: IO a -> Setup a
+setupIO = liftF . liftAction . RunIO
 
 runSetup :: Setup a -> IO a
 runSetup = iterM $ \ s -> case s of

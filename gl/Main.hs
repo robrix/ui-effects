@@ -91,7 +91,7 @@ setup f = do
   _ <- setClearColour (Linear.V4 0 0 0 (1 :: Float))
   program <- buildProgram [ GL.Setup.Vertex vertexShader, GL.Setup.Fragment fragmentShader ]
   array <- bindArray (vertices shape :: [Linear.V4 Float])
-  runIO (f (program, array))
+  setupIO (f (program, array))
   where shape = Rectangle (Linear.V2 (negate 0.5) (negate 0.5)) (Linear.V2 0.5 0.5)
         vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
