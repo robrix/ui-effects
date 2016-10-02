@@ -18,6 +18,7 @@ data DrawF a where
   SetUniform :: GLProgram -> String -> Linear.V4 Float -> DrawF ()
   BindVertexArray :: GLArray n -> DrawF ()
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
+  RunIO :: IO a -> DrawF a
 
 type Draw = Freer (Action DrawF)
 
@@ -36,6 +37,9 @@ bindVertexArray = liftF . liftAction . BindVertexArray
 
 drawArrays :: Mode -> Int -> Int -> Draw ()
 drawArrays mode from to = liftF (liftAction (DrawArrays mode from to))
+
+drawIO :: IO a -> Draw a
+drawIO = liftF . liftAction . RunIO
 
 
 runDraw :: Draw a -> IO a
@@ -63,3 +67,4 @@ runDraw = iterM $ \ d -> case d of
       Triangles -> GL_TRIANGLES
       TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral to)
     rest ()
+  Action (RunIO io) rest -> io >>= rest
