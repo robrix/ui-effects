@@ -50,9 +50,10 @@ main = runInBoundThread $ withCString "UI" $ \ name -> do
                             , SDL_WINDOW_ALLOW_HIGHDPI
                             ]
 
-  withWindow name flags (\ window -> withContext window setup draw) `catch` (putStrLn . displayException :: SomeException -> IO ()) `finally` do
+  withWindow name flags (\ window -> withContext window (render window)) `catch` (putStrLn . displayException :: SomeException -> IO ()) `finally` do
     quit
     exitSuccess
+  where render window = setup $ \ state -> forever (draw state >> glSwapWindow window)
 
 vertices :: Num n => Shape n -> [Linear.V4 n]
 vertices (Rectangle (Linear.V2 ax ay) (Linear.V2 bx by)) =
@@ -69,46 +70,34 @@ withWindow name flags = bracket
   destroyWindow
   where (w, h) = (1024, 768)
 
-withContext :: Window -> ((b -> IO a) -> IO a) -> (b -> IO a) -> IO a
-withContext window setup draw = bracket
+withContext :: Window -> Setup a -> IO a
+withContext window setup = bracket
   (glCreateContext window >>= checkNonNull)
   glDeleteContext
-  (\ context -> do
+  $ \ context -> do
     glMakeCurrent window context >>= check
 
     glGetString GL_RENDERER >>= peekCString . castPtr >>= putStrLn
     glGetString GL_VERSION >>= peekCString . castPtr >>= putStrLn
     glGetString GL_SHADING_LANGUAGE_VERSION >>= peekCString . castPtr >>= putStrLn
 
-    setup $ \ state -> forever (draw state >> checkGLError >> glSwapWindow window))
+    state <- runSetup setup
+    checkGLError
+    pure state
 
-setup' :: Setup (GLProgram, GLArray Float)
-setup' = do
+setup :: ((GLProgram, GLArray Float) -> IO a) -> Setup a
+setup f = do
   _ <- enable DepthTest
   _ <- setDepthFunc Less
   _ <- setClearColour (Linear.V4 0 0 0 (1 :: Float))
   program <- buildProgram [ GL.Setup.Vertex vertexShader, GL.Setup.Fragment fragmentShader ]
   array <- bindArray (vertices shape :: [Linear.V4 Float])
-  pure (program, array)
+  runIO (f (program, array))
   where shape = Rectangle (Linear.V2 (negate 0.5) (negate 0.5)) (Linear.V2 0.5 0.5)
         vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Float))
 
-setup :: ((GLProgram, GLArray Float) -> IO a) -> IO a
-setup body = do
-  glEnable GL_DEPTH_TEST
-  glDepthFunc GL_LESS
-  glClearColor 0 0 0 1
-  withVertices (vertices shape) $ \ array ->
-    withBuiltProgram
-      [ (GL_VERTEX_SHADER, toGLSL vertexShader)
-      , (GL_FRAGMENT_SHADER, toGLSL fragmentShader) ]
-      $ \ program -> checkGLError >> body (program, array)
-  where shape = Rectangle (Linear.V2 (negate 0.5) (negate 0.5)) (Linear.V2 0.5 0.5)
-        vertexShader = lambda "position" $ \ p ->
-          set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
-        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Double))
 
 draw :: (GLProgram, GLArray Float) -> IO ()
 draw (program, array) = do
