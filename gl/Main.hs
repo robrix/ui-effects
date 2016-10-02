@@ -17,6 +17,7 @@ import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL.Core41
 import GL.Array
+import GL.Draw
 import GL.Exception
 import GL.Program
 import GL.Shader
@@ -97,6 +98,17 @@ setup f = do
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Float))
 
+draw' :: GLProgram -> GLArray Float -> Draw ()
+draw' program array = do
+  clear [ ColourBuffer, DepthBuffer ]
+
+  useProgram program
+
+  t <- drawIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
+  setUniform program "time" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
+
+  bindVertexArray array
+  drawArrays TriangleStrip 0 4
 
 draw :: (GLProgram, GLArray Float) -> IO ()
 draw (program, array) = do
