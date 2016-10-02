@@ -31,3 +31,6 @@ setUniform program var value = liftF (liftAction (SetUniform program var value))
 
 bindVertexArray :: GLArray n -> Draw ()
 bindVertexArray = liftF . liftAction . BindVertexArray
+
+drawArrays :: Mode -> Int -> Int -> Draw ()
+drawArrays mode from to = liftF (liftAction (DrawArrays mode from to))
