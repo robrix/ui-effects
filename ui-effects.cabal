@@ -19,7 +19,7 @@ library
                      , Control.Applicative.Free.Freer
                      , Control.Monad.Free.Freer
                      , GL.Array
-                     , GL.Drawing
+                     , GL.Draw
                      , GL.Exception
                      , GL.Program
                      , GL.Scalar
