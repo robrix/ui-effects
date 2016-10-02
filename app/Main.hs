@@ -12,8 +12,8 @@ data Format = CLI
 main :: IO ()
 main = execParser opts >>= run
   where opts = info (helper <*>
-          (fmap Arguments
-          $   flag CLI CLI (long "cli" <> short 'C')))
+          (Arguments
+          <$> flag CLI CLI (long "cli" <> short 'C')))
           (fullDesc <> progDesc "UI playground")
 
 run :: Arguments -> IO ()
