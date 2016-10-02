@@ -24,7 +24,6 @@ data SetupF a where
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
   BuildProgram :: [Shader a] -> SetupF GLProgram
-
   RunIO :: IO a -> SetupF a
 
 type Setup = Freer (Action SetupF)
