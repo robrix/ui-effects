@@ -28,3 +28,6 @@ useProgram = liftF . liftAction . UseProgram
 
 setUniform :: GLProgram -> String -> Linear.V4 a -> Draw ()
 setUniform program var value = liftF (liftAction (SetUniform program var value))
+
+bindVertexArray :: GLArray n -> Draw ()
+bindVertexArray = liftF . liftAction . BindVertexArray
