@@ -27,6 +27,7 @@ library
                      , GL.Shader
                      , UI.Drawing
                      , UI.View
+                     , UI.Window
   build-depends:       base >= 4.7 && < 5
                      , gl
                      , linear
