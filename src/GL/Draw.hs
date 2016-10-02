@@ -13,7 +13,7 @@ data Mode = Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 data DrawF a where
   Clear :: [Buffer] -> DrawF ()
   UseProgram :: GLProgram -> DrawF ()
-  SetUniform :: GLProgram -> String -> Linear.V4 a -> DrawF ()
+  SetUniform :: GLProgram -> String -> Linear.V4 Float -> DrawF ()
   BindVertexArray :: GLArray n -> DrawF ()
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
 
@@ -26,7 +26,7 @@ clear = liftF . liftAction . Clear
 useProgram :: GLProgram -> Draw ()
 useProgram = liftF . liftAction . UseProgram
 
-setUniform :: GLProgram -> String -> Linear.V4 a -> Draw ()
+setUniform :: GLProgram -> String -> Linear.V4 Float -> Draw ()
 setUniform program var value = liftF (liftAction (SetUniform program var value))
 
 bindVertexArray :: GLArray n -> Draw ()
