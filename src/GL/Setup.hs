@@ -2,7 +2,7 @@
 module GL.Setup where
 
 import Control.Action
-import Control.Applicative.Free.Freer
+import Control.Monad.Free.Freer
 import GL.Array
 import GL.Program
 import GL.Scalar
