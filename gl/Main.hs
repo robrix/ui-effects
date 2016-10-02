@@ -53,7 +53,7 @@ main = runInBoundThread $ withCString "UI" $ \ name -> do
   withWindow name flags (\ window -> withContext window (render window)) `catch` (putStrLn . displayException :: SomeException -> IO ()) `finally` do
     quit
     exitSuccess
-  where render window = setup $ \ state -> forever (draw state >> glSwapWindow window)
+  where render window = setup $ \ state -> forever (runDraw (uncurry draw state) >> glSwapWindow window)
 
 vertices :: Num n => Shape n -> [Linear.V4 n]
 vertices (Rectangle (Linear.V2 ax ay) (Linear.V2 bx by)) =
@@ -98,8 +98,8 @@ setup f = do
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Float))
 
-draw' :: GLProgram -> GLArray Float -> Draw ()
-draw' program array = do
+draw :: GLProgram -> GLArray Float -> Draw ()
+draw program array = do
   clear [ ColourBuffer, DepthBuffer ]
 
   useProgram program
@@ -109,18 +109,6 @@ draw' program array = do
 
   bindVertexArray array
   drawArrays TriangleStrip 0 4
-
-draw :: (GLProgram, GLArray Float) -> IO ()
-draw (program, array) = do
-  glClear $ GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT
-
-  glUseProgram (unGLProgram program) >> checkGLError
-
-  t <- realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime
-  setUniformValue program "time" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
-
-  glBindVertexArray (unGLArray array) >> checkGLError
-  glDrawArrays GL_TRIANGLE_STRIP 0 4 >> checkGLError
 
 check :: MonadIO m => CInt -> m ()
 check e = when (e < 0) checkSDLError
