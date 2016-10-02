@@ -26,6 +26,8 @@ data SetupF a where
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
   BuildProgram :: [Shader a] -> SetupF GLProgram
 
+  RunIO :: IO a -> SetupF a
+
 type Setup = Freer (Action SetupF)
 
 enable :: Flag -> Setup ()
@@ -46,6 +48,9 @@ bindArray = liftF . liftAction . BindArray
 buildProgram :: [Shader a] -> Setup GLProgram
 buildProgram = liftF . liftAction . BuildProgram
 
+runIO :: IO a -> Setup a
+runIO = liftF . liftAction . RunIO
+
 runSetup :: Setup a -> IO a
 runSetup = iterM $ \ s -> case s of
   Action (Flag f b) rest -> do
@@ -61,6 +66,7 @@ runSetup = iterM $ \ s -> case s of
     rest ()
   Action (BindArray vertices) rest -> withVertices vertices rest
   Action (BuildProgram shaders) rest -> withBuiltProgram (compileShader <$> shaders) rest
+  Action (RunIO io) rest -> io >>= rest
   where toggle b = if b then glEnable else glDisable
 
 compileShader :: Shader a -> (GLenum, String)
