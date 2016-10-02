@@ -6,18 +6,17 @@ import Control.Monad.Free.Freer
 import GL.Array
 import GL.Program
 import GL.Scalar
-import GL.Shader
+import qualified GL.Shader as Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
-import qualified Graphics.Shader as Graphics
 import qualified Linear.V4 as Linear
 
 data Flag = DepthTest
 data Func = Less
 
 data Shader a where
-  Vertex :: Graphics.Shader 'Graphics.Vertex a -> Shader a
-  Fragment :: Graphics.Shader 'Graphics.Fragment a -> Shader a
+  Vertex :: Shader.Shader 'Shader.Vertex a -> Shader a
+  Fragment :: Shader.Shader 'Shader.Fragment a -> Shader a
 
 data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
@@ -70,5 +69,5 @@ runSetup = iterM $ \ s -> case s of
   where toggle b = if b then glEnable else glDisable
 
 compileShader :: Shader a -> (GLenum, String)
-compileShader (Vertex shader) = (GL_VERTEX_SHADER, toGLSL shader)
-compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, toGLSL shader)
+compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL shader)
+compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL shader)

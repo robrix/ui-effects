@@ -25,7 +25,6 @@ library
                      , GL.Scalar
                      , GL.Setup
                      , GL.Shader
-                     , Graphics.Shader
                      , UI.Drawing
                      , UI.View
   build-depends:       base >= 4.7 && < 5
