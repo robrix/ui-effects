@@ -22,3 +22,6 @@ type Draw = Freer (Action DrawF)
 
 clear :: [Buffer] -> Draw ()
 clear = liftF . liftAction . Clear
+
+useProgram :: GLProgram -> Draw ()
+useProgram = liftF . liftAction . UseProgram
