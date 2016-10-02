@@ -11,7 +11,6 @@ import Data.Time.Clock.POSIX
 import Data.Typeable
 import Data.Word
 import Foreign.C.String
-import Foreign.C.Types
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
@@ -110,7 +109,7 @@ draw program array = do
   bindVertexArray array
   drawArrays TriangleStrip 0 4
 
-check :: MonadIO m => CInt -> m ()
+check :: (MonadIO m, Num n, Ord n) => n -> m ()
 check e = when (e < 0) checkSDLError
 
 checkNonNull :: MonadIO m => Ptr a -> m (Ptr a)
