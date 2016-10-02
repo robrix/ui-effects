@@ -11,7 +11,7 @@ data Buffer = Colour | Depth | Stencil
 data Mode = Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 
 data DrawF a where
-  Clear :: Buffer -> DrawF ()
+  Clear :: [Buffer] -> DrawF ()
   UseProgram :: GLProgram -> DrawF ()
   SetUniform :: GLProgram -> String -> Linear.V4 a -> DrawF ()
   BindVertexArray :: GLArray n -> DrawF ()
@@ -20,5 +20,5 @@ data DrawF a where
 type Draw = Freer (Action DrawF)
 
 
-clear :: Buffer -> Draw ()
+clear :: [Buffer] -> Draw ()
 clear = liftF . liftAction . Clear
