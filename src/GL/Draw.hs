@@ -18,3 +18,7 @@ data DrawF a where
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
 
 type Draw = Freer (Action DrawF)
+
+
+clear :: Buffer -> Draw ()
+clear = liftF . liftAction . Clear
