@@ -9,7 +9,7 @@ import GL.Program
 import Graphics.GL.Core41
 import Linear.V4 as Linear
 
-data Buffer = Colour | Depth | Stencil
+data Buffer = ColourBuffer | DepthBuffer | StencilBuffer
 data Mode = Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 
 data DrawF a where
@@ -42,9 +42,9 @@ runDraw :: Draw a -> IO a
 runDraw = iterM $ \ d -> case d of
   Action (Clear buffers) rest -> do
     glClear $ foldr (.|.) 0 ((\ b -> case b of
-      Colour -> GL_COLOR_BUFFER_BIT
-      Depth -> GL_DEPTH_BUFFER_BIT
-      Stencil -> GL_STENCIL_BUFFER_BIT) <$> buffers)
+      ColourBuffer -> GL_COLOR_BUFFER_BIT
+      DepthBuffer -> GL_DEPTH_BUFFER_BIT
+      StencilBuffer -> GL_STENCIL_BUFFER_BIT) <$> buffers)
     rest ()
   Action (UseProgram program) rest -> do
     glUseProgram (unGLProgram program)
