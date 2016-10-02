@@ -20,7 +20,6 @@ import Graphics.Shader
 import GL.Array
 import GL.Exception
 import GL.Program
-import GL.Shader
 import GL.Setup
 import qualified Linear.V2 as Linear
 import qualified Linear.V4 as Linear
