@@ -1,15 +1,17 @@
-{-# LANGUAGE DataKinds, GADTs #-}
+{-# LANGUAGE DataKinds, GADTs, RankNTypes #-}
 module GL.Setup where
 
 import Control.Action
 import Control.Monad.Free.Freer
 import GL.Array
+import GL.Exception
 import GL.Program
 import GL.Scalar
 import qualified GL.Shader as Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.V4 as Linear
+import Prelude hiding (IO)
 
 data Flag = DepthTest
 data Func = Less
@@ -54,16 +56,16 @@ runSetup = iterM $ \ s -> case s of
   Action (Flag f b) rest -> do
     toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST
-    rest ()
+    checkingGLError (rest ())
   Action (SetDepthFunc f) rest -> do
     glDepthFunc $ case f of
       Less -> GL_LESS
-    rest ()
+    checkingGLError (rest ())
   Action (SetClearColour (Linear.V4 r g b a)) rest -> do
     glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
-    rest ()
-  Action (BindArray vertices) rest -> withVertices vertices rest
-  Action (BuildProgram shaders) rest -> withBuiltProgram (compileShader <$> shaders) rest
+    checkingGLError (rest ())
+  Action (BindArray vertices) rest -> withVertices vertices (checkingGLError . rest)
+  Action (BuildProgram shaders) rest -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . rest)
   Action (RunIO io) rest -> io >>= rest
   where toggle b = if b then glEnable else glDisable
 
