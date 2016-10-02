@@ -1,13 +1,15 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, RankNTypes #-}
 module GL.Draw where
 
 import Control.Action
 import Control.Monad.Free.Freer
 import Data.Bits
 import GL.Array
+import GL.Exception
 import GL.Program
 import Graphics.GL.Core41
 import Linear.V4 as Linear
+import Prelude hiding (IO)
 
 data Buffer = ColourBuffer | DepthBuffer | StencilBuffer
 data Mode = Lines | LineLoop | LineStrip | Triangles | TriangleStrip
@@ -49,16 +51,16 @@ runDraw = iterM $ \ d -> case d of
       ColourBuffer -> GL_COLOR_BUFFER_BIT
       DepthBuffer -> GL_DEPTH_BUFFER_BIT
       StencilBuffer -> GL_STENCIL_BUFFER_BIT) <$> buffers)
-    rest ()
+    checkingGLError (rest ())
   Action (UseProgram program) rest -> do
     glUseProgram (unGLProgram program)
-    rest ()
+    checkingGLError (rest ())
   Action (SetUniform program var value) rest -> do
     setUniformValue program var value
-    rest ()
+    checkingGLError (rest ())
   Action (BindVertexArray array) rest -> do
     glBindVertexArray (unGLArray array)
-    rest ()
+    checkingGLError (rest ())
   Action (DrawArrays mode from to) rest -> do
     glDrawArrays (case mode of
       Lines -> GL_LINES
@@ -66,5 +68,5 @@ runDraw = iterM $ \ d -> case d of
       LineStrip -> GL_LINE_STRIP
       Triangles -> GL_TRIANGLES
       TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral to)
-    rest ()
+    checkingGLError (rest ())
   Action (RunIO io) rest -> io >>= rest
