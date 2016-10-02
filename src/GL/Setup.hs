@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, GADTs, LambdaCase #-}
+{-# LANGUAGE DataKinds, GADTs #-}
 module GL.Setup where
 
 import Control.Action
