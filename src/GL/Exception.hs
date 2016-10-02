@@ -47,6 +47,12 @@ checkGLError = glGetError >>= \ e -> case e of
   GL_OUT_OF_MEMORY -> throw $ GLException OutOfMemory callStack
   _ -> throw $ GLException (Other "Unknown") callStack
 
+checkingGLError :: IO a -> IO a
+checkingGLError action = do
+  result <- action
+  checkGLError
+  pure result
+
 
 instance Show GLException where
   showsPrec p (GLException e s) = showString "GLException " . showsPrec p e . showChar '\n' . showString (prettyCallStack s)
