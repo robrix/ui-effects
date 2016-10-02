@@ -1,4 +1,4 @@
-{-# LANGUAGE ApplicativeDo, RankNTypes #-}
+{-# LANGUAGE RankNTypes #-}
 module Main where
 
 import Control.Concurrent
