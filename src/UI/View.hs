@@ -18,7 +18,7 @@ type View a = Freer ViewF a
 text :: String -> View ()
 text = wrap . Text
 
-list :: [View ()] -> View ()
+list :: [View a] -> View a
 list = wrap . List
 
 input :: View String
