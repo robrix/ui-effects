@@ -22,7 +22,7 @@ run Arguments{..} = case format of
   where view = list [ text "hello", input >>= text ] >> pure ()
 
 cli :: View () -> IO ()
-cli = iterM go
-  where go (Text s) = putStrLn s
-        go (List vs) = traverse_ (putStr "- " >>) vs
-        go (Input f) = putStr "> " >> hFlush stdout >> getLine >>= f
+cli = iterM $ \ view -> case view of
+  Text s -> putStrLn s
+  List vs -> traverse_ (putStr "- " >>) vs
+  Input f -> putStr "> " >> hFlush stdout >> getLine >>= f
