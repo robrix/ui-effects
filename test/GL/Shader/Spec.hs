@@ -2,7 +2,6 @@ module GL.Shader.Spec where
 
 import Data.List (intercalate)
 import GL.Shader
-import Graphics.Shader
 import Test.Hspec
 
 spec :: Spec
