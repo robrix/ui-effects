@@ -1,6 +1,6 @@
 module UI.View where
 
-import Control.Monad.Free.Freer
+import Control.Monad.Free
 
 -- Datatypes
 
@@ -10,7 +10,7 @@ data ViewF f
   | Input (String -> f)
   deriving Functor
 
-type View a = Freer ViewF a
+type View a = Free ViewF a
 
 
 -- Smart constructors

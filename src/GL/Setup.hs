@@ -2,7 +2,7 @@
 module GL.Setup where
 
 import Control.Action
-import Control.Monad.Free.Freer
+import Control.Monad.Free
 import GL.Array
 import GL.Exception
 import GL.Program
@@ -28,7 +28,7 @@ data SetupF a where
   BuildProgram :: [Shader a] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
 
-type Setup = Freer (Action SetupF)
+type Setup = Free (Action SetupF)
 
 enable :: Flag -> Setup ()
 enable = liftF . liftAction . (`Flag` True)

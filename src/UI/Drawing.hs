@@ -2,7 +2,7 @@
 module UI.Drawing where
 
 import Control.Action
-import Control.Applicative.Free.Freer
+import Control.Applicative.Free
 import Linear.V2
 
 data Shape a
@@ -24,16 +24,16 @@ data DrawingF a where
   Stroke :: Shape a -> DrawingF ()
   Fill :: Shape a -> DrawingF ()
 
-type Drawing a = Freer (Action DrawingF) a
+type Drawing a = Ap (Action DrawingF) a
 
 setStroke :: Colour a -> Drawing ()
-setStroke c = liftF . liftAction $ SetStroke c
+setStroke c = liftAp . liftAction $ SetStroke c
 
 setFill :: Colour a -> Drawing ()
-setFill c = liftF . liftAction $ SetFill c
+setFill c = liftAp . liftAction $ SetFill c
 
 stroke :: Shape a -> Drawing ()
-stroke s = liftF . liftAction $ Stroke s
+stroke s = liftAp . liftAction $ Stroke s
 
 fill :: Shape a -> Drawing ()
-fill s = liftF . liftAction $ Fill s
+fill s = liftAp . liftAction $ Fill s

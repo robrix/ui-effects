@@ -2,7 +2,7 @@
 module GL.Draw where
 
 import Control.Action
-import Control.Monad.Free.Freer
+import Control.Monad.Free
 import Data.Bits
 import GL.Array
 import GL.Exception
@@ -22,7 +22,7 @@ data DrawF a where
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
   RunIO :: IO a -> DrawF a
 
-type Draw = Freer (Action DrawF)
+type Draw = Free (Action DrawF)
 
 
 clear :: [Buffer] -> Draw ()
