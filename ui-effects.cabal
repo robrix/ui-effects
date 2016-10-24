@@ -36,7 +36,7 @@ library
   default-extensions:  DeriveFunctor
   ghc-options:         -Wall -fno-warn-name-shadowing
 
-executable ui-effects-gl
+executable ui-effects
   hs-source-dirs:      gl
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
