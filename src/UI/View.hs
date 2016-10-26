@@ -8,6 +8,7 @@ data ViewF f
   = Text String
   | List [f]
   | Input (String -> f)
+  | Scroll f
   deriving Functor
 
 type View a = Free ViewF a
@@ -23,3 +24,6 @@ list = wrap . List
 
 input :: View String
 input = wrap $ Input pure
+
+scroll :: View a -> View a
+scroll = wrap . Scroll
