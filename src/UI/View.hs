@@ -12,6 +12,7 @@ import Data.Semigroup
 
 data ViewF f
   = Text String
+  | Label String
   | List [f]
   | Scroll f
   deriving (Eq, Show, Functor)
@@ -42,6 +43,7 @@ offset by = liftF (Offset by ())
 measureView :: Real a => View -> Layout a (Size a)
 measureView = cata $ \ view -> case view of
   Text s -> pure (measureString s)
+  Label s -> pure (measureString s)
   Scroll child -> do
     inset 5
     child
@@ -83,6 +85,7 @@ layout :: Real a => Maybe (Size a) -> View -> Maybe (AView (Size a))
 layout size view = case (size, unfix view) of
   (Nothing, Text s) -> Just (measureString s :< Text s)
   (Just size, Text s) -> Just (size :< Text s)
+  (Nothing, Label s) -> Just (measureString s :< Label s)
   (Nothing, List as) -> (\ as -> stackSize as :< List as) <$> traverse measure as
   (Nothing, Scroll sub) -> measure sub
   (Just size, Scroll sub) -> (size :<) . Scroll <$> measure sub
@@ -115,6 +118,7 @@ scroll = Fix . Scroll
 instance Show1 ViewF where
   liftShowsPrec sp sl d view = case view of
     Text s -> showsUnaryWith showsPrec "Text" d s
+    Label s -> showsUnaryWith showsPrec "Label" d s
     List l -> showsUnaryWith (liftShowsPrec sp sl) "List" d l
     Scroll f -> showsUnaryWith sp "Scroll" d f
 
