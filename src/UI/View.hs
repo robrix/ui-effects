@@ -1,6 +1,7 @@
 module UI.View where
 
 import Control.Comonad.Cofree
+import Control.Monad.Free
 import Data.Functor.Classes
 import Data.Functor.Foldable
 
@@ -15,6 +16,25 @@ data ViewF f
 type View = Fix ViewF
 
 type AView a = Cofree ViewF a
+
+data LayoutF a f
+  = Inset a f
+  | Divide a f f
+  | Offset a f
+  deriving (Eq, Show, Functor)
+
+type Layout a = Free (LayoutF a)
+
+inset :: a -> Layout a ()
+inset d = liftF (Inset d ())
+
+divide :: a -> Layout a ()
+divide d = liftF (Divide d () ())
+
+offset :: Real a => a -> Layout a ()
+offset 0 = pure ()
+offset d = liftF (Offset d ())
+
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
   deriving (Eq, Show)
