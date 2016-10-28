@@ -39,16 +39,16 @@ offset (Point 0 0) = pure ()
 offset by = liftF (Offset by ())
 
 
-layoutView :: Real a => View -> Layout a (Size a)
-layoutView = cata $ \ view -> case view of
+measureView :: Real a => View -> Layout a (Size a)
+measureView = cata $ \ view -> case view of
   Text s -> pure (Size (fromIntegral (length s) * 5) 13)
   Scroll child -> do
     inset 5
     child
   List children -> do
     inset 5
-    foldl layoutChild (pure (Size 0 0)) children
-  where layoutChild from each = do
+    foldl measureChild (pure (Size 0 0)) children
+  where measureChild from each = do
           Size w h <- from
           offset (Point 0 h)
           Size w' h' <- each
