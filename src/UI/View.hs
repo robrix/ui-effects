@@ -58,11 +58,11 @@ runLayout = iter $ \ layout -> case layout of
 
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
-  deriving (Eq, Show)
+  deriving (Eq, Functor, Show)
 data Point a = Point { x :: !a, y :: !a }
-  deriving (Eq, Show)
+  deriving (Eq, Functor, Show)
 data Size a = Size { width :: !a, height :: !a }
-  deriving (Eq, Show)
+  deriving (Eq, Functor, Show)
 
 measure :: Real a => View -> Maybe (AView (Size a))
 measure = layout Nothing
