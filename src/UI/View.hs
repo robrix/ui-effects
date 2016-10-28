@@ -16,8 +16,6 @@ type View a = Free ViewF a
 
 type AView a = Cofree ViewF a
 
-data Rectangle = Rectangle { origin :: !Point, size :: !Size }
-data Point = Point { x :: !Double, y :: !Double }
 data Size = Size { width :: !Double, height :: !Double }
   deriving (Eq, Show)
 
