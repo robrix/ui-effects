@@ -5,6 +5,7 @@ import Control.Comonad.Cofree
 import Control.Monad.Free
 import Data.Functor.Classes
 import Data.Functor.Foldable
+import Data.Semigroup
 
 -- Datatypes
 
@@ -120,3 +121,6 @@ instance Num a => Num (Size a) where
   negate = liftA negate
   (+) = liftA2 (+)
   (*) = liftA2 (*)
+
+instance Semigroup a => Semigroup (Size a) where
+  (<>) = liftA2 (<>)
