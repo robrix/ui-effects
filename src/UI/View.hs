@@ -1,6 +1,7 @@
 module UI.View where
 
 import Control.Comonad.Cofree
+import Data.Functor.Classes
 import Data.Functor.Foldable
 
 -- Datatypes
@@ -52,3 +53,12 @@ list = Fix . List
 
 scroll :: View -> View
 scroll = Fix . Scroll
+
+
+-- Instances
+
+instance Show1 ViewF where
+  liftShowsPrec sp sl d view = case view of
+    Text s -> showsUnaryWith showsPrec "Text" d s
+    List l -> showsUnaryWith (liftShowsPrec sp sl) "List" d l
+    Scroll f -> showsUnaryWith sp "Scroll" d f
