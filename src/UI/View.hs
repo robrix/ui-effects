@@ -16,6 +16,10 @@ type View = Fix ViewF
 
 type AView a = Cofree ViewF a
 
+data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
+  deriving (Eq, Show)
+data Point a = Point { x :: !a, y :: !a }
+  deriving (Eq, Show)
 data Size a = Size { width :: !a, height :: !a }
   deriving (Eq, Show)
 
