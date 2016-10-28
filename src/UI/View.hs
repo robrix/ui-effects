@@ -107,3 +107,7 @@ instance Show1 ViewF where
     Text s -> showsUnaryWith showsPrec "Text" d s
     List l -> showsUnaryWith (liftShowsPrec sp sl) "List" d l
     Scroll f -> showsUnaryWith sp "Scroll" d f
+
+instance Applicative Size where
+  pure a = Size a a
+  Size f g <*> Size a b = Size (f a) (g b)
