@@ -54,7 +54,7 @@ layoutView = cata $ \ view -> case view of
 
 runLayout :: Real a => Layout a (Size a) -> Size a
 runLayout = iter $ \ layout -> case layout of
-  Inset (Size byw byh) (Size w h) -> Size (w + (2 * byw)) (h + (2 * byh))
+  Inset inset size -> size + (2 * inset)
   Offset (Point byx byy) (Size w h) -> Size (w + byx) (h + byy)
   Divide _ (Size w1 h1) (Size w2 h2) -> Size (max w1 w2) (h1 + h2)
 
