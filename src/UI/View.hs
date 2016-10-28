@@ -1,7 +1,6 @@
 module UI.View where
 
 import Control.Comonad.Cofree
-import Control.Monad.Free
 import Data.Functor.Foldable
 
 -- Datatypes
@@ -12,20 +11,20 @@ data ViewF f
   | Scroll f
   deriving (Eq, Show, Functor)
 
-type View a = Free ViewF a
+type View = Fix ViewF
 
 type AView a = Cofree ViewF a
 
 data Size = Size { width :: !Double, height :: !Double }
   deriving (Eq, Show)
 
-measure :: Fix ViewF -> Maybe (AView Size)
+measure :: View -> Maybe (AView Size)
 measure = layout Nothing
 
-fitTo :: Size -> Fix ViewF -> Maybe (AView Size)
+fitTo :: Size -> View -> Maybe (AView Size)
 fitTo = layout . Just
 
-layout :: Maybe Size -> Fix ViewF -> Maybe (AView Size)
+layout :: Maybe Size -> View -> Maybe (AView Size)
 layout size view = case (size, unfix view) of
   (Nothing, Text s) -> Just (Size (fromIntegral (length s) * fontW) lineH :< Text s)
   (Just size, Text s) -> Just (size :< Text s)
@@ -45,11 +44,11 @@ layout size view = case (size, unfix view) of
 
 -- Smart constructors
 
-text :: String -> View ()
-text = wrap . Text
+text :: String -> View
+text = Fix . Text
 
-list :: [View a] -> View a
-list = wrap . List
+list :: [View] -> View
+list = Fix . List
 
-scroll :: View a -> View a
-scroll = wrap . Scroll
+scroll :: View -> View
+scroll = Fix . Scroll
