@@ -19,6 +19,7 @@ type AView a = Cofree ViewF a
 data Rectangle = Rectangle { origin :: !Point, size :: !Size }
 data Point = Point { x :: !Double, y :: !Double }
 data Size = Size { width :: !Double, height :: !Double }
+  deriving (Eq, Show)
 
 measure :: Fix ViewF -> Maybe (AView Size)
 measure = layout Nothing
