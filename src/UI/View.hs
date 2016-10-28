@@ -22,7 +22,7 @@ type AView a = Cofree ViewF a
 data LayoutF a f
   = Inset (Size a) f
   | Divide a f f
-  | Offset a f
+  | Offset (Point a) f
   deriving (Eq, Show, Functor)
 
 type Layout a = Free (LayoutF a)
@@ -33,9 +33,9 @@ inset d = liftF (Inset d ())
 divide :: a -> Layout a ()
 divide d = liftF (Divide d () ())
 
-offset :: Real a => a -> Layout a ()
-offset 0 = pure ()
-offset d = liftF (Offset d ())
+offset :: Real a => Point a -> Layout a ()
+offset (Point 0 0) = pure ()
+offset by = liftF (Offset by ())
 
 
 layoutView :: Real a => View -> Layout a (Size a)
@@ -48,14 +48,14 @@ layoutView = cata $ \ view -> case view of
     inset 5
     foldl (\ prev each -> do
       Size w h <- prev
-      offset h
+      offset (Point 0 h)
       Size w' h' <- each
       pure (Size (max w w') h')) (pure (Size 0 0)) children
 
 runLayout :: Real a => Layout a (Size a) -> Size a
 runLayout = iter $ \ layout -> case layout of
   Inset (Size byw byh) (Size w h) -> Size (w + (2 * byw)) (h + (2 * byh))
-  Offset by (Size w h) -> Size w (h + by)
+  Offset (Point byx byy) (Size w h) -> Size (w + byx) (h + byy)
   Divide _ (Size w1 h1) (Size w2 h2) -> Size (max w1 w2) (h1 + h2)
 
 
