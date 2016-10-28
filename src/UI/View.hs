@@ -55,7 +55,11 @@ measureView = cata $ \ view -> case view of
           offset (Point 0 h)
           Size w' h' <- each
           pure (Size (max w w') h')
-        measureString s = Size (fromIntegral (length s) * 5) 13
+
+measureString :: Num a => String -> Size a
+measureString s = Size (fromIntegral (length s) * fontW) lineH
+  where (fontW, fontH) = (5, 8)
+        lineH = fontH + 5
 
 runLayout :: Real a => Layout a (Size a) -> Size a
 runLayout = iter $ \ layout -> case layout of
@@ -96,9 +100,6 @@ layout size view = case (size, unfix view) of
       else Nothing
   where stackSize :: Real a => [AView (Size a)] -> Size a
         stackSize = foldr (\ each into -> Size max (+) <*> into <*> each) (Size 0 0) . fmap extract
-        (fontW, fontH) = (5, 8)
-        lineH = fontH + 5
-        measureString s = Size (fromIntegral (length s) * fontW) lineH
 
 
 -- Smart constructors
