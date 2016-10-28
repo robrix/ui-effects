@@ -28,7 +28,7 @@ fitTo = layout . Just
 
 layout :: Maybe Size -> Fix ViewF -> Maybe (AView Size)
 layout size view = case (size, unfix view) of
-  (Nothing, Text s) -> Just (Size (fromIntegral (length s) * 5) 8 :< Text s)
+  (Nothing, Text s) -> Just (Size (fromIntegral (length s) * fontW) fontH :< Text s)
   (Nothing, List as) -> (\ as -> stackSize as :< List as) <$> traverse measure as
   (Nothing, Scroll sub) -> measure sub
   (Just size, Scroll sub) -> (size :<) . Scroll <$> measure sub
@@ -39,6 +39,7 @@ layout size view = case (size, unfix view) of
       else Nothing
   where stackSize :: [AView Size] -> Size
         stackSize = foldr (\ (Size w h :< _) (Size tw th) -> Size (max w tw) (th + h)) (Size 0 0)
+        (fontW, fontH) = (5, 8)
 
 
 -- Smart constructors
