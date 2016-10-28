@@ -36,6 +36,20 @@ offset 0 = pure ()
 offset d = liftF (Offset d ())
 
 
+layoutView :: Real a => View -> Layout a (Size a)
+layoutView = cata $ \ view -> case view of
+  Text s -> pure (Size (fromIntegral (length s) * 5) 13)
+  Scroll child -> do
+    inset 5
+    child
+  List children -> do
+    inset 5
+    foldl (\ prev each -> do
+      Size w h <- prev
+      offset h
+      Size w' h' <- each
+      pure (Size (max w w') h')) (pure (Size 0 0)) children
+
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
   deriving (Eq, Show)
 data Point a = Point { x :: !a, y :: !a }
