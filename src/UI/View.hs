@@ -50,6 +50,13 @@ layoutView = cata $ \ view -> case view of
       Size w' h' <- each
       pure (Size (max w w') h')) (pure (Size 0 0)) children
 
+runLayout :: Real a => Layout a (Size a) -> Size a
+runLayout = iter $ \ layout -> case layout of
+  Inset by (Size w h) -> Size (w + by) (h + by)
+  Offset by (Size w h) -> Size w (h + by)
+  Divide _ (Size w1 h1) (Size w2 h2) -> Size (max w1 w2) (h1 + h2)
+
+
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
   deriving (Eq, Show)
 data Point a = Point { x :: !a, y :: !a }
