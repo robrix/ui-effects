@@ -29,6 +29,7 @@ fitTo = layout . Just
 layout :: Maybe Size -> Fix ViewF -> Maybe (AView Size)
 layout size view = case (size, unfix view) of
   (Nothing, Text s) -> Just (Size (fromIntegral (length s) * fontW) fontH :< Text s)
+  (Just size, Text s) -> Just (size :< Text s)
   (Nothing, List as) -> (\ as -> stackSize as :< List as) <$> traverse measure as
   (Nothing, Scroll sub) -> measure sub
   (Just size, Scroll sub) -> (size :<) . Scroll <$> measure sub
