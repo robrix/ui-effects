@@ -27,6 +27,7 @@ library
                      , UI.View
                      , UI.Window
   build-depends:       base >= 4.7 && < 5
+                     , comonad
                      , free
                      , gl
                      , linear

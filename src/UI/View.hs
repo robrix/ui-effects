@@ -1,6 +1,7 @@
 module UI.View where
 
 import Control.Applicative
+import Control.Comonad
 import Control.Comonad.Cofree
 import Control.Monad.Free
 import Data.Functor.Classes
@@ -90,7 +91,7 @@ layout size view = case (size, unfix view) of
       then Just laidOut
       else Nothing
   where stackSize :: Real a => [AView (Size a)] -> Size a
-        stackSize = foldr (\ (Size w h :< _) (Size tw th) -> Size (max w tw) (th + h)) (Size 0 0)
+        stackSize = foldr (\ each into -> Size max (+) <*> into <*> each) (Size 0 0) . fmap extract
         (fontW, fontH) = (5, 8)
         lineH = fontH + 5
 
