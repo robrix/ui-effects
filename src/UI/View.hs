@@ -124,3 +124,7 @@ instance Num a => Num (Size a) where
 
 instance Semigroup a => Semigroup (Size a) where
   (<>) = liftA2 (<>)
+
+instance Monoid a => Monoid (Size a) where
+  mempty = pure mempty
+  mappend = liftA2 mappend
