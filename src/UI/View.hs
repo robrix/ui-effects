@@ -41,7 +41,7 @@ offset by = liftF (Offset by ())
 
 measureView :: Real a => View -> Layout a (Size a)
 measureView = cata $ \ view -> case view of
-  Text s -> pure (Size (fromIntegral (length s) * 5) 13)
+  Text s -> pure (measureString s)
   Scroll child -> do
     inset 5
     child
@@ -53,6 +53,7 @@ measureView = cata $ \ view -> case view of
           offset (Point 0 h)
           Size w' h' <- each
           pure (Size (max w w') h')
+        measureString s = Size (fromIntegral (length s) * 5) 13
 
 runLayout :: Real a => Layout a (Size a) -> Size a
 runLayout = iter $ \ layout -> case layout of
@@ -80,7 +81,7 @@ fitTo = layout . Just
 
 layout :: Real a => Maybe (Size a) -> View -> Maybe (AView (Size a))
 layout size view = case (size, unfix view) of
-  (Nothing, Text s) -> Just (Size (fromIntegral (length s) * fontW) lineH :< Text s)
+  (Nothing, Text s) -> Just (measureString s :< Text s)
   (Just size, Text s) -> Just (size :< Text s)
   (Nothing, List as) -> (\ as -> stackSize as :< List as) <$> traverse measure as
   (Nothing, Scroll sub) -> measure sub
@@ -94,6 +95,7 @@ layout size view = case (size, unfix view) of
         stackSize = foldr (\ each into -> Size max (+) <*> into <*> each) (Size 0 0) . fmap extract
         (fontW, fontH) = (5, 8)
         lineH = fontH + 5
+        measureString s = Size (fromIntegral (length s) * fontW) lineH
 
 
 -- Smart constructors
