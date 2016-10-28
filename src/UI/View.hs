@@ -20,14 +20,14 @@ type View = Fix ViewF
 type AView a = Cofree ViewF a
 
 data LayoutF a f
-  = Inset a f
+  = Inset (Size a) f
   | Divide a f f
   | Offset a f
   deriving (Eq, Show, Functor)
 
 type Layout a = Free (LayoutF a)
 
-inset :: a -> Layout a ()
+inset :: Size a -> Layout a ()
 inset d = liftF (Inset d ())
 
 divide :: a -> Layout a ()
@@ -54,7 +54,7 @@ layoutView = cata $ \ view -> case view of
 
 runLayout :: Real a => Layout a (Size a) -> Size a
 runLayout = iter $ \ layout -> case layout of
-  Inset by (Size w h) -> Size (w + (2 * by)) (h + (2 * by))
+  Inset (Size byw byh) (Size w h) -> Size (w + (2 * byw)) (h + (2 * byh))
   Offset by (Size w h) -> Size w (h + by)
   Divide _ (Size w1 h1) (Size w2 h2) -> Size (max w1 w2) (h1 + h2)
 
