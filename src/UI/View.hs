@@ -16,16 +16,16 @@ type View = Fix ViewF
 
 type AView a = Cofree ViewF a
 
-data Size = Size { width :: !Double, height :: !Double }
+data Size a = Size { width :: !a, height :: !a }
   deriving (Eq, Show)
 
-measure :: View -> Maybe (AView Size)
+measure :: Real a => View -> Maybe (AView (Size a))
 measure = layout Nothing
 
-fitTo :: Size -> View -> Maybe (AView Size)
+fitTo :: Real a => Size a -> View -> Maybe (AView (Size a))
 fitTo = layout . Just
 
-layout :: Maybe Size -> View -> Maybe (AView Size)
+layout :: Real a => Maybe (Size a) -> View -> Maybe (AView (Size a))
 layout size view = case (size, unfix view) of
   (Nothing, Text s) -> Just (Size (fromIntegral (length s) * fontW) lineH :< Text s)
   (Just size, Text s) -> Just (size :< Text s)
@@ -37,7 +37,7 @@ layout size view = case (size, unfix view) of
     if width maxSize >= width minSize && height maxSize >= height minSize
       then Just laidOut
       else Nothing
-  where stackSize :: [AView Size] -> Size
+  where stackSize :: Real a => [AView (Size a)] -> Size a
         stackSize = foldr (\ (Size w h :< _) (Size tw th) -> Size (max w tw) (th + h)) (Size 0 0)
         (fontW, fontH) = (5, 8)
         lineH = fontH + 5
