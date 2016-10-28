@@ -10,7 +10,7 @@ data ViewF f
   = Text String
   | List [f]
   | Scroll f
-  deriving Functor
+  deriving (Eq, Show, Functor)
 
 type View a = Free ViewF a
 
