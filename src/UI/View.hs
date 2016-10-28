@@ -46,11 +46,12 @@ layoutView = cata $ \ view -> case view of
     child
   List children -> do
     inset 5
-    foldl (\ prev each -> do
-      Size w h <- prev
-      offset (Point 0 h)
-      Size w' h' <- each
-      pure (Size (max w w') h')) (pure (Size 0 0)) children
+    foldl layoutChild (pure (Size 0 0)) children
+  where layoutChild from each = do
+          Size w h <- from
+          offset (Point 0 h)
+          Size w' h' <- each
+          pure (Size (max w w') h')
 
 runLayout :: Real a => Layout a (Size a) -> Size a
 runLayout = iter $ \ layout -> case layout of
