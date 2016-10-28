@@ -1,5 +1,6 @@
 module UI.View where
 
+import Control.Applicative
 import Control.Comonad.Cofree
 import Control.Monad.Free
 import Data.Functor.Classes
@@ -111,3 +112,11 @@ instance Show1 ViewF where
 instance Applicative Size where
   pure a = Size a a
   Size f g <*> Size a b = Size (f a) (g b)
+
+instance Num a => Num (Size a) where
+  fromInteger = pure . fromInteger
+  abs = liftA abs
+  signum = liftA signum
+  negate = liftA negate
+  (+) = liftA2 (+)
+  (*) = liftA2 (*)
