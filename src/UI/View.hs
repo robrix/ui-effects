@@ -25,7 +25,8 @@ data LayoutF a f
   = Inset (Size a) f
   | Divide a f f
   | Offset (Point a) f
-  deriving (Eq, Show, Functor)
+  | Bounded (Maybe (Size a) -> f)
+  deriving Functor
 
 type Layout a = Free (LayoutF a)
 
@@ -38,6 +39,9 @@ divide d = liftF (Divide d () ())
 offset :: Real a => Point a -> Layout a b -> Layout a b
 offset (Point 0 0) = id
 offset by = wrap . Offset by
+
+bounded :: (Maybe (Size a) -> Layout a b) -> Layout a b
+bounded = wrap . Bounded
 
 
 measureView :: Real a => View -> Layout a (Size a)
@@ -61,11 +65,12 @@ measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (to
   where char = Size 5 8
         line = char + Size 10 5
 
-runLayout :: Real a => Layout a (Size a) -> Size a
-runLayout = iter $ \ layout -> case layout of
+runLayout :: Real a => Maybe (Size a) -> Layout a (Size a) -> Size a
+runLayout maxSize = iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
   Offset (Point byx byy) (Size w h) -> Size (w + byx) (h + byy)
   Divide _ (Size w1 h1) (Size w2 h2) -> Size (max w1 w2) (h1 + h2)
+  Bounded f -> f maxSize
 
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
