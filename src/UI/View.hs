@@ -7,6 +7,7 @@ import Control.Comonad.Cofree
 import Control.Monad.Free
 import Data.Functor.Classes
 import Data.Functor.Foldable
+import Data.List (intersperse)
 import Data.Semigroup
 
 -- Datatypes
@@ -71,6 +72,16 @@ measureStringForWidth :: Real a => a -> String -> Size a
 measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (toRational (length s) / (toRational maxW / toRational (width char)))))
   where char = Size 5 8
         line = char + Size 10 5
+
+layoutView :: Real a => View -> Layout a (Size a)
+layoutView = cata $ \ view -> case view of
+  Text s -> inset margins (bounded (pure . ($ s) . maybe measureString (measureStringForWidth . width)))
+  Label s -> inset margins (pure (measureString s))
+  Scroll child -> inset margins (bounded (maybe child pure))
+  List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
+  where margins = Size 5 3
+        spacing = Point 0 3
+
 
 runLayout :: Real a => Maybe (Size a) -> Layout a (Size a) -> Size a
 runLayout maxSize = iter $ \ layout -> case layout of
