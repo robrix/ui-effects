@@ -29,31 +29,26 @@ data LayoutF a f
 
 type Layout a = Free (LayoutF a)
 
-inset :: Size a -> Layout a ()
-inset d = liftF (Inset d ())
+inset :: Size a -> Layout a b -> Layout a b
+inset = (wrap .) . Inset
 
 divide :: a -> Layout a ()
 divide d = liftF (Divide d () ())
 
-offset :: Real a => Point a -> Layout a ()
-offset (Point 0 0) = pure ()
-offset by = liftF (Offset by ())
+offset :: Real a => Point a -> Layout a b -> Layout a b
+offset (Point 0 0) = id
+offset by = wrap . Offset by
 
 
 measureView :: Real a => View -> Layout a (Size a)
 measureView = cata $ \ view -> case view of
   Text s -> pure (measureString s)
   Label s -> pure (measureString s)
-  Scroll child -> do
-    inset 5
-    child
-  List children -> do
-    inset 5
-    foldl measureChild (pure (Size 0 0)) children
+  Scroll child -> inset 5 child
+  List children -> inset 5 (foldl measureChild (pure (Size 0 0)) children)
   where measureChild from each = do
           Size w h <- from
-          offset (Point 0 h)
-          Size w' h' <- each
+          Size w' h' <- offset (Point 0 h) each
           pure (Size (max w w') h')
 
 measureString :: Num a => String -> Size a
