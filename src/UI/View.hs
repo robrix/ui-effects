@@ -52,17 +52,6 @@ stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
 stack = unStack . foldMap Stack
 
 
-measureView :: Real a => View -> Layout a (Size a)
-measureView = cata $ \ view -> case view of
-  Text s -> pure (measureString s)
-  Label s -> pure (measureString s)
-  Scroll child -> inset 5 child
-  List children -> inset 5 (foldl measureChild (pure (Size 0 0)) children)
-  where measureChild from each = do
-          Size w h <- from
-          Size w' h' <- offset (Point 0 h) each
-          pure (Size (max w w') h')
-
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
   where (fontW, fontH) = (5, 8)
