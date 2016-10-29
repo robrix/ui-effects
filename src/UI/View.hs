@@ -25,7 +25,6 @@ type AView a = Cofree ViewF a
 
 data LayoutF a f
   = Inset (Size a) f
-  | Divide a f f
   | Offset (Point a) f
   | Bounded (Maybe (Size a) -> f)
   deriving Functor
@@ -34,9 +33,6 @@ type Layout a = Free (LayoutF a)
 
 inset :: Size a -> Layout a b -> Layout a b
 inset = (wrap .) . Inset
-
-divide :: a -> Layout a ()
-divide d = liftF (Divide d () ())
 
 offset :: Real a => Point a -> Layout a b -> Layout a b
 offset (Point 0 0) = id
@@ -76,7 +72,6 @@ runLayout :: Real a => Maybe (Size a) -> Layout a (Size a) -> Size a
 runLayout maxSize = iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
   Offset (Point byx byy) (Size w h) -> Size (w + byx) (h + byy)
-  Divide _ (Size w1 h1) (Size w2 h2) -> Size (max w1 w2) (h1 + h2)
   Bounded f -> f maxSize
 
 
