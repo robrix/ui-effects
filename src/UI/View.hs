@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 module UI.View where
 
 import Control.Applicative
@@ -42,6 +43,12 @@ offset by = wrap . Offset by
 
 bounded :: (Maybe (Size a) -> Layout a b) -> Layout a b
 bounded = wrap . Bounded
+
+
+newtype Stack a b = Stack { unStack :: Layout a b }
+
+stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
+stack = unStack . foldMap Stack
 
 
 measureView :: Real a => View -> Layout a (Size a)
@@ -146,3 +153,10 @@ instance Semigroup a => Semigroup (Size a) where
 instance Monoid a => Monoid (Size a) where
   mempty = pure mempty
   mappend = liftA2 mappend
+
+instance Real a => Monoid (Stack a (Size a)) where
+  mempty = Stack (pure (Size 0 0))
+  mappend a b = Stack $ do
+    Size w1 h1 <- unStack a
+    Size w2 h2 <- unStack b
+    pure (Size (max w1 w2) (h1 + h2))
