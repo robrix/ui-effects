@@ -56,6 +56,11 @@ measureString s = Size (fromIntegral (length s) * fontW) lineH
   where (fontW, fontH) = (5, 8)
         lineH = fontH + 5
 
+measureStringForWidth :: Real a => a -> String -> Size a
+measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (toRational (length s) / (toRational maxW / toRational (width char)))))
+  where char = Size 5 8
+        line = char + Size 10 5
+
 runLayout :: Real a => Layout a (Size a) -> Size a
 runLayout = iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
