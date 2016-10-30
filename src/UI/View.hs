@@ -1,6 +1,5 @@
 module UI.View where
 
-import Control.Comonad
 import Control.Comonad.Cofree
 import Data.Functor.Classes
 import Data.Functor.Foldable
@@ -46,29 +45,6 @@ layoutView = cata $ \ view -> case view of
   List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
   where margins = Size 5 3
         spacing = Point 0 3
-
-
-measure :: Real a => View -> Maybe (AView (Size a))
-measure = layout Nothing
-
-fitTo :: Real a => Size a -> View -> Maybe (AView (Size a))
-fitTo = layout . Just
-
-layout :: Real a => Maybe (Size a) -> View -> Maybe (AView (Size a))
-layout size view = case (size, unfix view) of
-  (Nothing, Text s) -> Just (measureString s :< Text s)
-  (Just size, Text s) -> Just (size :< Text s)
-  (Nothing, Label s) -> Just (measureString s :< Label s)
-  (Nothing, List as) -> (\ as -> stackSize as :< List as) <$> traverse measure as
-  (Nothing, Scroll _ sub) -> measure sub
-  (Just size, Scroll axis sub) -> (size :<) . Scroll axis <$> measure sub
-  (Just maxSize, _) -> do
-    laidOut@(minSize :< _) <- measure view
-    if width maxSize >= width minSize && height maxSize >= height minSize
-      then Just laidOut
-      else Nothing
-  where stackSize :: Real a => [AView (Size a)] -> Size a
-        stackSize = foldr (\ each into -> Size max (+) <*> into <*> each) (Size 0 0) . fmap extract
 
 
 -- Smart constructors
