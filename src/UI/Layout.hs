@@ -30,10 +30,7 @@ stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
 stack = unStack . foldMap Stack
 
 measureLayout :: Real a => Layout a (Size a) -> Size a
-measureLayout = iter $ \ layout -> case layout of
-  Inset inset size -> size + (2 * inset)
-  Offset offset size -> size + pointSize offset
-  Resizeable resize -> resize (pure Nothing)
+measureLayout = fromMaybe (Size 0 0) . fitLayoutTo (pure Nothing)
 
 fitLayoutTo :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
 fitLayoutTo maxSize layout = case layout of
