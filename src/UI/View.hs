@@ -26,7 +26,7 @@ type AView a = Cofree ViewF a
 data LayoutF a f
   = Inset (Size a) f
   | Offset (Point a) f
-  | Bounded (Maybe (Size a) -> f)
+  | Bounded f (Size a -> f)
   deriving Functor
 
 type Layout a = Free (LayoutF a)
@@ -38,8 +38,8 @@ offset :: Real a => Point a -> Layout a b -> Layout a b
 offset (Point 0 0) = id
 offset by = wrap . Offset by
 
-bounded :: (Maybe (Size a) -> Layout a b) -> Layout a b
-bounded = wrap . Bounded
+bounded :: Layout a b -> (Size a -> Layout a b) -> Layout a b
+bounded = (wrap .) . Bounded
 
 
 newtype Stack a b = Stack { unStack :: Layout a b }
@@ -60,9 +60,9 @@ measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (to
 
 layoutView :: Real a => View -> Layout a (Size a)
 layoutView = cata $ \ view -> case view of
-  Text s -> inset margins (bounded (pure . ($ s) . maybe measureString (measureStringForWidth . width)))
+  Text s -> inset margins (bounded (pure (measureString s)) (pure . (`measureStringForWidth` s) . width))
   Label s -> inset margins (pure (measureString s))
-  Scroll child -> inset margins (bounded (maybe child pure))
+  Scroll child -> inset margins (bounded child pure)
   List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
   where margins = Size 5 3
         spacing = Point 0 3
@@ -72,14 +72,14 @@ measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
   Offset offset size -> size + pointSize offset
-  Bounded f -> f Nothing
+  Bounded naturalSize _ -> naturalSize
 
 fitLayoutTo :: Real a => Size a -> Layout a (Size a) -> Maybe (Size a)
 fitLayoutTo maxSize layout = case layout of
   Pure size | maxSize >= size -> Just size
   Free (Inset inset rest) | maxSize >= (2 * inset) -> (2 * inset +) <$> fitLayoutTo (maxSize - (2 * inset)) rest
   Free (Offset offset rest) | maxSize >= pointSize offset -> (pointSize offset +) <$> fitLayoutTo (maxSize - pointSize offset) rest
-  Free (Bounded f) -> fitLayoutTo maxSize (f (Just maxSize))
+  Free (Bounded _ withMaxSize) -> fitLayoutTo maxSize (withMaxSize maxSize)
   _ -> Nothing
 
 
