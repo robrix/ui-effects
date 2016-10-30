@@ -81,12 +81,6 @@ fitLayoutTo maxSize layout = case layout of
   Free (Offset offset rest) -> (pointSize offset +) <$> fitLayoutTo (maxSize - pointSize offset) rest
   Free (Bounded f) -> fitLayoutTo maxSize (f (Just maxSize))
 
-runLayout :: Real a => Maybe (Size a) -> Layout a (Size a) -> Maybe (Size a)
-runLayout maxSize = (Just .) . iter $ \ layout -> case layout of
-  Inset inset size -> size + (2 * inset)
-  Offset (Point byx byy) (Size w h) -> Size (w + byx) (h + byy)
-  Bounded f -> f maxSize
-
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
