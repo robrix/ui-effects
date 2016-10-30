@@ -74,6 +74,13 @@ measureLayout = iter $ \ layout -> case layout of
   Offset offset size -> size + pointSize offset
   Bounded f -> f Nothing
 
+fitLayoutTo :: Real a => Size a -> Layout a (Size a) -> Maybe (Size a)
+fitLayoutTo maxSize layout = case layout of
+  Pure a -> Just a
+  Free (Inset inset rest) -> fitLayoutTo (maxSize - (2 * inset)) rest
+  Free (Offset offset rest) -> fitLayoutTo (maxSize - pointSize offset) rest
+  Free (Bounded f) -> fitLayoutTo maxSize (f (Just maxSize))
+
 runLayout :: Real a => Maybe (Size a) -> Layout a (Size a) -> Maybe (Size a)
 runLayout maxSize = (Just .) . iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
