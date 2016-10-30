@@ -68,6 +68,12 @@ layoutView = cata $ \ view -> case view of
         spacing = Point 0 3
 
 
+measureLayout :: Real a => Layout a (Size a) -> Size a
+measureLayout = iter $ \ layout -> case layout of
+  Inset inset size -> size + (2 * inset)
+  Offset (Point byx byy) (Size w h) -> Size (w + byx) (h + byy)
+  Bounded f -> f Nothing
+
 runLayout :: Real a => Maybe (Size a) -> Layout a (Size a) -> Maybe (Size a)
 runLayout maxSize = (Just .) . iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
