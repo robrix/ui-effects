@@ -17,6 +17,8 @@ data ViewF f
   | Scroll f
   deriving (Eq, Show, Functor)
 
+data Axis = Horizontal | Vertical
+
 type View = Fix ViewF
 
 type AView a = Cofree ViewF a
