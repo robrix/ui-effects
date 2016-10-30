@@ -5,6 +5,7 @@ import Control.Comonad.Cofree
 import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.List (intersperse)
+import Data.Maybe (fromMaybe)
 import UI.Layout
 
 -- Datatypes
@@ -33,9 +34,12 @@ measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (to
 
 layoutView :: Real a => View -> Layout a (Size a)
 layoutView = cata $ \ view -> case view of
-  Text s -> inset margins (resizeable (pure . maybe (measureString s) ((`measureStringForWidth` s) . width)))
+  Text s -> inset margins (resizeable (\ maxSize ->
+    pure (fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize)))
   Label s -> inset margins (pure (measureString s))
-  Scroll child -> inset margins (resizeable (maybe child pure))
+  Scroll child -> inset margins (resizeable (\ maxSize -> do
+    childSize <- child
+    pure (fromMaybe <$> childSize <*> maxSize)))
   List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
   where margins = Size 5 3
         spacing = Point 0 3

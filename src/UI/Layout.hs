@@ -8,7 +8,7 @@ import Data.Semigroup
 data LayoutF a f
   = Inset (Size a) f
   | Offset (Point a) f
-  | Resizeable (Maybe (Size a) -> f)
+  | Resizeable (Size (Maybe a) -> f)
   deriving Functor
 
 type Layout a = Free (LayoutF a)
@@ -20,7 +20,7 @@ offset :: Real a => Point a -> Layout a b -> Layout a b
 offset (Point 0 0) = id
 offset by = wrap . Offset by
 
-resizeable :: (Maybe (Size a) -> Layout a b) -> Layout a b
+resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
 resizeable = wrap . Resizeable
 
 newtype Stack a b = Stack { unStack :: Layout a b }
@@ -32,14 +32,14 @@ measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
   Offset offset size -> size + pointSize offset
-  Resizeable resize -> resize Nothing
+  Resizeable resize -> resize (pure Nothing)
 
 fitLayoutTo :: Real a => Size a -> Layout a (Size a) -> Maybe (Size a)
 fitLayoutTo maxSize layout = case layout of
   Pure size | maxSize `encloses` size -> Just maxSize
   Free (Inset inset rest) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (maxSize - (2 * inset)) rest
   Free (Offset offset rest) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (maxSize - pointSize offset) rest
-  Free (Resizeable resize) -> fitLayoutTo maxSize (resize (Just maxSize))
+  Free (Resizeable resize) -> fitLayoutTo maxSize (resize (Just <$> maxSize))
   _ -> Nothing
 
 
