@@ -14,10 +14,11 @@ data ViewF f
   = Text String
   | Label String
   | List [f]
-  | Scroll f
+  | Scroll (Maybe Axis) f
   deriving (Eq, Show, Functor)
 
 data Axis = Horizontal | Vertical
+  deriving (Eq, Show)
 
 type View = Fix ViewF
 
@@ -39,7 +40,7 @@ layoutView = cata $ \ view -> case view of
   Text s -> inset margins (resizeable (\ maxSize ->
     pure (fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize)))
   Label s -> inset margins (pure (measureString s))
-  Scroll child -> inset margins (resizeable (\ maxSize -> do
+  Scroll _ child -> inset margins (resizeable (\ maxSize -> do
     childSize <- child
     pure (fromMaybe <$> childSize <*> maxSize)))
   List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
@@ -59,8 +60,8 @@ layout size view = case (size, unfix view) of
   (Just size, Text s) -> Just (size :< Text s)
   (Nothing, Label s) -> Just (measureString s :< Label s)
   (Nothing, List as) -> (\ as -> stackSize as :< List as) <$> traverse measure as
-  (Nothing, Scroll sub) -> measure sub
-  (Just size, Scroll sub) -> (size :<) . Scroll <$> measure sub
+  (Nothing, Scroll _ sub) -> measure sub
+  (Just size, Scroll axis sub) -> (size :<) . Scroll axis <$> measure sub
   (Just maxSize, _) -> do
     laidOut@(minSize :< _) <- measure view
     if width maxSize >= width minSize && height maxSize >= height minSize
@@ -78,8 +79,8 @@ text = Fix . Text
 list :: [View] -> View
 list = Fix . List
 
-scroll :: View -> View
-scroll = Fix . Scroll
+scroll :: Maybe Axis -> View -> View
+scroll = (Fix .) . Scroll
 
 
 -- Instances
@@ -89,4 +90,4 @@ instance Show1 ViewF where
     Text s -> showsUnaryWith showsPrec "Text" d s
     Label s -> showsUnaryWith showsPrec "Label" d s
     List l -> showsUnaryWith (liftShowsPrec sp sl) "List" d l
-    Scroll f -> showsUnaryWith sp "Scroll" d f
+    Scroll a f -> showsBinaryWith showsPrec sp "Scroll" d a f
