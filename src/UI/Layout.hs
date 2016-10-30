@@ -56,6 +56,9 @@ pointSize (Point x y) = Size x y
 data Size a = Size { width :: !a, height :: !a }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
+encloses :: Ord a => Size a -> Size a -> Bool
+encloses a b = and ((>=) <$> a <*> b)
+
 
 -- Instances
 
