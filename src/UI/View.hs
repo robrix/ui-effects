@@ -71,7 +71,7 @@ layoutView = cata $ \ view -> case view of
 measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = iter $ \ layout -> case layout of
   Inset inset size -> size + (2 * inset)
-  Offset (Point byx byy) (Size w h) -> Size (w + byx) (h + byy)
+  Offset offset size -> size + pointSize offset
   Bounded f -> f Nothing
 
 runLayout :: Real a => Maybe (Size a) -> Layout a (Size a) -> Maybe (Size a)
