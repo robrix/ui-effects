@@ -26,6 +26,7 @@ library
                      , GL.Setup
                      , GL.Shader
                      , UI.Drawing
+                     , UI.Font
                      , UI.Layout
                      , UI.View
                      , UI.Window
