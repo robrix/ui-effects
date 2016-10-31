@@ -32,7 +32,6 @@ vertices (Rectangle (Linear.V2 ax ay) (Linear.V2 bx by)) =
   , Linear.V4 bx ay 0 1
   , Linear.V4 bx by 0 1
   ]
-vertices Circle{} = []
 
 setup :: ((GLProgram, GLArray Float) -> IO a) -> Setup a
 setup f = do
