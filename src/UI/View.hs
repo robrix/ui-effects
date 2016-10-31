@@ -54,8 +54,9 @@ layoutView = cata $ \ view -> case view of
   where margins = Size 5 3
         spacing = Point 0 3
 
+type Rendering a = Free (Action Draw.DrawingF :+: LayoutF a)
 
-drawView :: Real a => View -> Free (Action Draw.DrawingF :+: LayoutF a) ()
+drawView :: Real a => View -> Rendering a ()
 drawView = cata $ \ view -> case view of
   Text s -> inset margins (resizeable (`text` s))
   Label s -> inset margins (text (pure Nothing) s)
