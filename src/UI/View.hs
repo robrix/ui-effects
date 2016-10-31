@@ -60,10 +60,15 @@ drawView :: Real a => View -> Rendering a ()
 drawView = cata $ \ view -> case view of
   Text s -> inset margins (resizeable (`text` s))
   Label s -> inset margins (text (pure Nothing) s)
+  List children -> inset margins (stack (intersperse (offset spacing (pure ())) children))
   _ -> pure ()
   where margins = Size 5 3
+        spacing = Point 0 3
         text maxSize = Free . L . (`Action` Pure) . Draw.Text maxSize
         inset margins = Free . R . Inset margins
+        offset delta = Free . R . Offset delta
+        stack :: Foldable t => t (Rendering a ()) -> Rendering a ()
+        stack = foldl (>>) (pure ())
         resizeable = Free . R . Resizeable
 
 
