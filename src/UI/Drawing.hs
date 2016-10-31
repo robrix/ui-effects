@@ -14,10 +14,6 @@ data Colour a = RGBA !a !a !a !a
 data Gradient a
   = Linear (V2 a) (Colour a) (V2 a) (Colour a)
 
-data Material a
-  = Colour (Colour a)
-  | Gradient (Gradient a)
-
 data DrawingF a where
   SetStroke :: Colour a -> DrawingF ()
   SetFill :: Colour a -> DrawingF ()
