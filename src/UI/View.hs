@@ -57,11 +57,12 @@ layoutView = cata $ \ view -> case view of
 
 drawView :: Real a => View -> Free (Action Draw.DrawingF :+: LayoutF a) ()
 drawView = cata $ \ view -> case view of
-  Text s -> text s
-  Label s -> Free (R (Inset margins (text s)))
+  Text s -> inset margins (text s)
+  Label s -> inset margins (text s)
   _ -> pure ()
   where margins = Size 5 3
         text = Free . L . (`Action` Pure) . Draw.Text
+        inset margins = Free . R . Inset margins
 
 
 -- Smart constructors
