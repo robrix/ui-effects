@@ -9,8 +9,8 @@ import Data.Functor.Foldable
 import Data.Functor.Sum
 import Data.List (intersperse)
 import Data.Maybe (fromMaybe)
+import UI.Drawing hiding (Text)
 import qualified UI.Drawing as Draw
-import UI.Layout
 
 -- Datatypes
 

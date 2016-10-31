@@ -1,9 +1,21 @@
 {-# LANGUAGE GADTs #-}
-module UI.Drawing where
+module UI.Drawing
+( Shape(..)
+, Colour(..)
+, DrawingF(..)
+, Drawing
+, setStroke
+, setFill
+, stroke
+, fill
+, text
+, module Layout
+) where
 
 import Control.Action
 import Control.Applicative.Free
 import Linear.V2
+import UI.Layout as Layout
 
 data Shape a = Rectangle (V2 a) (V2 a)
 
