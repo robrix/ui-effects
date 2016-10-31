@@ -1,10 +1,15 @@
+{-# LANGUAGE TypeOperators #-}
 module UI.View where
 
+import Control.Action
+import Control.Monad.Free
 import Control.Comonad.Cofree
 import Data.Functor.Classes
 import Data.Functor.Foldable
+import Data.Functor.Sum
 import Data.List (intersperse)
 import Data.Maybe (fromMaybe)
+import qualified UI.Drawing as Draw
 import UI.Layout
 
 -- Datatypes
@@ -48,6 +53,14 @@ layoutView = cata $ \ view -> case view of
   List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
   where margins = Size 5 3
         spacing = Point 0 3
+
+
+drawView :: Real a => View -> Free (Action Draw.DrawingF :+: LayoutF a) ()
+drawView = cata $ \ view -> case view of
+  Text s -> Free (L (Action (Draw.Text s) pure))
+  Label s -> Free (R (Inset margins (Free (L (Action (Draw.Text s) pure)))))
+  _ -> pure ()
+  where margins = Size 5 3
 
 
 -- Smart constructors
