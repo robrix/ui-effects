@@ -2,7 +2,8 @@
 module UI.Layout where
 
 import Control.Applicative
-import Control.Monad.Free
+import Control.Monad.Free.Church
+import Control.Monad.Free (Free (Pure, Free))
 import Data.Maybe (fromMaybe)
 import Data.Semigroup
 
@@ -12,7 +13,7 @@ data LayoutF a f
   | Resizeable (Size (Maybe a) -> f)
   deriving Functor
 
-type Layout a = Free (LayoutF a)
+type Layout a = F (LayoutF a)
 
 inset :: Size a -> Layout a b -> Layout a b
 inset = (wrap .) . Inset
@@ -33,11 +34,11 @@ measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = fromMaybe (Size 0 0) . fitLayoutTo (pure Nothing)
 
 fitLayoutTo :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
-fitLayoutTo maxSize layout = case layout of
+fitLayoutTo maxSize layout = case fromF layout of
   Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
-  Free (Inset inset rest) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (subtractSize (2 * inset)) rest
-  Free (Offset offset rest) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) rest
-  Free (Resizeable resize) -> fitLayoutTo maxSize (resize maxSize)
+  Free (Inset inset rest) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (subtractSize (2 * inset)) (toF rest)
+  Free (Offset offset rest) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) (toF rest)
+  Free (Resizeable resize) -> fitLayoutTo maxSize (toF (resize maxSize))
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
