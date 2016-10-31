@@ -57,11 +57,12 @@ layoutView = cata $ \ view -> case view of
 
 drawView :: Real a => View -> Free (Action Draw.DrawingF :+: LayoutF a) ()
 drawView = cata $ \ view -> case view of
-  Text s -> inset margins (resizeable (const (text s)))
-  Label s -> inset margins (text s)
+  Text s -> inset margins (resizeable (\ maxSize ->
+    text maxSize s))
+  Label s -> inset margins (text (pure Nothing) s)
   _ -> pure ()
   where margins = Size 5 3
-        text = Free . L . (`Action` Pure) . Draw.Text
+        text maxSize = Free . L . (`Action` Pure) . Draw.Text maxSize
         inset margins = Free . R . Inset margins
         resizeable = Free . R . Resizeable
 

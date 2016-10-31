@@ -26,7 +26,7 @@ data DrawingF a where
   SetFill :: Colour a -> DrawingF ()
   Stroke :: Shape a -> DrawingF ()
   Fill :: Shape a -> DrawingF ()
-  Text :: String -> DrawingF ()
+  Text :: Size (Maybe a) -> String -> DrawingF ()
 
 type Drawing a = Ap (Action DrawingF) a
 
@@ -42,5 +42,5 @@ stroke s = liftAp . liftAction $ Stroke s
 fill :: Shape a -> Drawing ()
 fill s = liftAp . liftAction $ Fill s
 
-text :: String -> Drawing ()
-text = liftAp . liftAction . Text
+text :: Size (Maybe a) -> String -> Drawing ()
+text maxSize = liftAp . liftAction . Text maxSize
