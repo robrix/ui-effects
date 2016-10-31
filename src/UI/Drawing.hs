@@ -9,6 +9,7 @@ module UI.Drawing
 , stroke
 , fill
 , text
+, clip
 , module Layout
 ) where
 
@@ -27,6 +28,7 @@ data DrawingF a where
   Stroke :: Shape a -> DrawingF ()
   Fill :: Shape a -> DrawingF ()
   Text :: Size (Maybe a) -> String -> DrawingF ()
+  Clip :: Size a -> b -> DrawingF ()
 
 type Drawing a = Ap (Action DrawingF) a
 
@@ -44,3 +46,6 @@ fill s = liftAp . liftAction $ Fill s
 
 text :: Size (Maybe a) -> String -> Drawing ()
 text maxSize = liftAp . liftAction . Text maxSize
+
+clip :: Size a -> Drawing b -> Drawing ()
+clip size = liftAp . liftAction . Clip size
