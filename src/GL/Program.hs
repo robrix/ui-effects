@@ -12,6 +12,7 @@ import Linear.V4
 import Prelude hiding (IO)
 
 newtype GLProgram = GLProgram { unGLProgram :: GLuint }
+  deriving Show
 
 newtype GLUniform a = GLUniform { unGLUniform :: GLint }
 
