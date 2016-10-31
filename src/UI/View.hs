@@ -39,9 +39,16 @@ layoutView = cata $ \ view -> case view of
   Text s -> inset margins (resizeable (\ maxSize ->
     pure (fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize)))
   Label s -> inset margins (pure (measureString s))
-  Scroll _ child -> inset margins (resizeable (\ maxSize -> do
-    childSize <- child
-    pure (fromMaybe <$> childSize <*> maxSize)))
+  Scroll axis child -> inset margins (case axis of
+    Just Vertical -> resizeable (\ (Size _ maxH) -> do
+      Size w h <- child
+      pure (Size w (fromMaybe h maxH)))
+    Just Horizontal -> resizeable (\ (Size maxW _) -> do
+      Size w h <- child
+      pure (Size (fromMaybe w maxW) h))
+    _ -> resizeable (\ maxSize -> do
+      childSize <- child
+      pure (fromMaybe <$> childSize <*> maxSize)))
   List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
   where margins = Size 5 3
         spacing = Point 0 3
