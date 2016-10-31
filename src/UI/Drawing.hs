@@ -14,6 +14,7 @@ data DrawingF a where
   SetFill :: Colour a -> DrawingF ()
   Stroke :: Shape a -> DrawingF ()
   Fill :: Shape a -> DrawingF ()
+  Text :: String -> DrawingF String
 
 type Drawing a = Ap (Action DrawingF) a
 
@@ -28,3 +29,6 @@ stroke s = liftAp . liftAction $ Stroke s
 
 fill :: Shape a -> Drawing ()
 fill s = liftAp . liftAction $ Fill s
+
+text :: String -> Drawing String
+text = liftAp . liftAction . Text
