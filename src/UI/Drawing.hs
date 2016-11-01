@@ -18,11 +18,11 @@ import Control.Action
 import Control.Applicative.Free
 import Control.Monad.Free.Church
 import Data.Functor.Sum
-import Linear.V2
+import qualified Linear.V2 as Linear
 import UI.Layout as Layout
 import UI.Geometry
 
-data Shape a = Rectangle (V2 a) (V2 a)
+data Shape a = Rectangle (Linear.V2 a) (Linear.V2 a)
 
 data Colour a = RGBA !a !a !a !a
 
