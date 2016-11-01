@@ -54,7 +54,7 @@ layoutView = cata $ \ view -> case view of
   where margins = Size 5 3
         spacing = Point 0 3
 
-type Rendering a = Free (Action Draw.DrawingF :+: Action (LayoutF a))
+type Rendering a = Free (Action Draw.DrawingF :+: LayoutF a)
 
 drawView :: Real a => View -> Rendering a ()
 drawView = cata $ \ view -> case view of
@@ -65,11 +65,11 @@ drawView = cata $ \ view -> case view of
   where margins = Size 5 3
         spacing = Point 0 3
         text maxSize = Free . L . (`Action` Pure) . Draw.Text maxSize
-        inset margins = Free . R . liftAction . Inset margins
-        offset delta = Free . R . liftAction . Offset delta
+        inset margins = Free . R . Inset margins
+        offset delta = Free . R . Offset delta
         stack :: Foldable t => t (Rendering a ()) -> Rendering a ()
         stack = foldl (>>) (pure ())
-        resizeable = Free . R . liftAction . Resizeable
+        resizeable = Free . R . Resizeable
 
 
 -- Smart constructors
