@@ -56,16 +56,16 @@ layoutView = cata $ \ view -> case view of
 type Rendering a = Free (Sum (Action Draw.DrawingF) (LayoutF a))
 
 renderView :: Real a => View -> Rendering a ()
-renderView = cata $ \ view -> case view of
-  Text s -> inset margins (resizeable (`text` s))
-  Label s -> inset margins (text (pure Nothing) s)
-  List children -> inset margins (stack (intersperse (offset spacing (pure ())) children))
-  Scroll axis child -> inset margins (resizeable (\ (Size maxW maxH) ->
+renderView = cata $ \ view -> inset margins $ case view of
+  Text s -> resizeable (`text` s)
+  Label s -> text (pure Nothing) s
+  List children -> stack (intersperse (offset spacing (pure ())) children)
+  Scroll axis child -> resizeable (\ (Size maxW maxH) ->
     measure child (\ (Size w h) ->
       clip (case axis of
         Just Horizontal -> Size w (fromMaybe h maxH)
         Just Vertical -> Size (fromMaybe w maxW) h
-        Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)))
+        Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child))
   where margins = Size 5 3
         spacing = Point 0 3
         text maxSize = Free . InL . (`Action` Pure) . Draw.Text maxSize
