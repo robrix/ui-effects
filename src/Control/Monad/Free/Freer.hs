@@ -21,3 +21,9 @@ instance Functor (FreerF f a) where
 
 instance Functor (Freer f) where
   fmap f = Freer . bimap f (fmap f) . runFreer
+
+instance Applicative (Freer f) where
+   pure = Freer . Pure
+   f <*> a = case runFreer f of
+     Pure f -> fmap f a
+     Free t r -> Freer (Free ((<*> a) . t) r)
