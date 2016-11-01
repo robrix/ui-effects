@@ -15,7 +15,6 @@ module UI.Drawing
 ) where
 
 import Control.Action
-import Control.Applicative.Free
 import Control.Monad.Free.Church
 import Data.Functor.Sum
 import qualified Linear.V2 as Linear
@@ -34,23 +33,26 @@ data DrawingF a where
   Text :: Size (Maybe a) -> String -> DrawingF ()
   Clip :: Size a -> b -> DrawingF ()
 
-type Drawing a = Ap (Action DrawingF) a
+type Drawing a = F (Action DrawingF) a
 type Rendering a = F (Sum (Action DrawingF) (LayoutF a))
 
 setStroke :: Colour a -> Drawing ()
-setStroke c = liftAp . liftAction $ SetStroke c
+setStroke c = liftF . liftAction $ SetStroke c
 
 setFill :: Colour a -> Drawing ()
-setFill c = liftAp . liftAction $ SetFill c
+setFill c = liftF . liftAction $ SetFill c
 
 stroke :: Shape a -> Drawing ()
-stroke s = liftAp . liftAction $ Stroke s
+stroke s = liftF . liftAction $ Stroke s
 
 fill :: Shape a -> Drawing ()
-fill s = liftAp . liftAction $ Fill s
+fill s = liftF . liftAction $ Fill s
 
 text :: Size (Maybe a) -> String -> Drawing ()
-text maxSize = liftAp . liftAction . Text maxSize
+text maxSize = liftF . liftAction . Text maxSize
 
 clip :: Size a -> Drawing b -> Drawing ()
-clip size = liftAp . liftAction . Clip size
+clip size = liftF . liftAction . Clip size
+-- renderingVertices = iter $ \ r -> case r of
+--   InL (Action drawing run) -> run drawing
+--   InR _ -> _
