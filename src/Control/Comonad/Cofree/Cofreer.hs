@@ -1,7 +1,8 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses #-}
 module Control.Comonad.Cofree.Cofreer where
 
 import Control.Comonad
+import Control.Comonad.Cofree.Class
 import Data.Bifunctor
 
 data CofreerF f a b where
@@ -31,3 +32,6 @@ instance Functor (Cofreer f) where
 instance Comonad (Cofreer f) where
   extract (Cofreer (Cofree a _ _)) = a
   extend f c@(Cofreer (Cofree _ t r)) = Cofreer (Cofree (f c) (extend f . t) r)
+
+instance Functor f => ComonadCofree f (Cofreer f) where
+  unwrap = tailF . runCofreer
