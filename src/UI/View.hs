@@ -29,8 +29,6 @@ type View = Fix ViewF
 type AView a = Cofree ViewF a
 
 
-type Rendering a = Free (Sum (Action Draw.DrawingF) (LayoutF a))
-
 renderView :: Real a => View -> Rendering a ()
 renderView = cata $ \ view -> inset margins $ case view of
   Text s -> resizeable (`text` s)

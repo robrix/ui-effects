@@ -4,6 +4,7 @@ module UI.Drawing
 , Colour(..)
 , DrawingF(..)
 , Drawing
+, Rendering
 , setStroke
 , setFill
 , stroke
@@ -15,6 +16,8 @@ module UI.Drawing
 
 import Control.Action
 import Control.Applicative.Free
+import Control.Monad.Free
+import Data.Functor.Sum
 import Linear.V2
 import UI.Layout as Layout
 import UI.Geometry
@@ -32,6 +35,7 @@ data DrawingF a where
   Clip :: Size a -> b -> DrawingF ()
 
 type Drawing a = Ap (Action DrawingF) a
+type Rendering a = Free (Sum (Action DrawingF) (LayoutF a))
 
 setStroke :: Colour a -> Drawing ()
 setStroke c = liftAp . liftAction $ SetStroke c
