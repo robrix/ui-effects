@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module UI.View where
 
 import Control.Action
@@ -42,14 +43,14 @@ renderView = cata $ \ view -> inset margins $ case view of
         Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child))
   where margins = Size 5 3
         spacing = Point 0 3
-        text maxSize = Free . InL . (`Action` Pure) . Draw.Text maxSize
-        clip size = Free . InL . (`Action` Pure) . Draw.Clip size
-        inset margins = Free . InR . Inset margins
-        offset delta = Free . InR . Offset delta
+        text maxSize = wrap . InL . (`Action` pure) . Draw.Text maxSize
+        clip size = wrap . InL . (`Action` pure) . Draw.Clip size
+        inset margins = wrap . InR . Inset margins
+        offset delta = wrap . InR . Offset delta
         stack :: Foldable t => t (Rendering a ()) -> Rendering a ()
         stack = foldl (>>) (pure ())
-        resizeable = Free . InR . Resizeable
-        measure child = Free . InR . Measure child
+        resizeable = wrap . InR . Resizeable
+        measure child = wrap . InR . Measure child
 
 
 -- Smart constructors

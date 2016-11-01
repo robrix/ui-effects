@@ -16,7 +16,7 @@ module UI.Drawing
 
 import Control.Action
 import Control.Applicative.Free
-import Control.Monad.Free
+import Control.Monad.Free.Church
 import Data.Functor.Sum
 import Linear.V2
 import UI.Layout as Layout
@@ -35,7 +35,7 @@ data DrawingF a where
   Clip :: Size a -> b -> DrawingF ()
 
 type Drawing a = Ap (Action DrawingF) a
-type Rendering a = Free (Sum (Action DrawingF) (LayoutF a))
+type Rendering a = F (Sum (Action DrawingF) (LayoutF a))
 
 setStroke :: Colour a -> Drawing ()
 setStroke c = liftAp . liftAction $ SetStroke c
