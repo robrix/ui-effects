@@ -17,6 +17,7 @@ import Control.Action
 import Control.Applicative.Free
 import Linear.V2
 import UI.Layout as Layout
+import UI.Geometry
 
 data Shape a = Rectangle (V2 a) (V2 a)
 

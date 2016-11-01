@@ -5,7 +5,7 @@ import Control.Applicative
 import Control.Monad.Free.Church
 import Control.Monad.Free (Free (Pure, Free))
 import Data.Maybe (fromMaybe)
-import Data.Semigroup
+import UI.Geometry
 
 data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
@@ -52,43 +52,7 @@ fitLayoutTo maxSize layout = case fromF layout of
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
 
 
--- Geometry
-
-data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
-  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
-data Point a = Point { x :: !a, y :: !a }
-  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
-
-pointSize :: Point a -> Size a
-pointSize (Point x y) = Size x y
-
-data Size a = Size { width :: !a, height :: !a }
-  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
-
-encloses :: Ord a => Size a -> Size a -> Bool
-encloses a b = and ((>=) <$> a <*> b)
-
-
 -- Instances
-
-instance Applicative Size where
-  pure a = Size a a
-  Size f g <*> Size a b = Size (f a) (g b)
-
-instance Num a => Num (Size a) where
-  fromInteger = pure . fromInteger
-  abs = liftA abs
-  signum = liftA signum
-  negate = liftA negate
-  (+) = liftA2 (+)
-  (*) = liftA2 (*)
-
-instance Semigroup a => Semigroup (Size a) where
-  (<>) = liftA2 (<>)
-
-instance Monoid a => Monoid (Size a) where
-  mempty = pure mempty
-  mappend = liftA2 mappend
 
 instance Real a => Monoid (Stack a (Size a)) where
   mempty = Stack (pure (Size 0 0))
