@@ -20,6 +20,4 @@ instance Functor (FreerF f a) where
   fmap = second
 
 instance Functor (Freer f) where
-  fmap f (Freer r) = Freer $ case r of
-    Pure a -> Pure (f a)
-    Free t g -> Free (fmap f . t) g
+  fmap f = Freer . bimap f (fmap f) . runFreer
