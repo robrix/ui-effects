@@ -1,7 +1,8 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses #-}
 module Control.Monad.Free.Freer where
 
 import Control.Monad ((>=>))
+import Control.Monad.Free.Class
 import Data.Bifunctor
 
 data FreerF f a b where
@@ -34,3 +35,6 @@ instance Monad (Freer f) where
   Freer g >>= f = case g of
     Pure a -> f a
     Free t r -> Freer (Free (t >=> f) r)
+
+instance MonadFree f (Freer f) where
+  wrap = Freer . Free id
