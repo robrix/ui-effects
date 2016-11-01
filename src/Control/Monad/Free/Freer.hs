@@ -15,8 +15,9 @@ newtype Freer f a = Freer { runFreer :: FreerF f a (Freer f a) }
 -- Instances
 
 instance Bifunctor (FreerF f) where
-  bimap f _ (Pure a) = Pure (f a)
-  bimap _ g (Free t r) = Free (g . t) r
+  bimap f g r = case r of
+    Pure a -> Pure (f a)
+    Free t r -> Free (g . t) r
 
 instance Functor (FreerF f a) where
   fmap = second
