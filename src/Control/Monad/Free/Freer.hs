@@ -1,5 +1,9 @@
 {-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, TypeFamilies #-}
-module Control.Monad.Free.Freer where
+module Control.Monad.Free.Freer
+( FreerF(..)
+, Freer(..)
+, iter
+) where
 
 import Control.Monad ((>=>))
 import Control.Monad.Free.Class
