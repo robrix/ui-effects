@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances, GADTs #-}
 module UI.Layout where
 
+import Control.Action
 import Control.Applicative
 import Control.Monad.Free.Church
 import Control.Monad.Free (Free (Pure, Free))
@@ -12,22 +13,21 @@ data LayoutF a f where
   Offset :: Point a -> f -> LayoutF a f
   Resizeable :: (Size (Maybe a) -> f) -> LayoutF a f
   Measure :: f -> LayoutF a f
-  deriving Functor
 
-type Layout a = F (LayoutF a)
+type Layout a = F (Action (LayoutF a))
 
 inset :: Size a -> Layout a b -> Layout a b
-inset by = wrap . Inset by
+inset by = wrap . liftAction . Inset by
 
 offset :: Real a => Point a -> Layout a b -> Layout a b
 offset (Point 0 0) = id
-offset by = wrap . Offset by
+offset by = wrap . liftAction . Offset by
 
 resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
-resizeable = wrap . Resizeable
+resizeable = wrap . liftAction . Resizeable
 
 measure :: Layout a b -> Layout a b
-measure = wrap . Measure
+measure = wrap . liftAction . Measure
 
 newtype Stack a b = Stack { unStack :: Layout a b }
 
@@ -40,10 +40,10 @@ measureLayout = fromMaybe (Size 0 0) . fitLayoutTo (pure Nothing)
 fitLayoutTo :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
 fitLayoutTo maxSize layout = case fromF layout of
   Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
-  Free (Inset inset rest) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (subtractSize (2 * inset)) (toF rest)
-  Free (Offset offset rest) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) (toF rest)
-  Free (Resizeable resize) -> fitLayoutTo maxSize (toF (resize maxSize))
-  Free (Measure child) -> Just (fromMaybe <$> measureLayout (toF child) <*> maxSize)
+  Free (Action (Inset inset rest) run) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (subtractSize (2 * inset)) (toF (run rest))
+  Free (Action (Offset offset rest) run) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) (toF (run rest))
+  Free (Action (Resizeable resize) run) -> fitLayoutTo maxSize (toF (run (resize maxSize)))
+  Free (Action (Measure child) run) -> Just (fromMaybe <$> measureLayout (toF (run child)) <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
