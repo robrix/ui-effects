@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 module Control.Monad.Free.Freer where
 
+import Control.Monad ((>=>))
 import Data.Bifunctor
 
 data FreerF f a b where
@@ -24,6 +25,12 @@ instance Functor (Freer f) where
 
 instance Applicative (Freer f) where
    pure = Freer . Pure
-   f <*> a = case runFreer f of
+   Freer g <*> a = case g of
      Pure f -> fmap f a
      Free t r -> Freer (Free ((<*> a) . t) r)
+
+instance Monad (Freer f) where
+  return = pure
+  Freer g >>= f = case g of
+    Pure a -> f a
+    Free t r -> Freer (Free (t >=> f) r)
