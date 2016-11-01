@@ -12,6 +12,7 @@ data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
   Resizeable :: (Size (Maybe a) -> f) -> LayoutF a f
+  Measure :: f -> LayoutF a (Size a)
 
 type Layout a = F (Action (LayoutF a))
 
@@ -24,6 +25,9 @@ offset by = wrap . liftAction . Offset by
 
 resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
 resizeable = wrap . liftAction . Resizeable
+
+measure :: Layout a b -> Layout a (Size a)
+measure = liftF . liftAction . Measure
 
 newtype Stack a b = Stack { unStack :: Layout a b }
 
