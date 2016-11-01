@@ -9,9 +9,17 @@ data FreerF f a b where
 
 newtype Freer f a = Freer { runFreer :: FreerF f a (Freer f a) }
 
+
+-- Instances
+
 instance Bifunctor (FreerF f) where
   bimap f _ (Pure a) = Pure (f a)
   bimap _ g (Free t r) = Free (g . t) r
 
 instance Functor (FreerF f a) where
   fmap = second
+
+instance Functor (Freer f) where
+  fmap f (Freer r) = Freer $ case r of
+    Pure a -> Pure (f a)
+    Free t g -> Free (fmap f . t) g
