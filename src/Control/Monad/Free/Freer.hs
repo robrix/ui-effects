@@ -3,6 +3,8 @@ module Control.Monad.Free.Freer
 ( FreerF(..)
 , Freer(..)
 , iter
+, liftF
+, wrap
 ) where
 
 import Control.Monad ((>=>))
