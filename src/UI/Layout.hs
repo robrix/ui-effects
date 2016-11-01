@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, GADTs #-}
 module UI.Layout where
 
 import Control.Applicative
@@ -7,10 +7,10 @@ import Control.Monad.Free (Free (Pure, Free))
 import Data.Maybe (fromMaybe)
 import Data.Semigroup
 
-data LayoutF a f
-  = Inset (Size a) f
-  | Offset (Point a) f
-  | Resizeable (Size (Maybe a) -> f)
+data LayoutF a f where
+  Inset :: Size a -> f -> LayoutF a f
+  Offset :: Point a -> f -> LayoutF a f
+  Resizeable :: (Size (Maybe a) -> f) -> LayoutF a f
   deriving Functor
 
 type Layout a = F (LayoutF a)
