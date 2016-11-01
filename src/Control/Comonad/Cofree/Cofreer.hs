@@ -23,3 +23,6 @@ instance Bifunctor (CofreerF f) where
 
 instance Functor (CofreerF f a) where
   fmap = second
+
+instance Functor (Cofreer f) where
+  fmap f = Cofreer . bimap f (fmap f) . runCofreer
