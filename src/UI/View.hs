@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeOperators #-}
 module UI.View where
 
 import Control.Action
@@ -54,7 +53,7 @@ layoutView = cata $ \ view -> case view of
   where margins = Size 5 3
         spacing = Point 0 3
 
-type Rendering a = Free (Action Draw.DrawingF :+: LayoutF a)
+type Rendering a = Free (Sum (Action Draw.DrawingF) (LayoutF a))
 
 drawView :: Real a => View -> Rendering a ()
 drawView = cata $ \ view -> case view of
@@ -69,14 +68,14 @@ drawView = cata $ \ view -> case view of
         Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)))
   where margins = Size 5 3
         spacing = Point 0 3
-        text maxSize = Free . L . (`Action` Pure) . Draw.Text maxSize
-        clip size = Free . L . (`Action` Pure) . Draw.Clip size
-        inset margins = Free . R . Inset margins
-        offset delta = Free . R . Offset delta
+        text maxSize = Free . InL . (`Action` Pure) . Draw.Text maxSize
+        clip size = Free . InL . (`Action` Pure) . Draw.Clip size
+        inset margins = Free . InR . Inset margins
+        offset delta = Free . InR . Offset delta
         stack :: Foldable t => t (Rendering a ()) -> Rendering a ()
         stack = foldl (>>) (pure ())
-        resizeable = Free . R . Resizeable
-        measure child = Free . R . Measure child
+        resizeable = Free . InR . Resizeable
+        measure child = Free . InR . Measure child
 
 
 -- Smart constructors

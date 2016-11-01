@@ -17,7 +17,6 @@ library
   hs-source-dirs:      src
   exposed-modules:     Control.Action
                      , Control.Applicative.Free.Class
-                     , Data.Functor.Sum
                      , GL.Array
                      , GL.Draw
                      , GL.Exception
