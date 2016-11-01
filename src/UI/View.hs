@@ -38,21 +38,6 @@ measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (to
   where char = Size 5 8
         line = char + Size 10 5
 
-layoutView :: Real a => View -> Layout a (Size a)
-layoutView = cata $ \ view -> case view of
-  Text s -> inset margins (resizeable (\ maxSize ->
-    pure (fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize)))
-  Label s -> inset margins (pure (measureString s))
-  Scroll axis child -> inset margins (resizeable (\ (Size maxW maxH) ->
-    measure child (\ (Size w h) ->
-      pure (case axis of
-        Just Horizontal -> Size w (fromMaybe h maxH)
-        Just Vertical -> Size (fromMaybe w maxW) h
-        Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH))))
-  List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
-  where margins = Size 5 3
-        spacing = Point 0 3
-
 type Rendering a = Free (Sum (Action Draw.DrawingF) (LayoutF a))
 
 renderView :: Real a => View -> Rendering a ()
