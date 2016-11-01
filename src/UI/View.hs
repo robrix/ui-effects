@@ -61,15 +61,22 @@ drawView = cata $ \ view -> case view of
   Text s -> inset margins (resizeable (`text` s))
   Label s -> inset margins (text (pure Nothing) s)
   List children -> inset margins (stack (intersperse (offset spacing (pure ())) children))
-  _ -> pure ()
+  Scroll axis child -> inset margins (resizeable (\ (Size maxW maxH) ->
+    measure child (\ (Size w h) ->
+      clip (case axis of
+        Just Horizontal -> Size w (fromMaybe h maxH)
+        Just Vertical -> Size (fromMaybe w maxW) h
+        Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)))
   where margins = Size 5 3
         spacing = Point 0 3
         text maxSize = Free . L . (`Action` Pure) . Draw.Text maxSize
+        clip size = Free . L . (`Action` Pure) . Draw.Clip size
         inset margins = Free . R . Inset margins
         offset delta = Free . R . Offset delta
         stack :: Foldable t => t (Rendering a ()) -> Rendering a ()
         stack = foldl (>>) (pure ())
         resizeable = Free . R . Resizeable
+        measure child = Free . R . Measure child
 
 
 -- Smart constructors
