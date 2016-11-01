@@ -14,7 +14,7 @@ module UI.Drawing
 , module Layout
 ) where
 
-import Control.Monad.Free.Church
+import Control.Monad.Free.Freer
 import Data.Functor.Sum
 import qualified Linear.V2 as Linear
 import UI.Layout as Layout
@@ -33,8 +33,8 @@ data DrawingF a f where
   Clip :: Size a -> f -> DrawingF a f
   deriving Functor
 
-type Drawing a = F (DrawingF a)
-type Rendering a = F (Sum (DrawingF a) (LayoutF a))
+type Drawing a = Freer (DrawingF a)
+type Rendering a = Freer (Sum (DrawingF a) (LayoutF a))
 
 setStroke :: Colour a -> Drawing a ()
 setStroke c = liftF $ SetStroke c
