@@ -20,3 +20,6 @@ newtype Cofreer f a = Cofreer { runCofreer :: CofreerF f a (Cofreer f a) }
 
 instance Bifunctor (CofreerF f) where
   bimap f g (Cofree a t r) = Cofree (f a) (g . t) r
+
+instance Functor (CofreerF f a) where
+  fmap = second
