@@ -43,7 +43,7 @@ fitLayoutTo maxSize layout = case fromF layout of
   Free (Action (Inset inset rest) run) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (subtractSize (2 * inset)) (toF (run rest))
   Free (Action (Offset offset rest) run) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) (toF (run rest))
   Free (Action (Resizeable resize) run) -> fitLayoutTo maxSize (toF (run (resize maxSize)))
-  Free (Action (Measure child) run) -> fitLayoutTo maxSize (toF (run child))
+  Free (Action (Measure child) run) -> Just (fromMaybe <$> measureLayout (toF (run child)) <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
