@@ -29,16 +29,6 @@ type View = Fix ViewF
 type AView a = Cofree ViewF a
 
 
-measureString :: Num a => String -> Size a
-measureString s = Size (fromIntegral (length s) * fontW) lineH
-  where (fontW, fontH) = (5, 8)
-        lineH = fontH + 5
-
-measureStringForWidth :: Real a => a -> String -> Size a
-measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (toRational (length s) / (toRational maxW / toRational (width char)))))
-  where char = Size 5 8
-        line = char + Size 10 5
-
 type Rendering a = Free (Sum (Action Draw.DrawingF) (LayoutF a))
 
 renderView :: Real a => View -> Rendering a ()
