@@ -12,7 +12,7 @@ data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
   Resizeable :: (Size (Maybe a) -> f) -> LayoutF a f
-  Measure :: f -> LayoutF a f
+  Measure :: f -> (Size a -> f) -> LayoutF a f
 
 type Layout a = F (Action (LayoutF a))
 
@@ -26,8 +26,8 @@ offset by = wrap . liftAction . Offset by
 resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
 resizeable = wrap . liftAction . Resizeable
 
-measure :: Layout a b -> Layout a b
-measure = wrap . liftAction . Measure
+measure :: Layout a b -> (Size a -> Layout a b) -> Layout a b
+measure child = wrap . liftAction . Measure child
 
 newtype Stack a b = Stack { unStack :: Layout a b }
 
@@ -43,7 +43,7 @@ fitLayoutTo maxSize layout = case fromF layout of
   Free (Action (Inset inset rest) run) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (subtractSize (2 * inset)) (toF (run rest))
   Free (Action (Offset offset rest) run) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) (toF (run rest))
   Free (Action (Resizeable resize) run) -> fitLayoutTo maxSize (toF (run (resize maxSize)))
-  Free (Action (Measure child) run) -> Just (fromMaybe <$> measureLayout (toF (run child)) <*> maxSize)
+  Free (Action (Measure child withMeasurement) run) -> fitLayoutTo maxSize (toF (run (withMeasurement (measureLayout (toF (run child))))))
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
