@@ -55,8 +55,8 @@ layoutView = cata $ \ view -> case view of
 
 type Rendering a = Free (Sum (Action Draw.DrawingF) (LayoutF a))
 
-drawView :: Real a => View -> Rendering a ()
-drawView = cata $ \ view -> case view of
+renderView :: Real a => View -> Rendering a ()
+renderView = cata $ \ view -> case view of
   Text s -> inset margins (resizeable (`text` s))
   Label s -> inset margins (text (pure Nothing) s)
   List children -> inset margins (stack (intersperse (offset spacing (pure ())) children))
