@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 module UI.View where
 
-import Control.Action
 import Control.Monad.Free
 import Control.Comonad.Cofree
 import Data.Functor.Classes
@@ -43,8 +42,8 @@ renderView = cata $ \ view -> inset margins $ case view of
         Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child))
   where margins = Size 5 3
         spacing = Point 0 3
-        text maxSize = wrap . InL . (`Action` pure) . Draw.Text maxSize
-        clip size = wrap . InL . (`Action` pure) . Draw.Clip size
+        text maxSize = wrap . InL . Draw.Text maxSize
+        clip size = wrap . InL . Draw.Clip size
         inset margins = wrap . InR . Inset margins
         offset delta = wrap . InR . Offset delta
         stack :: Foldable t => t (Rendering a ()) -> Rendering a ()
