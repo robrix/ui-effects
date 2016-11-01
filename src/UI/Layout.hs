@@ -26,6 +26,9 @@ offset by = wrap . liftAction . Offset by
 resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
 resizeable = wrap . liftAction . Resizeable
 
+getMaxSize :: Layout a (Size (Maybe a))
+getMaxSize = wrap (liftAction (Resizeable pure))
+
 measure :: Layout a b -> (Size a -> Layout a b) -> Layout a b
 measure child = wrap . liftAction . Measure child
 
