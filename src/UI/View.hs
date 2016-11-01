@@ -45,7 +45,7 @@ layoutView = cata $ \ view -> case view of
     pure (fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize)))
   Label s -> inset margins (pure (measureString s))
   Scroll axis child -> inset margins (resizeable (\ (Size maxW maxH) -> do
-    Size w h <- child
+    Size w h <- measure child
     pure (case axis of
       Just Horizontal -> Size w (fromMaybe h maxH)
       Just Vertical -> Size (fromMaybe w maxW) h
