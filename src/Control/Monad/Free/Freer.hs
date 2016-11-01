@@ -12,6 +12,11 @@ data FreerF f a b where
 
 newtype Freer f a = Freer { runFreer :: FreerF f a (Freer f a) }
 
+iter :: Functor f => (f a -> a) -> Freer f a -> a
+iter algebra = cata $ \ r -> case r of
+  Pure a -> a
+  Free t r -> algebra (t <$> r)
+
 
 -- Instances
 
