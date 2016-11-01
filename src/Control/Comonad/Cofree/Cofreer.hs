@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 module Control.Comonad.Cofree.Cofreer where
 
+import Control.Comonad
 import Data.Bifunctor
 
 data CofreerF f a b where
@@ -26,3 +27,7 @@ instance Functor (CofreerF f a) where
 
 instance Functor (Cofreer f) where
   fmap f = Cofreer . bimap f (fmap f) . runCofreer
+
+instance Comonad (Cofreer f) where
+  extract (Cofreer (Cofree a _ _)) = a
+  extend f c@(Cofreer (Cofree _ t r)) = Cofreer (Cofree (f c) (extend f . t) r)
