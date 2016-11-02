@@ -31,7 +31,7 @@ data DrawingF a f where
   Fill :: Shape a -> DrawingF a f
   Text :: Size (Maybe a) -> String -> DrawingF a f
   Clip :: Size a -> f -> DrawingF a f
-  deriving Functor
+  deriving (Foldable, Functor)
 
 type Drawing a = Freer (DrawingF a)
 type Rendering a = Freer (Sum (DrawingF a) (LayoutF a))
