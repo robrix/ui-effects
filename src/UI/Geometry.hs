@@ -20,6 +20,11 @@ encloses a b = and ((>=) <$> a <*> b)
 
 -- Instances
 
+instance Applicative Point where
+  pure a = Point a a
+  Point f g <*> Point a b = Point (f a) (g b)
+
+
 instance Applicative Size where
   pure a = Size a a
   Size f g <*> Size a b = Size (f a) (g b)
