@@ -1,10 +1,11 @@
-{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, TypeFamilies, UndecidableInstances #-}
 module Control.Comonad.Cofree.Cofreer where
 
 import Control.Comonad
 import Control.Comonad.Cofree.Class
 import Data.Bifunctor
 import Data.Functor.Classes
+import Data.Functor.Foldable
 
 data CofreerF f a b where
   Cofree :: a -> (x -> b) -> f x -> CofreerF f a b
@@ -36,6 +37,13 @@ instance Comonad (Cofreer f) where
 
 instance Functor f => ComonadCofree f (Cofreer f) where
   unwrap = tailF . runCofreer
+
+
+type instance Base (Cofreer f a) = CofreerF f a
+
+instance Recursive (Cofreer f a) where project = runCofreer
+instance Corecursive (Cofreer f a) where embed = Cofreer
+
 
 instance (Functor f, Show1 f) => Show2 (CofreerF f) where
   liftShowsPrec2 sp1 _ sp2 sa2 d (Cofree a t r) = showsTernaryWith sp1 (const showString) (liftShowsPrec sp2 sa2) "Cofree" d a "id" (t <$> r)
