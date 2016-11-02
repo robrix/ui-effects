@@ -5,7 +5,8 @@ import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Functor.Foldable hiding (unfold)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, listToMaybe, maybeToList)
+import Data.Semigroup
 import UI.Geometry
 
 data LayoutF a f where
@@ -84,6 +85,16 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         setOriginWith f rect = rect { origin = f (origin rect) }
         setSizeWith f rect = rect { size = f (size rect) }
+
+
+layoutRectanglesAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) [Rect a] -> [Rect a]
+layoutRectanglesAlgebra c@(Cofree (_, maxSize) runC layout) = maybeToList (layoutAlgebra (listToMaybe <$> c)) <> case layout of
+  Pure _ -> []
+  Free runF l -> case l of
+    Inset _ child -> runC (runF child)
+    Offset _ child -> runC (runF child)
+    Resizeable resize -> runC (runF (resize maxSize))
+    Measure child withMeasurement -> runC (runF child) >>= runC . runF . withMeasurement . size
 
 
 fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
