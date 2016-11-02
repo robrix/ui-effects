@@ -41,7 +41,7 @@ stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
 stack = unStack . foldMap Stack
 
 measureLayout :: Real a => Layout a (Size a) -> Size a
-measureLayout = fromMaybe (Size 0 0) . fitLayoutTo (pure Nothing)
+measureLayout = fromMaybe (Size 0 0) . fitLayout (pure Nothing)
 
 fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
 fitLayout = fitLayoutWith $ \ (Cofree maxSize runC layout) -> case layout of
@@ -74,17 +74,6 @@ fitLayoutAndAnnotate = fitLayoutWith $ \ (Cofree maxSize runC layout) -> case la
       pure (extract computed `cowrap` liftFreerF (Measure child (const computed)))
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
-
-fitLayoutTo :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
-fitLayoutTo maxSize layout = case runFreer layout of
-  Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
-  Free toF (Inset inset rest) | maxSize `encloses` (2 * inset) -> (2 * inset +) <$> fitLayoutTo (subtractSize (2 * inset)) (toF rest)
-  Free toF (Offset offset rest) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) (toF rest)
-  Free toF (Resizeable resize) -> fitLayoutTo maxSize (toF (resize maxSize))
-  Free toF (Measure child withMeasurement) -> fitLayoutTo maxSize (toF (withMeasurement (measureLayout (toF child))))
-  _ -> Nothing
-  where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
-        subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
 
 
 fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
