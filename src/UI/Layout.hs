@@ -58,25 +58,8 @@ layoutSizeAlgebra (Cofree maxSize runC layout) = case layout of
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
 
-fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a) (Size a))
-fitLayoutAndAnnotate = fitLayoutWith $ \ (Cofree maxSize runC layout) -> case layout of
-  Pure size | maxSize `encloses` size -> Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
-  Free runF l -> case l of
-    Inset by child -> do
-      child <- runC (runF child)
-      pure ((2 * by + extract child) `cowrap` liftFreerF (Inset by child))
-    Offset by child -> do
-      child <- runC (runF child)
-      pure ((pointSize by + extract child) `cowrap` liftFreerF (Offset by child))
-    Resizeable resize -> do
-      computed <- runC (runF (resize maxSize))
-      pure (extract computed `cowrap` liftFreerF (Resizeable (const computed)))
-    Measure child withMeasurement -> do
-      child <- runC (runF child)
-      computed <- runC (runF (withMeasurement (extract child)))
-      pure (extract computed `cowrap` liftFreerF (Measure child (const computed)))
-  _ -> Nothing
-  where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
+fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
+fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
 
 
 fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
