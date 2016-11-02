@@ -2,6 +2,7 @@
 module Control.Monad.Free.Freer
 ( FreerF(..)
 , Freer(..)
+, liftFreerF
 , iter
 , liftF
 , wrap
@@ -16,6 +17,10 @@ import Data.Functor.Foldable
 data FreerF f a b where
   Pure :: a -> FreerF f a b
   Free :: (x -> b) -> f x -> FreerF f a b
+
+liftFreerF :: f b -> FreerF f a b
+liftFreerF = Free id
+
 
 newtype Freer f a = Freer { runFreer :: FreerF f a (Freer f a) }
 
