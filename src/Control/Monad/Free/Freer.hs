@@ -4,6 +4,7 @@ module Control.Monad.Free.Freer
 , Freer(..)
 , liftFreerF
 , iter
+, iterA
 , liftF
 , wrap
 ) where
@@ -27,6 +28,11 @@ newtype Freer f a = Freer { runFreer :: FreerF f a (Freer f a) }
 iter :: Functor f => (f a -> a) -> Freer f a -> a
 iter algebra = cata $ \ r -> case r of
   Pure a -> a
+  Free t r -> algebra (t <$> r)
+
+iterA :: (Functor f, Applicative m) => (f (m a) -> m a) -> Freer f a -> m a
+iterA algebra = cata $ \ r -> case r of
+  Pure a -> pure a
   Free t r -> algebra (t <$> r)
 
 
