@@ -77,14 +77,12 @@ layoutAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size
 layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just (Rect offset (fromMaybe <$> size <*> maxSize))
   Free runF l -> case l of
-    Inset by child -> setOriginWith (flip (-) <$> sizeExtent by <*>) . setSizeWith (2 * by +) <$> runC (runF child)
-    Offset by child -> setOriginWith (flip (-) <$> by <*>) . setSizeWith (pointSize by +) <$> runC (runF child)
+    Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
+    Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
     Resizeable resize -> runC (runF (resize maxSize))
     Measure child withMeasurement -> runC (runF child) >>= runC . runF . withMeasurement . size
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
-        setOriginWith f rect = rect { origin = f (origin rect) }
-        setSizeWith f rect = rect { size = f (size rect) }
 
 
 layoutRectanglesAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) [Rect a] -> [Rect a]
