@@ -59,7 +59,7 @@ instance Foldable f => Foldable (CofreerF f a) where
   foldMap f (Cofree _ t r) = foldMap (f . t) r
 
 instance Foldable f => Foldable (Cofreer f) where
-  foldMap f (Cofreer (Cofree a t r)) = mappend (f a) (foldMap (foldMap f . t) r)
+  foldMap f (Cofreer c) = mappend (f (headF c)) (foldMap (foldMap f) c)
 
 
 type instance Base (Cofreer f a) = CofreerF f a
