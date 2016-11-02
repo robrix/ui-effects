@@ -46,6 +46,9 @@ measureLayout = fromMaybe (Size 0 0) . fitLayout (pure Nothing)
 fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
 fitLayout = fitLayoutWith layoutSizeAlgebra
 
+fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
+fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
+
 layoutSizeAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Maybe (Size a)) -> Maybe (Size a)
 layoutSizeAlgebra (Cofree maxSize runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
@@ -56,10 +59,6 @@ layoutSizeAlgebra (Cofree maxSize runC layout) = case layout of
     Measure child withMeasurement -> runC (runF child) >>= runC . runF . withMeasurement
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
-
-
-fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
-fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
 
 
 fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
