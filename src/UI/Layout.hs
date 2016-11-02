@@ -41,13 +41,13 @@ stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
 stack = unStack . foldMap Stack
 
 measureLayout :: Real a => Layout a (Size a) -> Size a
-measureLayout = fromMaybe (Size 0 0) . fitLayout (pure Nothing)
+measureLayout = fromMaybe (Size 0 0) . fitLayoutSize (pure Nothing)
 
-fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
-fitLayout = fitLayoutWith layoutSizeAlgebra
+fitLayoutSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
+fitLayoutSize = fitLayoutWith layoutSizeAlgebra
 
-fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
-fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
+fitLayoutAndAnnotateSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
+fitLayoutAndAnnotateSize = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
 
 layoutSizeAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Maybe (Size a)) -> Maybe (Size a)
 layoutSizeAlgebra (Cofree (_, maxSize) runC layout) = case layout of
