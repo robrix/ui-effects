@@ -17,6 +17,9 @@ data Size a = Size { width :: !a, height :: !a }
 encloses :: Ord a => Size a -> Size a -> Bool
 encloses a b = and ((>=) <$> a <*> b)
 
+sizeExtent :: Size a -> Point a
+sizeExtent (Size w h) = Point w h
+
 
 -- Instances
 
