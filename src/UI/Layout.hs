@@ -68,11 +68,11 @@ fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
 layoutAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Maybe (Rect a)) -> Maybe (Rect a)
 layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just (Rect offset (fromMaybe <$> size <*> maxSize))
-  Free runF l -> case l of
-    Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
-    Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
-    Resizeable resize -> runC (runF (resize maxSize))
-    Measure child withMeasurement -> runC (runF child) >>= runC . runF . withMeasurement . size
+  Free runF l -> case runC . runF <$> l of
+    Inset by child -> Rect offset . (2 * by +) . size <$> child
+    Offset by child -> Rect offset . (pointSize by +) . size <$> child
+    Resizeable resize -> resize maxSize
+    Measure child withMeasurement -> child >>= withMeasurement . size
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
@@ -80,11 +80,11 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
 layoutRectanglesAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) [Rect a] -> [Rect a]
 layoutRectanglesAlgebra c@(Cofree (_, maxSize) runC layout) = maybeToList (layoutAlgebra (listToMaybe <$> c)) <> case layout of
   Pure _ -> []
-  Free runF l -> case l of
-    Inset _ child -> runC (runF child)
-    Offset _ child -> runC (runF child)
-    Resizeable resize -> runC (runF (resize maxSize))
-    Measure child withMeasurement -> runC (runF child) >>= runC . runF . withMeasurement . size
+  Free runF l -> case runC . runF <$> l of
+    Inset _ child -> child
+    Offset _ child -> child
+    Resizeable resize -> resize maxSize
+    Measure child withMeasurement -> child >>= withMeasurement . size
 
 
 fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
@@ -92,11 +92,11 @@ fitLayoutWith algebra maxSize layout = hylo algebra coalgebra (Point 0 0, maxSiz
   where coalgebra :: Real a => (Point a, Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Layout a (Size a))
         coalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case runFreer layout of
           Pure size -> Pure size
-          Free run l -> Free id $ case l of
-            Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
-            Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
-            Resizeable resize -> Resizeable ((,,) offset maxSize . run . resize)
-            Measure child withMeasurement -> Measure (offset, maxSize, run child) ((,,) offset maxSize . run . withMeasurement)
+          Free run l -> Free id $ case run <$> l of
+            Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
+            Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
+            Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
+            Measure child withMeasurement -> Measure (offset, maxSize, child) ((,,) offset maxSize . withMeasurement)
 
         subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
