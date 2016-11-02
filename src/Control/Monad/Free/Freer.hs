@@ -74,6 +74,18 @@ instance Foldable f => Foldable (Freer f) where
   foldMap f = foldMap (foldMap f) . runFreer
 
 
+instance Traversable f => Traversable (FreerF f a) where
+  traverse f g = case g of
+    Pure a -> pure (Pure a)
+    Free t r -> Free id <$> traverse (f . t) r
+
+instance Traversable f => Traversable (Freer f) where
+  traverse f = go
+    where go g = case runFreer g of
+            Pure a -> Freer . Pure <$> f a
+            Free t r -> Freer . Free id <$> traverse (go . t) r
+
+
 type instance Base (Freer f a) = FreerF f a
 
 instance Recursive (Freer f a) where project = runFreer
