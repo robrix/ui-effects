@@ -18,6 +18,9 @@ data LayoutF a f where
 type Layout a = Freer (LayoutF a)
 type ALayout a b = Cofreer (FreerF (LayoutF a) b)
 
+
+-- Smart constructors
+
 inset :: Size a -> Layout a b -> Layout a b
 inset by = wrap . Inset by
 
@@ -38,6 +41,9 @@ newtype Stack a b = Stack { unStack :: Layout a b }
 
 stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
 stack = unStack . foldMap Stack
+
+
+-- Evaluation
 
 measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = fromMaybe (Size 0 0) . fitLayoutSize (pure Nothing)
