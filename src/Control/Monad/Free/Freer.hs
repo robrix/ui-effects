@@ -65,6 +65,12 @@ instance MonadFree f (Freer f) where
   wrap = Freer . Free id
 
 
+instance Foldable f => Foldable (Freer f) where
+  foldMap f g = case runFreer g of
+    Pure a -> f a
+    Free t r -> foldMap (foldMap f . t) r
+
+
 type instance Base (Freer f a) = FreerF f a
 
 instance Recursive (Freer f a) where project = runFreer
