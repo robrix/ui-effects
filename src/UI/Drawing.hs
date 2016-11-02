@@ -11,6 +11,8 @@ module UI.Drawing
 , fill
 , text
 , clip
+, liftL
+, liftR
 , module Layout
 ) where
 
@@ -53,3 +55,13 @@ text maxSize = liftF . Text maxSize
 
 clip :: Size a -> Drawing a b -> Drawing a b
 clip size = wrap . Clip size
+
+liftL :: Functor l => Freer l a -> Freer (Sum l r) a
+liftL (Freer f) = case f of
+  Free t r -> wrap (InL (liftL . t <$> r))
+  Pure a -> pure a
+
+liftR :: Functor r => Freer r a -> Freer (Sum l r) a
+liftR  (Freer f) = case f of
+  Free t r -> wrap (InR (liftR . t <$> r))
+  Pure a -> pure a
