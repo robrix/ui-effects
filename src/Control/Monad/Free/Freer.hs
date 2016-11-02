@@ -65,6 +65,11 @@ instance MonadFree f (Freer f) where
   wrap = Freer . Free id
 
 
+instance Foldable f => Foldable (FreerF f a) where
+  foldMap f g = case g of
+    Pure _ -> mempty
+    Free t r -> foldMap (f . t) r
+
 instance Foldable f => Foldable (Freer f) where
   foldMap f g = case runFreer g of
     Pure a -> f a
