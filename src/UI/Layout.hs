@@ -43,6 +43,28 @@ stack = unStack . foldMap Stack
 measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = fromMaybe (Size 0 0) . fitLayoutTo (pure Nothing)
 
+fitLayoutTo' :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a))
+fitLayoutTo' = fitLayoutToAlgebra algebra
+  where algebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Maybe (ALayout a (Size a))) -> Maybe (ALayout a (Size a))
+        algebra (Cofree maxSize runC layout) = case layout of
+          Pure size | maxSize `encloses` size -> Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
+          Free runF l -> case l of
+            Inset by child -> do
+              child <- runC (runF child)
+              pure ((2 * by + extract child) `cowrap` liftFreerF (Inset by child))
+            Offset by child -> do
+              child <- runC (runF child)
+              pure ((pointSize by + extract child) `cowrap` liftFreerF (Offset by child))
+            Resizeable resize -> do
+              computed <- runC (runF (resize maxSize))
+              pure (extract computed `cowrap` liftFreerF (Resizeable (const computed)))
+            Measure child withMeasurement -> do
+              child <- runC (runF child)
+              computed <- runC (runF (withMeasurement (extract child)))
+              pure (extract computed `cowrap` liftFreerF (Measure child (const computed)))
+          _ -> Nothing
+        maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
+
 fitLayoutTo :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
 fitLayoutTo maxSize layout = case runFreer layout of
   Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
@@ -80,30 +102,6 @@ fitLayoutTo'' = fitLayoutToAlgebra algebra
             Resizeable resize -> runC (runF (resize maxSize))
             Measure child withMeasurement -> runC (runF child) >>= runC . runF . withMeasurement
           _ -> Nothing
-        maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
-
-
-fitLayoutTo' :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a))
-fitLayoutTo' = fitLayoutToAlgebra algebra
-  where algebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Maybe (ALayout a (Size a))) -> Maybe (ALayout a (Size a))
-        algebra (Cofree maxSize runC layout) = case layout of
-          Pure size | maxSize `encloses` size -> Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
-          Free runF l -> case l of
-            Inset by child -> do
-              child <- runC (runF child)
-              pure ((2 * by + extract child) `cowrap` liftFreerF (Inset by child))
-            Offset by child -> do
-              child <- runC (runF child)
-              pure ((pointSize by + extract child) `cowrap` liftFreerF (Offset by child))
-            Resizeable resize -> do
-              computed <- runC (runF (resize maxSize))
-              pure (extract computed `cowrap` liftFreerF (Resizeable (const computed)))
-            Measure child withMeasurement -> do
-              child <- runC (runF child)
-              computed <- runC (runF (withMeasurement (extract child)))
-              pure (extract computed `cowrap` liftFreerF (Measure child (const computed)))
-          _ -> Nothing
-
         maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
 
