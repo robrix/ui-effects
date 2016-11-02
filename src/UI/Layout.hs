@@ -2,6 +2,8 @@
 module UI.Layout where
 
 import Control.Applicative
+import Control.Comonad
+import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Maybe (fromMaybe)
 import UI.Geometry
@@ -14,6 +16,7 @@ data LayoutF a f where
   deriving Functor
 
 type Layout a = Freer (LayoutF a)
+type ALayout a b = Cofreer (FreerF (LayoutF a) b) b
 
 inset :: Size a -> Layout a b -> Layout a b
 inset by = wrap . Inset by
@@ -46,6 +49,28 @@ fitLayoutTo maxSize layout = case runFreer layout of
   Free toF (Offset offset rest) | maxSize `encloses` pointSize offset -> (pointSize offset +) <$> fitLayoutTo (subtractSize (pointSize offset)) (toF rest)
   Free toF (Resizeable resize) -> fitLayoutTo maxSize (toF (resize maxSize))
   Free toF (Measure child withMeasurement) -> fitLayoutTo maxSize (toF (withMeasurement (measureLayout (toF child))))
+  _ -> Nothing
+  where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
+        subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+
+
+fitLayoutTo' :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a))
+fitLayoutTo' maxSize layout = case runFreer layout of
+  Pure size | maxSize `encloses` size ->
+    Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
+  Free run (Inset by child) | maxSize `encloses` (2 * by) -> do
+    child <- fitLayoutTo' (subtractSize (2 * by)) (run child)
+    pure ((2 * by + extract child) `cowrap` liftFreerF (Inset by child))
+  Free run (Offset by child) | maxSize `encloses` pointSize by -> do
+    child <- fitLayoutTo' (subtractSize (pointSize by)) (run child)
+    pure ((pointSize by + extract child) `cowrap` liftFreerF (Offset by child))
+  Free run (Resizeable resize) -> do
+    computed <- fitLayoutTo' maxSize (run (resize maxSize))
+    pure (extract computed `cowrap` liftFreerF (Resizeable (const computed)))
+  Free run (Measure child withMeasurement) -> do
+    child <- fitLayoutTo' (pure Nothing) (run child)
+    computed <- fitLayoutTo' maxSize (run (withMeasurement (extract child)))
+    pure (extract computed `cowrap` liftFreerF (Measure child (const computed)))
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
