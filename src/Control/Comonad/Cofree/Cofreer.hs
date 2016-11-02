@@ -19,6 +19,10 @@ tailF (Cofree _ t r) = t <$> r
 
 newtype Cofreer f a = Cofreer { runCofreer :: CofreerF f a (Cofreer f a) }
 
+infixr 5 `cowrap`
+cowrap :: a -> f (Cofreer f a) -> Cofreer f a
+cowrap a r = Cofreer (Cofree a id r)
+
 
 -- Instances
 
