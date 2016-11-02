@@ -44,7 +44,7 @@ measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = fromMaybe (Size 0 0) . fitLayoutTo (pure Nothing)
 
 fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
-fitLayout = fitLayoutToAlgebra $ \ (Cofree maxSize runC layout) -> case layout of
+fitLayout = fitLayoutWith $ \ (Cofree maxSize runC layout) -> case layout of
   Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
   Free runF l -> case l of
     Inset by child -> (2 * by +) <$> runC (runF child)
@@ -56,7 +56,7 @@ fitLayout = fitLayoutToAlgebra $ \ (Cofree maxSize runC layout) -> case layout o
 
 
 fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a))
-fitLayoutAndAnnotate = fitLayoutToAlgebra $ \ (Cofree maxSize runC layout) -> case layout of
+fitLayoutAndAnnotate = fitLayoutWith $ \ (Cofree maxSize runC layout) -> case layout of
   Pure size | maxSize `encloses` size -> Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
   Free runF l -> case l of
     Inset by child -> do
@@ -87,8 +87,8 @@ fitLayoutTo maxSize layout = case runFreer layout of
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
 
 
-fitLayoutToAlgebra :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutToAlgebra = curry . (`hylo` coalgebra)
+fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
+fitLayoutWith = curry . (`hylo` coalgebra)
   where coalgebra :: Real a => (Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Size (Maybe a), Layout a (Size a))
         coalgebra (maxSize, layout) = Cofree maxSize id $ case runFreer layout of
           Pure size -> Pure size
