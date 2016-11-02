@@ -55,8 +55,8 @@ fitLayoutTo maxSize layout = case runFreer layout of
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
 
 
-fitLayoutTo''' :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutTo''' = curry . (`hylo` coalgebra)
+fitLayoutToAlgebra :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
+fitLayoutToAlgebra = curry . (`hylo` coalgebra)
   where coalgebra :: Real a => (Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Size (Maybe a), Layout a (Size a))
         coalgebra (maxSize, layout) = Cofree maxSize id $ case runFreer layout of
           Pure size -> Pure size
