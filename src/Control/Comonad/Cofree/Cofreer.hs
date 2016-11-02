@@ -46,6 +46,10 @@ instance Functor f => ComonadCofree f (Cofreer f) where
   unwrap = tailF . runCofreer
 
 
+instance Foldable f => Foldable (Cofreer f) where
+  foldMap f (Cofreer (Cofree a t r)) = mappend (f a) (foldMap (foldMap f . t) r)
+
+
 type instance Base (Cofreer f a) = CofreerF f a
 
 instance Recursive (Cofreer f a) where project = runCofreer
