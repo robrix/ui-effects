@@ -5,6 +5,7 @@ import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Bifunctor
+import Data.Functor.Foldable hiding (unfold)
 import Data.Maybe (fromMaybe)
 import UI.Geometry
 
@@ -52,6 +53,27 @@ fitLayoutTo maxSize layout = case runFreer layout of
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+
+fitLayoutTo'' :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
+fitLayoutTo'' = curry (hylo algebra coalgebra)
+  where algebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Maybe (Size a)) -> Maybe (Size a)
+        algebra (Cofree maxSize runC layout) = case layout of
+          Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
+          Free runF (Inset by child) -> (2 * by +) <$> runC (runF child)
+          Free runF (Offset by child) -> (pointSize by +) <$> runC (runF child)
+          _ -> Nothing
+
+        coalgebra :: Real a => (Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Size (Maybe a), Layout a (Size a))
+        coalgebra (maxSize, layout) = Cofree maxSize id $ case runFreer layout of
+          Pure size -> Pure size
+          Free run l -> Free id $ case l of
+            Inset by child -> Inset by (subtractSize maxSize (2 * by), run child)
+            Offset by child -> Offset by (subtractSize maxSize (pointSize by), run child)
+            Resizeable resize -> Resizeable ((,) maxSize . run . resize)
+            Measure child withMeasurement -> Measure (maxSize, run child) ((,) maxSize . run . withMeasurement)
+
+        maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
+        subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
 
 
 fitLayoutTo' :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a))
