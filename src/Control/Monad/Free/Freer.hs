@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, TypeFamilies, UndecidableInstances #-}
 module Control.Monad.Free.Freer
 ( FreerF(..)
 , Freer(..)
@@ -10,6 +10,7 @@ module Control.Monad.Free.Freer
 import Control.Monad ((>=>))
 import Control.Monad.Free.Class
 import Data.Bifunctor
+import Data.Functor.Classes
 import Data.Functor.Foldable
 
 data FreerF f a b where
@@ -52,7 +53,25 @@ instance Monad (Freer f) where
 instance MonadFree f (Freer f) where
   wrap = Freer . Free id
 
+
 type instance Base (Freer f a) = FreerF f a
 
 instance Recursive (Freer f a) where project = runFreer
 instance Corecursive (Freer f a) where embed = Freer
+
+
+instance (Functor f, Show1 f) => Show2 (FreerF f) where
+  liftShowsPrec2 sp1 _ sp2 sa2 d f = case f of
+    Pure a -> showsUnaryWith sp1 "Pure" d a
+    Free t r -> showsUnaryWith (liftShowsPrec sp2 sa2) "Free" d (t <$> r)
+
+instance (Functor f, Show1 f) => Show1 (Freer f) where
+  liftShowsPrec sp sa d (Freer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Cofreer" d c
+
+instance (Functor f, Show (f (Freer f a)), Show a) => Show (Freer f a) where
+  showsPrec d (Freer c) = showParen (d > 10) $ showString "Freer" . showChar ' ' . showsPrec 11 c
+
+instance (Functor f, Show (f b), Show a) => Show (FreerF f a b) where
+  showsPrec d f = case f of
+    Pure a -> showParen (d > 10) $ showString "Pure" . showChar ' ' . showsPrec 11 a
+    Free t r -> showParen (d > 10) $ showString "Free" . showChar ' ' . showsPrec 11 (t <$> r)
