@@ -59,3 +59,10 @@ instance Real a => Monoid (Stack a (Size a)) where
     Size w1 h1 <- unStack a
     Size w2 h2 <- unStack b
     pure (Size (max w1 w2) (h1 + h2))
+
+instance (Show a, Show b, Num a) => Show (LayoutF a b) where
+  showsPrec d l = showParen (d > 10) $ case l of
+    Inset by child -> showString "Inset" . showChar ' ' . showsPrec 11 by . showChar ' ' . showsPrec 11 child
+    Offset by child -> showString "Offset" . showChar ' ' . showsPrec 11 by . showChar ' ' . showsPrec 11 child
+    Resizeable with -> showString "Resizeable" . showChar ' ' . showsPrec 11 (with (pure Nothing))
+    Measure child with -> showString "Measure" . showChar ' ' . showsPrec 11 child . showChar ' ' . showsPrec 11 (with (pure 0))
