@@ -5,7 +5,7 @@ import Control.Comonad
 import Control.Comonad.Cofree.Class
 import Data.Bifunctor
 import Data.Functor.Classes
-import Data.Functor.Foldable
+import Data.Functor.Foldable hiding (unfold)
 
 data CofreerF f a b where
   Cofree :: a -> (x -> b) -> f x -> CofreerF f a b
@@ -22,6 +22,9 @@ newtype Cofreer f a = Cofreer { runCofreer :: CofreerF f a (Cofreer f a) }
 infixr 5 `cowrap`
 cowrap :: a -> f (Cofreer f a) -> Cofreer f a
 cowrap a r = Cofreer (Cofree a id r)
+
+unfold :: Functor f => (b -> (a, f b)) -> b -> Cofreer f a
+unfold f c = let (x, d) = f c in Cofreer (Cofree x (unfold f) d)
 
 
 -- Instances
