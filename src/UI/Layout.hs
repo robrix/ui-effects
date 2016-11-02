@@ -84,25 +84,27 @@ fitLayoutTo'' = fitLayoutToAlgebra algebra
 
 
 fitLayoutTo' :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a))
-fitLayoutTo' maxSize layout = case runFreer layout of
-  Pure size | maxSize `encloses` size ->
-    Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
-  Free run (Inset by child) | maxSize `encloses` (2 * by) -> do
-    child <- fitLayoutTo' (subtractSize (2 * by)) (run child)
-    pure ((2 * by + extract child) `cowrap` liftFreerF (Inset by child))
-  Free run (Offset by child) | maxSize `encloses` pointSize by -> do
-    child <- fitLayoutTo' (subtractSize (pointSize by)) (run child)
-    pure ((pointSize by + extract child) `cowrap` liftFreerF (Offset by child))
-  Free run (Resizeable resize) -> do
-    computed <- fitLayoutTo' maxSize (run (resize maxSize))
-    pure (extract computed `cowrap` liftFreerF (Resizeable (const computed)))
-  Free run (Measure child withMeasurement) -> do
-    child <- fitLayoutTo' (pure Nothing) (run child)
-    computed <- fitLayoutTo' maxSize (run (withMeasurement (extract child)))
-    pure (extract computed `cowrap` liftFreerF (Measure child (const computed)))
-  _ -> Nothing
-  where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
-        subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+fitLayoutTo' = fitLayoutToAlgebra algebra
+  where algebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Size (Maybe a)) (Maybe (ALayout a (Size a))) -> Maybe (ALayout a (Size a))
+        algebra (Cofree maxSize runC layout) = case layout of
+          Pure size | maxSize `encloses` size -> Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
+          Free runF l -> case l of
+            Inset by child -> do
+              child <- runC (runF child)
+              pure ((2 * by + extract child) `cowrap` liftFreerF (Inset by child))
+            Offset by child -> do
+              child <- runC (runF child)
+              pure ((pointSize by + extract child) `cowrap` liftFreerF (Offset by child))
+            Resizeable resize -> do
+              computed <- runC (runF (resize maxSize))
+              pure (extract computed `cowrap` liftFreerF (Resizeable (const computed)))
+            Measure child withMeasurement -> do
+              child <- runC (runF child)
+              computed <- runC (runF (withMeasurement (extract child)))
+              pure (extract computed `cowrap` liftFreerF (Measure child (const computed)))
+          _ -> Nothing
+
+        maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
 
 extractAll :: Foldable f => Cofreer f a -> [a]
