@@ -8,6 +8,7 @@ module Control.Comonad.Cofree.Cofreer
 , coiter
 , unfold
 , annotating
+, annotatingBidi
 , extract
 , unwrap
 ) where
@@ -44,6 +45,9 @@ unfold f c = let (x, d) = f c in Cofreer (Cofree x (unfold f) d)
 
 annotating :: Functor f => (f a -> a) -> f (Cofreer f a) -> Cofreer f a
 annotating algebra base = Cofreer (Cofree (algebra (extract <$> base)) id base)
+
+annotatingBidi :: Functor f => (CofreerF f b a -> a) -> CofreerF f b (Cofreer f a) -> Cofreer f a
+annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (tailF base))
 
 
 -- Instances
