@@ -71,9 +71,7 @@ instance Foldable f => Foldable (FreerF f a) where
     Free t r -> foldMap (f . t) r
 
 instance Foldable f => Foldable (Freer f) where
-  foldMap f g = case runFreer g of
-    Pure a -> f a
-    Free t r -> foldMap (foldMap f . t) r
+  foldMap f = foldMap (foldMap f) . runFreer
 
 
 type instance Base (Freer f a) = FreerF f a
