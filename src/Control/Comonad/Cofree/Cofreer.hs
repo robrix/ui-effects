@@ -1,5 +1,14 @@
 {-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, TypeFamilies, UndecidableInstances #-}
-module Control.Comonad.Cofree.Cofreer where
+module Control.Comonad.Cofree.Cofreer
+( CofreerF(..)
+, Cofreer(..)
+, headF
+, tailF
+, cowrap
+, unfold
+, extract
+, unwrap
+) where
 
 import Control.Comonad
 import Control.Comonad.Cofree.Class
