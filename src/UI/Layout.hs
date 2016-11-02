@@ -75,9 +75,6 @@ fitLayoutWith = curry . (`hylo` coalgebra)
         subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
 
 
-extractAll :: Foldable f => Cofreer f a -> [a]
-extractAll = foldMap pure
-
 layoutRectangle :: Real a => ALayout a (Size a) (Size a) -> ALayout a (Rect a) (Rect a)
 layoutRectangle = unfold coalgebra . (,) (Point 0 0)
   where coalgebra :: Real a => (Point a, ALayout a (Size a) (Size a)) -> (Rect a, FreerF (LayoutF a) (Rect a) (Point a, ALayout a (Size a) (Size a)))
