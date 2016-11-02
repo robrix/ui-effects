@@ -2,7 +2,6 @@
 module UI.Layout where
 
 import Control.Applicative
-import Control.Comonad
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Foldable
