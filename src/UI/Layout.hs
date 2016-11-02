@@ -4,6 +4,7 @@ module UI.Layout where
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Bifunctor
 import Data.Foldable
 import Data.Maybe (fromMaybe)
 import UI.Geometry
@@ -78,6 +79,19 @@ fitLayoutTo' maxSize layout = case runFreer layout of
 
 extractAll :: Foldable f => Cofreer f a -> [a]
 extractAll = fold . fmap pure
+
+layoutRectangle :: Real a => ALayout a (Size a) -> ALayout a (Rect a)
+layoutRectangle = unfold coalgebra . (,) (Point 0 0)
+  where coalgebra :: Real a => (Point a, ALayout a (Size a)) -> (Rect a, FreerF (LayoutF a) (Rect a) (Point a, ALayout a (Size a)))
+        coalgebra (offset, Cofreer (Cofree size runC layout)) =
+          let rect = Rect offset size
+              assign origin = bimap (Rect origin) ((,) origin . runC) layout
+          in (,) rect $ case layout of
+            Pure _ -> assign offset
+            Free _ l -> case l of
+              Offset by _ -> assign (liftA2 (+) offset by)
+              _ -> assign offset
+
 
 -- Instances
 
