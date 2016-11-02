@@ -76,6 +76,13 @@ instance Foldable f => Foldable (Cofreer f) where
   foldMap f (Cofreer c) = mappend (f (headF c)) (foldMap (foldMap f) c)
 
 
+instance Traversable f => Traversable (CofreerF f a) where
+  traverse f (Cofree a t r) = Cofree a id <$> traverse (f . t) r
+
+instance Traversable f => Traversable (Cofreer f) where
+  traverse f (Cofreer (Cofree a t r)) = cowrap <$> f a <*> traverse (traverse f . t) r
+
+
 type instance Base (Cofreer f a) = CofreerF f a
 
 instance Recursive (Cofreer f a) where project = runCofreer
