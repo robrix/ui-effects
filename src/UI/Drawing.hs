@@ -53,6 +53,3 @@ text maxSize = liftF . Text maxSize
 
 clip :: Size a -> Drawing a b -> Drawing a b
 clip size = wrap . Clip size
--- renderingVertices = iter $ \ r -> case r of
---   InL (Action drawing run) -> run drawing
---   InR _ -> _
