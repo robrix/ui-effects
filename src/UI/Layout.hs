@@ -17,7 +17,7 @@ data LayoutF a f where
   deriving Functor
 
 type Layout a = Freer (LayoutF a)
-type ALayout a b = Cofreer (FreerF (LayoutF a) b) b
+type ALayout a b = Cofreer (FreerF (LayoutF a) b)
 
 inset :: Size a -> Layout a b -> Layout a b
 inset by = wrap . Inset by
@@ -58,7 +58,7 @@ layoutSizeAlgebra (Cofree maxSize runC layout) = case layout of
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
 
-fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a))
+fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (ALayout a (Size a) (Size a))
 fitLayoutAndAnnotate = fitLayoutWith $ \ (Cofree maxSize runC layout) -> case layout of
   Pure size | maxSize `encloses` size -> Just ((fromMaybe <$> size <*> maxSize) `cowrap` Pure size)
   Free runF l -> case l of
@@ -96,9 +96,9 @@ fitLayoutWith = curry . (`hylo` coalgebra)
 extractAll :: Foldable f => Cofreer f a -> [a]
 extractAll = foldMap pure
 
-layoutRectangle :: Real a => ALayout a (Size a) -> ALayout a (Rect a)
+layoutRectangle :: Real a => ALayout a (Size a) (Size a) -> ALayout a (Rect a) (Rect a)
 layoutRectangle = unfold coalgebra . (,) (Point 0 0)
-  where coalgebra :: Real a => (Point a, ALayout a (Size a)) -> (Rect a, FreerF (LayoutF a) (Rect a) (Point a, ALayout a (Size a)))
+  where coalgebra :: Real a => (Point a, ALayout a (Size a) (Size a)) -> (Rect a, FreerF (LayoutF a) (Rect a) (Point a, ALayout a (Size a) (Size a)))
         coalgebra (offset, Cofreer (Cofree size runC layout)) =
           let rect = Rect offset size
               assign origin = bimap (Rect origin) ((,) origin . runC) layout
