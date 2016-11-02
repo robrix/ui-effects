@@ -43,8 +43,8 @@ stack = unStack . foldMap Stack
 measureLayout :: Real a => Layout a (Size a) -> Size a
 measureLayout = fromMaybe (Size 0 0) . fitLayoutTo (pure Nothing)
 
-fitLayoutTo'' :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
-fitLayoutTo'' = fitLayoutToAlgebra $ \ (Cofree maxSize runC layout) -> case layout of
+fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
+fitLayout = fitLayoutToAlgebra $ \ (Cofree maxSize runC layout) -> case layout of
   Pure size | maxSize `encloses` size -> Just (fromMaybe <$> size <*> maxSize)
   Free runF l -> case l of
     Inset by child -> (2 * by +) <$> runC (runF child)
