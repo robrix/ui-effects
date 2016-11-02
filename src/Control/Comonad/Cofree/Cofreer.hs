@@ -55,6 +55,9 @@ instance Functor f => ComonadCofree f (Cofreer f) where
   unwrap = tailF . runCofreer
 
 
+instance Foldable f => Foldable (CofreerF f a) where
+  foldMap f (Cofree _ t r) = foldMap (f . t) r
+
 instance Foldable f => Foldable (Cofreer f) where
   foldMap f (Cofreer (Cofree a t r)) = mappend (f a) (foldMap (foldMap f . t) r)
 
