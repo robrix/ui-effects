@@ -5,6 +5,7 @@ import Control.Applicative
 import Control.Comonad
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Foldable
 import Data.Maybe (fromMaybe)
 import UI.Geometry
 
@@ -75,6 +76,9 @@ fitLayoutTo' maxSize layout = case runFreer layout of
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
         subtractSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
 
+
+extractAll :: Foldable f => Cofreer f a -> [a]
+extractAll = fold . fmap pure
 
 -- Instances
 
