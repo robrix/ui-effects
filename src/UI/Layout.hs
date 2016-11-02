@@ -5,7 +5,6 @@ import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Bifunctor
-import Data.Foldable
 import Data.Maybe (fromMaybe)
 import UI.Geometry
 
@@ -78,7 +77,7 @@ fitLayoutTo' maxSize layout = case runFreer layout of
 
 
 extractAll :: Foldable f => Cofreer f a -> [a]
-extractAll = fold . fmap pure
+extractAll = foldMap pure
 
 layoutRectangle :: Real a => ALayout a (Size a) -> ALayout a (Rect a)
 layoutRectangle = unfold coalgebra . (,) (Point 0 0)
