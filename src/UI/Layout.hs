@@ -4,6 +4,7 @@ module UI.Layout where
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
 import Data.Maybe (fromMaybe, listToMaybe, maybeToList)
 import Data.Semigroup
@@ -117,3 +118,11 @@ instance (Show a, Show b, Num a) => Show (LayoutF a b) where
     Offset by child -> showString "Offset" . showChar ' ' . showsPrec 11 by . showChar ' ' . showsPrec 11 child
     Resizeable with -> showString "Resizeable" . showChar ' ' . showsPrec 11 (with (pure Nothing))
     Measure child with -> showString "Measure" . showChar ' ' . showsPrec 11 child . showChar ' ' . showsPrec 11 (with (pure 0))
+
+instance (Show a, Num a) => Show1 (LayoutF a) where
+  liftShowsPrec sp _ d layout = case layout of
+    Inset by child -> showsBinaryWith showsPrec sp "Inset" d by child
+    Offset by child -> showsBinaryWith showsPrec sp "Offset" d by child
+    Resizeable with -> showsUnaryWith showsConst "Resizeable" d (with (pure Nothing))
+    Measure child with -> showsBinaryWith sp showsConst "Measure" d child (with (pure 0))
+    where showsConst i = showParen True . (showString "const " .) . sp i
