@@ -13,6 +13,8 @@ module UI.Drawing
 , clip
 , liftL
 , liftR
+, wrapL
+, wrapR
 , module Layout
 ) where
 
@@ -58,10 +60,16 @@ clip size = wrap . Clip size
 
 liftL :: Functor l => Freer l a -> Freer (Sum l r) a
 liftL (Freer f) = case f of
-  Free t r -> wrap (InL (liftL . t <$> r))
+  Free t r -> wrapL (liftL . t <$> r)
   Pure a -> pure a
 
 liftR :: Functor r => Freer r a -> Freer (Sum l r) a
 liftR  (Freer f) = case f of
-  Free t r -> wrap (InR (liftR . t <$> r))
+  Free t r -> wrapR (liftR . t <$> r)
   Pure a -> pure a
+
+wrapL :: l (Freer (Sum l r) a) -> Freer (Sum l r) a
+wrapL = wrap . InL
+
+wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
+wrapR = wrap . InR
