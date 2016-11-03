@@ -11,6 +11,7 @@ module UI.Drawing
 , liftR
 , wrapL
 , wrapR
+, boundingRectAlgebra
 , module Layout
 ) where
 
