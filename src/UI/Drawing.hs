@@ -5,6 +5,7 @@ module UI.Drawing
 , DrawingF(..)
 , Drawing
 , Rendering
+, RenderingF
 , text
 , clip
 , liftL
@@ -34,7 +35,8 @@ data DrawingF a f where
   deriving (Foldable, Functor)
 
 type Drawing a = Freer (DrawingF a)
-type Rendering a = Freer (Sum (DrawingF a) (LayoutF a))
+type Rendering a = Freer (RenderingF a)
+type RenderingF a = Sum (DrawingF a) (LayoutF a)
 
 text :: Size (Maybe a) -> String -> Drawing a ()
 text maxSize = liftF . Text maxSize
