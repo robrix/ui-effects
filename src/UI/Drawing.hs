@@ -34,7 +34,7 @@ data Colour a = RGBA !a !a !a !a
 data DrawingF a f where
   Text :: Size (Maybe a) -> String -> DrawingF a f
   Clip :: Size a -> f -> DrawingF a f
-  deriving (Foldable, Functor)
+  deriving (Foldable, Functor, Show)
 
 type Drawing a = Freer (DrawingF a)
 type Rendering a = Freer (RenderingF a)
