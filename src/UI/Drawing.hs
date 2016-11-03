@@ -15,6 +15,7 @@ module UI.Drawing
 , sumAlgebra
 , drawingBoundingRectAlgebra
 , renderingBoundingRectAlgebra
+, drawingCoalgebra
 , module Layout
 ) where
 
@@ -81,6 +82,13 @@ renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
   Free runF sum -> case sum of
     InL drawing -> drawingBoundingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
+
+drawingCoalgebra :: (Point a, Size (Maybe a), Drawing a (Size a)) -> CofreerF (FreerF (DrawingF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Drawing a (Size a))
+drawingCoalgebra (offset, maxSize, drawing) = Cofree (offset, maxSize) id $ case runFreer drawing of
+  Pure size -> Pure size
+  Free run l -> Free id $ case run <$> l of
+    Text size string -> Text size string
+    Clip size child -> Clip size (offset, maxSize, child)
 
 
 -- Instances
