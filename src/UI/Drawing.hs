@@ -20,6 +20,7 @@ module UI.Drawing
 
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Functor.Classes
 import Data.Functor.Sum
 import Data.Maybe (fromMaybe)
 import qualified Linear.V2 as Linear
@@ -80,3 +81,11 @@ renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
   Free runF sum -> case sum of
     InL drawing -> drawingBoundingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
+
+
+-- Instances
+
+instance Show a => Show1 (DrawingF a) where
+  liftShowsPrec sp _ d drawing = case drawing of
+    Text size string -> showsBinaryWith showsPrec showsPrec "Text" d size string
+    Clip size f -> showsBinaryWith showsPrec sp "Clip" d size f
