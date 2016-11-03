@@ -14,10 +14,13 @@ module UI.Drawing
 , module Layout
 ) where
 
+import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Functor.Sum
+import Data.Maybe (fromMaybe)
 import qualified Linear.V2 as Linear
 import UI.Layout as Layout
+import UI.Font
 import UI.Geometry
 
 data Shape a = Rectangle (Linear.V2 a) (Linear.V2 a)
@@ -53,3 +56,10 @@ wrapL = wrap . InL
 
 wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
 wrapR = wrap . InR
+
+boundingRectAlgebra :: Real a => CofreerF (FreerF (DrawingF a) (Size a)) (Point a) (Rect a) -> Rect a
+boundingRectAlgebra (Cofree origin runC r) = Rect origin $ case r of
+  Pure size -> size
+  Free runF r -> case runC . runF <$> r of
+    Text maxSize s -> fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize
+    Clip size _ -> size
