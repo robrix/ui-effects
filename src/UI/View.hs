@@ -1,11 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 module UI.View where
 
-import Control.Monad.Free
 import Control.Comonad.Cofree
 import Data.Functor.Classes
 import Data.Functor.Foldable
-import Data.Functor.Sum
 import Data.List (intersperse)
 import Data.Maybe (fromMaybe)
 import UI.Drawing hiding (Text)
@@ -30,26 +28,16 @@ type AView a = Cofree ViewF a
 
 
 renderView :: Real a => View -> Rendering a ()
-renderView = cata $ \ view -> inset margins $ case view of
-  Text s -> resizeable (`text` s)
-  Label s -> text (pure Nothing) s
-  List children -> stack (intersperse (offset spacing (pure ())) children)
-  Scroll axis child -> resizeable (\ (Size maxW maxH) ->
-    measure child (\ (Size w h) ->
-      clip (case axis of
+renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
+  Text s -> wrapR (Resizeable (wrapL . flip Draw.Text s))
+  Label s -> wrapL (Draw.Text (pure Nothing) s)
+  List children -> foldl (>>) (pure ()) (intersperse (wrapR (Offset (Point 0 3) (pure ()))) children)
+  Scroll axis child -> wrapR (Resizeable (\ (Size maxW maxH) ->
+    wrapR (Measure child (\ (Size w h) ->
+      wrapL (Clip (case axis of
         Just Horizontal -> Size w (fromMaybe h maxH)
         Just Vertical -> Size (fromMaybe w maxW) h
-        Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child))
-  where margins = Size 5 3
-        spacing = Point 0 3
-        text maxSize = wrap . InL . Draw.Text maxSize
-        clip size = wrap . InL . Draw.Clip size
-        inset margins = wrap . InR . Inset margins
-        offset delta = wrap . InR . Offset delta
-        stack :: Foldable t => t (Rendering a ()) -> Rendering a ()
-        stack = foldl (>>) (pure ())
-        resizeable = wrap . InR . Resizeable
-        measure child = wrap . InR . Measure child
+        Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)))))
 
 
 -- Smart constructors
