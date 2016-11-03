@@ -89,17 +89,17 @@ layoutRectanglesAlgebra c@(Cofree (_, maxSize) runC layout) = maybeToList (layou
 
 
 fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra coalgebra (Point 0 0, maxSize, layout)
-  where coalgebra :: Real a => (Point a, Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Layout a (Size a))
-        coalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case runFreer layout of
-          Pure size -> Pure size
-          Free run l -> Free id $ case run <$> l of
-            Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
-            Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
-            Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
-            Measure child withMeasurement -> Measure (offset, maxSize, child) ((,,) offset maxSize . withMeasurement)
+fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Point 0 0, maxSize, layout)
 
-        subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+fittingCoalgebra :: Real a => (Point a, Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Layout a (Size a))
+fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case runFreer layout of
+  Pure size -> Pure size
+  Free run l -> Free id $ case run <$> l of
+    Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
+    Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
+    Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
+    Measure child withMeasurement -> Measure (offset, maxSize, child) ((,,) offset maxSize . withMeasurement)
+  where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 
