@@ -14,6 +14,7 @@ module UI.Drawing
 , wrapR
 , sumAlgebra
 , drawingBoundingRectAlgebra
+, renderingBoundingRectAlgebra
 , module Layout
 ) where
 
@@ -72,3 +73,10 @@ drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
   Free runF r -> case runC . runF <$> r of
     Text maxSize s -> fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize
     Clip size _ -> size
+
+renderingBoundingRectAlgebra :: Real a => CofreerF (FreerF (RenderingF a) (Size a)) (Point a, Size (Maybe a)) (Rect a) -> Rect a
+renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
+  Pure size -> Rect origin size
+  Free runF sum -> case sum of
+    InL drawing -> drawingBoundingRectAlgebra (Cofree a id (Free runF drawing))
+    InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
