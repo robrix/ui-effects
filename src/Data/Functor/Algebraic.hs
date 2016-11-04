@@ -35,4 +35,4 @@ collect :: (Foldable f, Functor f) => Algebra f a -> Algebra f [a]
 collect algebra c = pure (algebra (head <$> c)) ++ fold c
 
 wrapAlgebra :: Functor f => (a -> b) -> (b -> a) -> Algebra f a -> Algebra f b
-wrapAlgebra into outOf algebra c = into (algebra (outOf <$> c))
+wrapAlgebra into outOf algebra = into . algebra . fmap outOf
