@@ -12,7 +12,6 @@ module UI.Drawing
 , liftR
 , wrapL
 , wrapR
-, sumAlgebra
 , drawingBoundingRectAlgebra
 , renderingBoundingRectAlgebra
 , drawingCoalgebra
@@ -66,11 +65,6 @@ wrapL = wrap . InL
 
 wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
 wrapR = wrap . InR
-
-sumAlgebra :: Algebra l a -> Algebra r a -> Algebra (Sum l r) a
-sumAlgebra lAlgebra rAlgebra sum = case sum of
-  InL l -> lAlgebra l
-  InR r -> rAlgebra r
 
 drawingBoundingRectAlgebra :: Real a => Algebra (Bidi (DrawingF a) (Size a) (Point a, Size (Maybe a))) (Rect a)
 drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
