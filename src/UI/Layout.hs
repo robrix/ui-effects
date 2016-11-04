@@ -67,7 +67,7 @@ fitLayout = fitLayoutWith layoutAlgebra
 fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Rect a))
 fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
 
-layoutAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Maybe (Rect a)) -> Maybe (Rect a)
+layoutAlgebra :: Real a => Algebra (Fitting LayoutF a) (Maybe (Rect a))
 layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just (Rect offset (fromMaybe <$> size <*> maxSize))
   Free runF l -> case runC . runF <$> l of
@@ -79,7 +79,7 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
 
-layoutRectanglesAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) [Rect a] -> [Rect a]
+layoutRectanglesAlgebra :: Real a => Algebra (Fitting LayoutF a) [Rect a]
 layoutRectanglesAlgebra c@(Cofree (_, maxSize) runC layout) = maybeToList (layoutAlgebra (listToMaybe <$> c)) <> case layout of
   Pure _ -> []
   Free runF l -> case runC . runF <$> l of
@@ -94,7 +94,7 @@ type Fitting f a = Bidi (f a) (Size a) (Point a, Size (Maybe a))
 fitLayoutWith :: Real a => Algebra (Fitting LayoutF a) b -> Size (Maybe a) -> Layout a (Size a) -> b
 fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Point 0 0, maxSize, layout)
 
-fittingCoalgebra :: Real a => (Point a, Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Layout a (Size a))
+fittingCoalgebra :: Real a => Coalgebra (Fitting LayoutF a) (Point a, Size (Maybe a), Layout a (Size a))
 fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case runFreer layout of
   Pure size -> Pure size
   Free run l -> Free id $ case run <$> l of
