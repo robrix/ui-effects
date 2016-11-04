@@ -40,8 +40,7 @@ iterA algebra = cata $ \ r -> case r of
 
 hoistFreer :: (forall a. f a -> g a) -> Freer f b -> Freer g b
 hoistFreer f = go
-  where go (Freer (Pure a))  = Freer (Pure a)
-        go (Freer (Free t r)) = Freer (Free (go . t) (f r))
+  where go = Freer . fmap go . hoistFreerF f . runFreer
 
 hoistFreerF :: (forall a. f a -> g a) -> FreerF f b c -> FreerF g b c
 hoistFreerF f = go
