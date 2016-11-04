@@ -16,6 +16,7 @@ import Prelude hiding (IO)
 import System.Exit
 import UI.Drawing
 import UI.Geometry
+import UI.View
 import UI.Window
 
 main :: IO ()
@@ -48,10 +49,9 @@ setup f = do
   _ <- setDepthFunc Less
   _ <- setClearColour (Linear.V4 0 0 0 (1 :: Float))
   program <- buildProgram [ GL.Setup.Vertex vertexShader, GL.Setup.Fragment fragmentShader ]
-  array <- bindArray (vertices shape :: [Linear.V4 Float])
+  array <- bindArray (rectVertices =<< renderingRects (pure 0 <* renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
-  where shape = Rectangle (Linear.V2 (negate 0.5) (negate 0.5)) (Linear.V2 0.5 0.5)
-        vertexShader = lambda "position" $ \ p ->
+  where vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.25 :: Float))
 
@@ -66,3 +66,6 @@ draw program array = do
 
   bindVertexArray array
   drawArrays TriangleStrip 0 4
+
+view :: View
+view = UI.View.text "hello, world"
