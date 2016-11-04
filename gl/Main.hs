@@ -15,6 +15,7 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 import System.Exit
 import UI.Drawing
+import UI.Geometry
 import UI.Window
 
 main :: IO ()
@@ -31,6 +32,14 @@ vertices (Rectangle (Linear.V2 ax ay) (Linear.V2 bx by)) =
   , Linear.V4 ax by 0 1
   , Linear.V4 bx ay 0 1
   , Linear.V4 bx by 0 1
+  ]
+
+rectVertices :: Num a => Rect a -> [Linear.V4 a]
+rectVertices (Rect (Point x y) (Size w h)) =
+  [ Linear.V4 x        y      0 1
+  , Linear.V4 x       (y + h) 0 1
+  , Linear.V4 (x + w)  y      0 1
+  , Linear.V4 (x + w) (y + h) 0 1
   ]
 
 setup :: ((GLProgram, GLArray Float) -> IO a) -> Setup a
