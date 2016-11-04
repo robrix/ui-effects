@@ -37,6 +37,7 @@ rectVertices (Rect (Point x y) (Size w h)) =
 setup :: ((GLProgram, GLArray Float) -> IO a) -> Setup a
 setup f = do
   _ <- enable DepthTest
+  _ <- enable Blending
   _ <- setDepthFunc Less
   _ <- setClearColour (Linear.V4 0 0 0 (1 :: Float))
   program <- buildProgram [ GL.Setup.Vertex vertexShader, GL.Setup.Fragment fragmentShader ]
