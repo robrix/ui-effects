@@ -6,6 +6,7 @@ module Control.Monad.Free.Freer
 , iter
 , iterA
 , hoistFreer
+, hoistFreerF
 , liftF
 , wrap
 ) where
@@ -41,6 +42,12 @@ hoistFreer :: (forall a. f a -> g a) -> Freer f b -> Freer g b
 hoistFreer f = go
   where go (Freer (Pure a))  = Freer (Pure a)
         go (Freer (Free t r)) = Freer (Free (hoistFreer f . t) (f r))
+
+hoistFreerF :: (forall a. f a -> g a) -> FreerF f b c -> FreerF g b c
+hoistFreerF f = go
+  where go r = case r of
+          Pure a -> Pure a
+          Free t r -> Free t (f r)
 
 
 -- Instances
