@@ -86,7 +86,7 @@ renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
     InL drawing -> drawingBoundingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
 
-drawingCoalgebra :: (Point a, Size (Maybe a), Drawing a (Size a)) -> CofreerF (FreerF (DrawingF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Drawing a (Size a))
+drawingCoalgebra :: Coalgebra (Bidi (DrawingF a) (Size a) (Point a, Size (Maybe a))) (Point a, Size (Maybe a), Drawing a (Size a))
 drawingCoalgebra (offset, maxSize, drawing) = Cofree (offset, maxSize) id $ case runFreer drawing of
   Pure size -> Pure size
   Free run l -> Free id $ case run <$> l of
