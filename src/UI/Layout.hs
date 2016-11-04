@@ -80,7 +80,7 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
 
 layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect (layoutAlgebra . outOf)) . into
-  where into = hoistCofreerF (hoistFreerF (FoldLayout (pure Nothing) (pure 0)))
+  where into c@(Cofree (_, maxSize) _ _) = hoistCofreerF (hoistFreerF (FoldLayout maxSize (pure 0))) c
         outOf = hoistCofreerF (hoistFreerF unfoldLayout)
 
 
