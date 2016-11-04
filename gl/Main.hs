@@ -11,6 +11,7 @@ import GL.Program
 import GL.Shader
 import GL.Setup
 import qualified Linear.V4 as Linear
+import qualified Linear.Matrix as Linear
 import Prelude hiding (IO)
 import System.Exit
 import UI.Drawing
@@ -47,6 +48,16 @@ setup f = do
   where vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.5 :: Float))
+
+orthographic :: Fractional a => a -> a -> a -> a -> a -> a -> Linear.M44 a
+orthographic left right bottom top near far = Linear.V4
+  (Linear.V4 (2 / (right - left))  0                    0                         tx)
+  (Linear.V4  0                   (2 / (top - bottom))  0                         ty)
+  (Linear.V4  0                    0                   (negate 2 / (far - near))  tz)
+  (Linear.V4  0                    0                    0                         1)
+  where tx = negate ((right + left) / (right - left))
+        ty = negate ((top + bottom) / (top - bottom))
+        tz = negate ((far + near) / (far - near))
 
 draw :: GLProgram -> GLArray Float -> Draw ()
 draw program array = do
