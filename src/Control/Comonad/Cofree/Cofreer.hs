@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, RankNTypes, TypeFamilies, UndecidableInstances #-}
 module Control.Comonad.Cofree.Cofreer
 ( CofreerF(..)
 , Cofreer(..)
@@ -7,6 +7,7 @@ module Control.Comonad.Cofree.Cofreer
 , cowrap
 , coiter
 , unfold
+, hoistCofreer
 , annotating
 , annotatingBidi
 , extract
@@ -41,6 +42,11 @@ coiter f = unfold (id &&& f)
 
 unfold :: Functor f => (b -> (a, f b)) -> b -> Cofreer f a
 unfold f c = let (x, d) = f c in Cofreer (Cofree x (unfold f) d)
+
+
+hoistCofreer :: (forall x . f x -> g x) -> Cofreer f a -> Cofreer g a
+hoistCofreer f = go
+  where go (Cofreer (Cofree a t r)) = Cofreer (Cofree a (go . t) (f r))
 
 
 annotating :: Functor f => (f a -> a) -> f (Cofreer f a) -> Cofreer f a
