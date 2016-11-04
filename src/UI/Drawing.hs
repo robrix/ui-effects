@@ -56,7 +56,7 @@ drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
     Clip size _ -> size
 
 drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
-drawingRectanglesAlgebra c@(Cofree _ runC drawing) = pure (drawingBoundingRectAlgebra (head <$> c)) ++ foldMap runC drawing
+drawingRectanglesAlgebra = collect drawingBoundingRectAlgebra
 
 renderingBoundingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
 renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
