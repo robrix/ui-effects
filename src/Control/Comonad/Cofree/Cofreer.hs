@@ -8,6 +8,7 @@ module Control.Comonad.Cofree.Cofreer
 , coiter
 , unfold
 , hoistCofreer
+, hoistCofreerF
 , annotating
 , annotatingBidi
 , extract
@@ -47,6 +48,9 @@ unfold f c = let (x, d) = f c in Cofreer (Cofree x (unfold f) d)
 hoistCofreer :: (forall x . f x -> g x) -> Cofreer f a -> Cofreer g a
 hoistCofreer f = go
   where go (Cofreer (Cofree a t r)) = Cofreer (Cofree a (go . t) (f r))
+
+hoistCofreerF :: (forall a. f a -> g a) -> CofreerF f b c -> CofreerF g b c
+hoistCofreerF f (Cofree a t r) = Cofree a t (f r)
 
 
 annotating :: Functor f => (f a -> a) -> f (Cofreer f a) -> Cofreer f a
