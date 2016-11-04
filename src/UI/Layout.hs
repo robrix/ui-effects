@@ -7,8 +7,7 @@ import Control.Monad.Free.Freer
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
-import Data.Maybe (fromMaybe, listToMaybe, maybeToList)
-import Data.Semigroup
+import Data.Maybe (catMaybes, fromMaybe)
 import UI.Geometry
 
 data LayoutF a f where
@@ -80,13 +79,9 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
 
 
 layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
-layoutRectanglesAlgebra c@(Cofree (_, maxSize) runC layout) = maybeToList (layoutAlgebra (listToMaybe <$> c)) <> case layout of
-  Pure _ -> []
-  Free runF l -> case runC . runF <$> l of
-    Inset _ child -> child
-    Offset _ child -> child
-    Resizeable resize -> resize maxSize
-    Measure child withMeasurement -> child >>= withMeasurement . size
+layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect (layoutAlgebra . outOf)) . into
+  where into = hoistCofreerF (hoistFreerF (FoldLayout (pure Nothing) (pure 0)))
+        outOf = hoistCofreerF (hoistFreerF unfoldLayout)
 
 
 type Fitting f a = Bidi f (Size a) (Point a, Size (Maybe a))
