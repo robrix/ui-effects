@@ -43,10 +43,9 @@ hoistFreer f = go
   where go = Freer . fmap go . hoistFreerF f . runFreer
 
 hoistFreerF :: (forall a. f a -> g a) -> FreerF f b c -> FreerF g b c
-hoistFreerF f = go
-  where go r = case r of
-          Pure a -> Pure a
-          Free t r -> Free t (f r)
+hoistFreerF f r = case r of
+  Pure a -> Pure a
+  Free t r -> Free t (f r)
 
 
 -- Instances
