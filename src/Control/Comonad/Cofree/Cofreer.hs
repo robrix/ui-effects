@@ -45,9 +45,9 @@ unfold :: Functor f => (b -> (a, f b)) -> b -> Cofreer f a
 unfold f c = let (x, d) = f c in Cofreer (Cofree x (unfold f) d)
 
 
-hoistCofreer :: (forall x . f x -> g x) -> Cofreer f a -> Cofreer g a
+hoistCofreer :: (forall a. f a -> g a) -> Cofreer f b -> Cofreer g b
 hoistCofreer f = go
-  where go (Cofreer (Cofree a t r)) = Cofreer (Cofree a (go . t) (f r))
+  where go = Cofreer . fmap go . hoistCofreerF f . runCofreer
 
 hoistCofreerF :: (forall a. f a -> g a) -> CofreerF f b c -> CofreerF g b c
 hoistCofreerF f (Cofree a t r) = Cofree a t (f r)
