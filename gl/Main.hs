@@ -53,7 +53,7 @@ setup f = do
   where shape = Rectangle (Linear.V2 (negate 0.5) (negate 0.5)) (Linear.V2 0.5 0.5)
         vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
-        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (1 :: Float))
+        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.25 :: Float))
 
 draw :: GLProgram -> GLArray Float -> Draw ()
 draw program array = do
