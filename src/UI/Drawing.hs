@@ -16,9 +16,11 @@ module UI.Drawing
 , drawingBoundingRectAlgebra
 , renderingBoundingRectAlgebra
 , drawingCoalgebra
+, renderingCoalgebra
 , module Layout
 ) where
 
+import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Functor.Classes
@@ -89,6 +91,21 @@ drawingCoalgebra (offset, maxSize, drawing) = Cofree (offset, maxSize) id $ case
   Free run l -> Free id $ case run <$> l of
     Text size string -> Text size string
     Clip size child -> Clip size (offset, maxSize, child)
+
+renderingCoalgebra :: Real a => (Point a, Size (Maybe a), Rendering a (Size a)) -> CofreerF (FreerF (RenderingF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Rendering a (Size a))
+renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ case runFreer rendering of
+  Pure size -> Pure size
+  Free run l -> Free id $ case run <$> l of
+    InL drawing -> InL $ case drawing of
+      Text size string -> Text size string
+      Clip size child -> Clip size (offset, maxSize, child)
+    InR layout -> InR $ case layout of
+      Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
+      Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
+      Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
+      Measure child withMeasurement -> Measure (offset, maxSize, child) ((,,) offset maxSize . withMeasurement)
+  where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+        addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 
 -- Instances
