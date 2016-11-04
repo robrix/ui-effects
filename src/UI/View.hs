@@ -2,6 +2,7 @@
 module UI.View where
 
 import Control.Comonad.Cofree
+import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.List (intersperse)

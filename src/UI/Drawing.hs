@@ -8,10 +8,6 @@ module UI.Drawing
 , RenderingF
 , text
 , clip
-, liftL
-, liftR
-, wrapL
-, wrapR
 , drawingBoundingRectAlgebra
 , renderingBoundingRectAlgebra
 , drawingCoalgebra
@@ -50,21 +46,6 @@ text maxSize = liftF . Text maxSize
 clip :: Size a -> Drawing a b -> Drawing a b
 clip size = wrap . Clip size
 
-liftL :: Functor l => Freer l a -> Freer (Sum l r) a
-liftL (Freer f) = case f of
-  Free t r -> wrapL (liftL . t <$> r)
-  Pure a -> pure a
-
-liftR :: Functor r => Freer r a -> Freer (Sum l r) a
-liftR  (Freer f) = case f of
-  Free t r -> wrapR (liftR . t <$> r)
-  Pure a -> pure a
-
-wrapL :: l (Freer (Sum l r) a) -> Freer (Sum l r) a
-wrapL = wrap . InL
-
-wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
-wrapR = wrap . InR
 
 drawingBoundingRectAlgebra :: Real a => Algebra (Bidi (DrawingF a) (Size a) (Point a, Size (Maybe a))) (Rect a)
 drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
