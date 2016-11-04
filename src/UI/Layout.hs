@@ -106,7 +106,17 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 
+data FoldLayout a b = FoldLayout { maxSize :: Size (Maybe a), childSize :: Size a, unfoldLayout :: LayoutF a b }
+
+
 -- Instances
+
+instance Foldable (FoldLayout a) where
+  foldMap f (FoldLayout maxSize childSize layout) = case layout of
+    Inset _ child -> f child
+    Offset _ child -> f child
+    Resizeable with -> f (with maxSize)
+    Measure child with -> mappend (f child) (f (with childSize))
 
 instance Real a => Monoid (Stack a (Size a)) where
   mempty = Stack (pure (Size 0 0))
