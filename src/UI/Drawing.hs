@@ -13,6 +13,7 @@ module UI.Drawing
 , renderingBoundingRectAlgebra
 , drawingCoalgebra
 , renderingCoalgebra
+, renderingRects
 , module Layout
 ) where
 
@@ -21,6 +22,7 @@ import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Functor.Algebraic
 import Data.Functor.Classes
+import Data.Functor.Foldable
 import Data.Functor.Sum
 import Data.Maybe (fromMaybe)
 import qualified Linear.V2 as Linear
@@ -86,6 +88,9 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
       Measure child withMeasurement -> Measure (offset, maxSize, child) ((,,) offset maxSize . withMeasurement)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
+
+renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
+renderingRects = hylo (collect renderingBoundingRectAlgebra) renderingCoalgebra . (,,) (pure 0) (pure Nothing)
 
 
 -- Instances
