@@ -46,7 +46,7 @@ setup f = do
   setupIO (f (program, array))
   where vertexShader = lambda "position" $ \ p ->
           set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
-        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.25 :: Float))
+        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.5 :: Float))
 
 draw :: GLProgram -> GLArray Float -> Draw ()
 draw program array = do
