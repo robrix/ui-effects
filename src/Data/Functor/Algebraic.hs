@@ -32,7 +32,7 @@ wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
 wrapR = wrap . InR
 
 collect :: (Foldable f, Functor f) => Algebra f a -> Algebra f [a]
-collect algebra c = pure (algebra (head <$> c)) ++ fold c
+collect algebra c = wrapAlgebra ((++ fold c) . pure) head algebra c
 
 wrapAlgebra :: Functor f => (a -> b) -> (b -> a) -> Algebra f a -> Algebra f b
 wrapAlgebra into outOf algebra = into . algebra . fmap outOf
