@@ -4,6 +4,7 @@ module UI.Layout where
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
 import Data.Maybe (fromMaybe, listToMaybe, maybeToList)
@@ -88,7 +89,9 @@ layoutRectanglesAlgebra c@(Cofree (_, maxSize) runC layout) = maybeToList (layou
     Measure child withMeasurement -> child >>= withMeasurement . size
 
 
-fitLayoutWith :: Real a => (CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) b -> b) -> Size (Maybe a) -> Layout a (Size a) -> b
+type Fitting f a = Bidi (f a) (Size a) (Point a, Size (Maybe a))
+
+fitLayoutWith :: Real a => Algebra (Fitting LayoutF a) b -> Size (Maybe a) -> Layout a (Size a) -> b
 fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Point 0 0, maxSize, layout)
 
 fittingCoalgebra :: Real a => (Point a, Size (Maybe a), Layout a (Size a)) -> CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Layout a (Size a))
