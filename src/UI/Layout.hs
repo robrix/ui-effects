@@ -79,9 +79,7 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
 
 
 layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
-layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect (layoutAlgebra . outOf)) . into
-  where into c@(Cofree (_, maxSize) _ _) = hoistCofreerF (hoistFreerF (FoldLayout maxSize (pure 0))) c
-        outOf = hoistCofreerF (hoistFreerF unfoldLayout)
+layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
 type Fitting f a = Bidi f (Size a) (Point a, Size (Maybe a))
@@ -101,17 +99,14 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 
-data FoldLayout a b = FoldLayout { maxSize :: Size (Maybe a), childSize :: Size a, unfoldLayout :: LayoutF a b }
-
-
 -- Instances
 
-instance Foldable (FoldLayout a) where
-  foldMap f (FoldLayout maxSize childSize layout) = case layout of
+instance Num a => Foldable (LayoutF a) where
+  foldMap f layout = case layout of
     Inset _ child -> f child
     Offset _ child -> f child
-    Resizeable with -> f (with maxSize)
-    Measure child with -> mappend (f child) (f (with childSize))
+    Resizeable with -> f (with (pure Nothing))
+    Measure child with -> mappend (f child) (f (with (pure 0)))
 
 instance Real a => Monoid (Stack a (Size a)) where
   mempty = Stack (pure (Size 0 0))
