@@ -2,6 +2,7 @@ module Data.Functor.Algebraic where
 
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Foldable (fold)
 import Data.Functor.Sum
 
 type Algebra functor result = functor result -> result
@@ -29,3 +30,6 @@ wrapL = wrap . InL
 
 wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
 wrapR = wrap . InR
+
+collect :: (Foldable f, Functor f) => Algebra f a -> Algebra f [a]
+collect algebra c = pure (algebra (head <$> c)) ++ fold c
