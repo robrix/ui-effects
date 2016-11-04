@@ -9,6 +9,7 @@ module UI.Drawing
 , text
 , clip
 , drawingBoundingRectAlgebra
+, drawingRectanglesAlgebra
 , renderingBoundingRectAlgebra
 , drawingCoalgebra
 , renderingCoalgebra
@@ -53,6 +54,9 @@ drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
   Free runF r -> case runC . runF <$> r of
     Text maxSize s -> fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize
     Clip size _ -> size
+
+drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
+drawingRectanglesAlgebra c@(Cofree _ runC drawing) = pure (drawingBoundingRectAlgebra (head <$> c)) ++ foldMap runC drawing
 
 renderingBoundingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
 renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
