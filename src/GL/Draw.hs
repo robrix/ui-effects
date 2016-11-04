@@ -12,7 +12,7 @@ import Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Buffer = ColourBuffer | DepthBuffer | StencilBuffer
-data Mode = Lines | LineLoop | LineStrip | Triangles | TriangleStrip
+data Mode = Points | Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 
 data DrawF a where
   Clear :: [Buffer] -> DrawF ()
@@ -63,6 +63,7 @@ runDraw = iterM $ \ d -> case d of
     checkingGLError (rest ())
   Action (DrawArrays mode from to) rest -> do
     glDrawArrays (case mode of
+      Points -> GL_POINTS
       Lines -> GL_LINES
       LineLoop -> GL_LINE_LOOP
       LineStrip -> GL_LINE_STRIP
