@@ -67,19 +67,19 @@ wrapL = wrap . InL
 wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
 wrapR = wrap . InR
 
-sumAlgebra :: (l a -> a) -> (r a -> a) -> Sum l r a -> a
+sumAlgebra :: Algebra l a -> Algebra r a -> Algebra (Sum l r) a
 sumAlgebra lAlgebra rAlgebra sum = case sum of
   InL l -> lAlgebra l
   InR r -> rAlgebra r
 
-drawingBoundingRectAlgebra :: Real a => CofreerF (FreerF (DrawingF a) (Size a)) (Point a, Size (Maybe a)) (Rect a) -> Rect a
+drawingBoundingRectAlgebra :: Real a => Algebra (Bidi (DrawingF a) (Size a) (Point a, Size (Maybe a))) (Rect a)
 drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
   Pure size -> size
   Free runF r -> case runC . runF <$> r of
     Text maxSize s -> fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize
     Clip size _ -> size
 
-renderingBoundingRectAlgebra :: Real a => CofreerF (FreerF (RenderingF a) (Size a)) (Point a, Size (Maybe a)) (Rect a) -> Rect a
+renderingBoundingRectAlgebra :: Real a => Algebra (Bidi (RenderingF a) (Size a) (Point a, Size (Maybe a))) (Rect a)
 renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
   Pure size -> Rect origin size
   Free runF sum -> case sum of
