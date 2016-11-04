@@ -13,7 +13,7 @@ import Graphics.GL.Types
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
-data Flag = DepthTest
+data Flag = DepthTest | Blending
 data Func = Less
 
 data Shader a where
@@ -56,6 +56,7 @@ runSetup = iterM $ \ s -> case s of
   Action (Flag f b) rest -> do
     toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST
+      Blending -> GL_BLEND
     checkingGLError (rest ())
   Action (SetDepthFunc f) rest -> do
     glDepthFunc $ case f of
