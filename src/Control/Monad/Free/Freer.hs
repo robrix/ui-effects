@@ -1,10 +1,11 @@
-{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, RankNTypes, TypeFamilies, UndecidableInstances #-}
 module Control.Monad.Free.Freer
 ( FreerF(..)
 , Freer(..)
 , liftFreerF
 , iter
 , iterA
+, hoistFreer
 , liftF
 , wrap
 ) where
@@ -34,6 +35,12 @@ iterA :: (Functor f, Applicative m) => (f (m a) -> m a) -> Freer f a -> m a
 iterA algebra = cata $ \ r -> case r of
   Pure a -> pure a
   Free t r -> algebra (t <$> r)
+
+
+hoistFreer :: (forall a. f a -> g a) -> Freer f b -> Freer g b
+hoistFreer f = go
+  where go (Freer (Pure a))  = Freer (Pure a)
+        go (Freer (Free t r)) = Freer (Free (hoistFreer f . t) (f r))
 
 
 -- Instances
