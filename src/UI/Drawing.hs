@@ -23,6 +23,7 @@ module UI.Drawing
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Sum
 import Data.Maybe (fromMaybe)
@@ -92,7 +93,7 @@ drawingCoalgebra (offset, maxSize, drawing) = Cofree (offset, maxSize) id $ case
     Text size string -> Text size string
     Clip size child -> Clip size (offset, maxSize, child)
 
-renderingCoalgebra :: Real a => (Point a, Size (Maybe a), Rendering a (Size a)) -> CofreerF (FreerF (RenderingF a) (Size a)) (Point a, Size (Maybe a)) (Point a, Size (Maybe a), Rendering a (Size a))
+renderingCoalgebra :: Real a => Coalgebra (Bidi (RenderingF a) (Size a) (Point a, Size (Maybe a))) (Point a, Size (Maybe a), Rendering a (Size a))
 renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ case runFreer rendering of
   Pure size -> Pure size
   Free run l -> Free id $ case run <$> l of
