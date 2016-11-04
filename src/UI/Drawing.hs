@@ -47,28 +47,28 @@ clip :: Size a -> Drawing a b -> Drawing a b
 clip size = wrap . Clip size
 
 
-drawingBoundingRectAlgebra :: Real a => Algebra (Bidi (DrawingF a) (Size a) (Point a, Size (Maybe a))) (Rect a)
+drawingBoundingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
 drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
   Pure size -> size
   Free runF r -> case runC . runF <$> r of
     Text maxSize s -> fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize
     Clip size _ -> size
 
-renderingBoundingRectAlgebra :: Real a => Algebra (Bidi (RenderingF a) (Size a) (Point a, Size (Maybe a))) (Rect a)
+renderingBoundingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
 renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
   Pure size -> Rect origin size
   Free runF sum -> case sum of
     InL drawing -> drawingBoundingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
 
-drawingCoalgebra :: Coalgebra (Bidi (DrawingF a) (Size a) (Point a, Size (Maybe a))) (Point a, Size (Maybe a), Drawing a (Size a))
+drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Point a, Size (Maybe a), Drawing a (Size a))
 drawingCoalgebra (offset, maxSize, drawing) = Cofree (offset, maxSize) id $ case runFreer drawing of
   Pure size -> Pure size
   Free run l -> Free id $ case run <$> l of
     Text size string -> Text size string
     Clip size child -> Clip size (offset, maxSize, child)
 
-renderingCoalgebra :: Real a => Coalgebra (Bidi (RenderingF a) (Size a) (Point a, Size (Maybe a))) (Point a, Size (Maybe a), Rendering a (Size a))
+renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Point a, Size (Maybe a), Rendering a (Size a))
 renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ case runFreer rendering of
   Pure size -> Pure size
   Free run l -> Free id $ case run <$> l of
