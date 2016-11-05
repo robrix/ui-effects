@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, GADTs, KindSignatures, RankNTypes, StandaloneDeriving #-}
+{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, RankNTypes, StandaloneDeriving #-}
 module GL.Shader
 ( Var
 , Shader
@@ -272,3 +272,13 @@ deriving instance Eq a => Eq (Shader k a)
 deriving instance Ord a => Ord (Shader k a)
 deriving instance Foldable (Var io k)
 deriving instance Foldable (Shader k)
+
+
+instance Num a => Num (Shader' a) where
+  (+) = (wrap .) . Add'
+  (-) = (wrap .) . Sub'
+  (*) = (wrap .) . Mul'
+
+  abs = wrap . Abs'
+  signum = wrap . Signum'
+  fromInteger = pure . fromInteger
