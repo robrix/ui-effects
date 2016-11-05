@@ -96,6 +96,9 @@ data ShaderF a where
   Add', Sub', Mul', Div' :: a -> a -> ShaderF a
   Abs', Signum' :: a -> ShaderF a
 
+  -- Matrix arithmetic
+  MulMV :: (Foldable term, Foldable row, Foldable column) => term (row (column a)) -> term (column a) -> ShaderF (column a)
+
   -- Trigonometric
   Sin', Cos', Tan' :: a -> ShaderF a
   ASin', ACos', ATan' :: a -> ShaderF a
@@ -121,6 +124,11 @@ set' var value = Freer (Free pure (Set' var value))
 
 v4' :: a -> a -> a -> a -> Shader' (Linear.V4 a)
 v4' x y z w = pure (Linear.V4 x y z w)
+
+infixl 7 !*
+
+(!*) :: Shader' (Linear.M44 a) -> Shader' (Linear.V4 a) -> Shader' (Linear.V4 a)
+matrix !* column = Freer (Free pure (MulMV matrix column))
 
 
 position :: Var 'Out 'Vertex (Linear.V4 Float)
