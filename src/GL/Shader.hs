@@ -115,6 +115,9 @@ bind s = Freer (Free pure (Bind s))
 get' :: Var' a -> Shader' a
 get' v = Freer (Free pure (Get' v))
 
+v4' :: a -> a -> a -> a -> Shader' (Linear.V4 a)
+v4' x y z w = pure (Linear.V4 x y z w)
+
 
 position :: Var 'Out 'Vertex (Linear.V4 Float)
 position = Position
