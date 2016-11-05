@@ -90,6 +90,7 @@ data ShaderF a where
 
   -- Accessors
   Get' :: Var' a -> ShaderF a
+  Set' :: Foldable t => Var' a -> t a -> ShaderF a
 
   -- Arithmetic
   Add', Sub', Mul', Div' :: a -> a -> ShaderF a
@@ -114,6 +115,9 @@ bind s = Freer (Free pure (Bind s))
 
 get' :: Var' a -> Shader' a
 get' v = Freer (Free pure (Get' v))
+
+set' :: Var' a -> Shader' a -> Shader' a
+set' var value = Freer (Free pure (Set' var value))
 
 v4' :: a -> a -> a -> a -> Shader' (Linear.V4 a)
 v4' x y z w = pure (Linear.V4 x y z w)
@@ -334,7 +338,4 @@ instance Floating a => Floating (Shader' a) where
   exp = wrap . Exp'
   log = wrap . Log'
 
-deriving instance Eq a => Eq (ShaderF a)
 deriving instance Foldable ShaderF
-deriving instance Ord a => Ord (ShaderF a)
-deriving instance Show a => Show (ShaderF a)
