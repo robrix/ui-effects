@@ -86,6 +86,9 @@ data Var' a where
 data ShaderF a where
   -- Binding
   Uniform' :: String -> ShaderF (Var' a)
+  Bind :: String -> ShaderF (Var' a)
+
+  -- Accessors
   Get' :: Var' a -> ShaderF a
 
   -- Arithmetic
@@ -105,6 +108,9 @@ type Shader' = Freer ShaderF
 
 uniform' :: String -> Shader' (Var' a)
 uniform' s = Freer (Free pure (Uniform' s))
+
+bind :: String -> Shader' (Var' a)
+bind s = Freer (Free pure (Bind s))
 
 get' :: Var' a -> Shader' a
 get' v = Freer (Free pure (Get' v))
