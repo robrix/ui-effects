@@ -79,9 +79,11 @@ data Shader (k :: ShaderType) t where
   Exp, Log :: Num a => Shader k a -> Shader k a
 
 data ShaderF a where
+  -- Arithmetic
   Add', Sub', Mul', Div' :: a -> a -> ShaderF a
   Abs', Signum' :: a -> ShaderF a
 
+  -- Trigonometric
   Sin', Cos', Tan' :: a -> ShaderF a
   ASin', ACos', ATan' :: a -> ShaderF a
   SinH', CosH', TanH' :: a -> ShaderF a
