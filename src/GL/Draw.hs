@@ -8,7 +8,6 @@ import GL.Array
 import GL.Exception
 import GL.Program
 import Graphics.GL.Core41
-import Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Buffer = ColourBuffer | DepthBuffer | StencilBuffer
@@ -17,7 +16,7 @@ data Mode = Points | Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 data DrawF a where
   Clear :: [Buffer] -> DrawF ()
   UseProgram :: GLProgram -> DrawF ()
-  SetUniform :: GLProgram -> String -> Linear.V4 Float -> DrawF ()
+  SetUniform :: GLProgramUniform v => GLProgram -> String -> v -> DrawF ()
   BindVertexArray :: GLArray n -> DrawF ()
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
   RunIO :: IO a -> DrawF a
@@ -31,7 +30,7 @@ clear = liftF . liftAction . Clear
 useProgram :: GLProgram -> Draw ()
 useProgram = liftF . liftAction . UseProgram
 
-setUniform :: GLProgram -> String -> Linear.V4 Float -> Draw ()
+setUniform :: GLProgramUniform v => GLProgram -> String -> v -> Draw ()
 setUniform program var value = liftF (liftAction (SetUniform program var value))
 
 bindVertexArray :: GLArray n -> Draw ()
