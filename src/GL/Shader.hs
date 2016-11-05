@@ -282,3 +282,7 @@ instance Num a => Num (Shader' a) where
   abs = wrap . Abs'
   signum = wrap . Signum'
   fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (Shader' a) where
+  (/) = (wrap .) . Div'
+  fromRational = pure . fromRational
