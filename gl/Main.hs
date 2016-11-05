@@ -46,7 +46,7 @@ setup f = do
   array <- bindArray (rectVertices =<< renderingRects (pure 0 <* renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
   where vertexShader = lambda "position" $ \ p ->
-          set position (uniform "time" * v4 0.3 0.3 0.3 0.3 + get p)
+          set position ((get p + v4 (negate 1) (negate 1) 0 0) * v4 (1/1024) (1/768) 1 1)
         fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.5 :: Float))
 
 orthographic :: Fractional a => a -> a -> a -> a -> a -> a -> Linear.M44 a
