@@ -236,6 +236,9 @@ toGLSL shader
         pragma k v = showString $ "#" <> k <> " " <> v <> "\n"
         main body = showString "void main(void) {\n" . body . showString "}"
 
+
+-- Instances
+
 instance (Show a, Num a) => Num (Shader k a) where
   (+) = Add
   (-) = Sub
