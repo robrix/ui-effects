@@ -86,6 +86,7 @@ data Var' a where
 data ShaderF a where
   -- Binding
   Uniform' :: String -> ShaderF (Var' a)
+  Get' :: Var' a -> ShaderF a
 
   -- Arithmetic
   Add', Sub', Mul', Div' :: a -> a -> ShaderF a
