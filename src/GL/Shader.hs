@@ -14,6 +14,7 @@ module GL.Shader
 , get
 , out
 , uniform
+, mat4Uniform
 , v2
 , v3
 , v4
@@ -35,6 +36,7 @@ import Graphics.GL.Types
 import qualified Linear.V2 as Linear
 import qualified Linear.V3 as Linear
 import qualified Linear.V4 as Linear
+import qualified Linear.Matrix as Linear
 import Prelude hiding (IO)
 
 data ShaderType = Fragment | Vertex
@@ -107,6 +109,9 @@ out = Var
 
 uniform :: String -> Shader k a
 uniform = Get . Uniform
+
+mat4Uniform :: String -> Shader k (Linear.M44 a)
+mat4Uniform = Get . Uniform
 
 
 v2 :: Show a => a -> a -> Shader k (Linear.V2 a)
