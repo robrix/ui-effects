@@ -286,3 +286,21 @@ instance Num a => Num (Shader' a) where
 instance Fractional a => Fractional (Shader' a) where
   (/) = (wrap .) . Div'
   fromRational = pure . fromRational
+
+instance Floating a => Floating (Shader' a) where
+  sin = wrap . Sin'
+  cos = wrap . Cos'
+  tan = wrap . Tan'
+  asin = wrap . ASin'
+  acos = wrap . ACos'
+  atan = wrap . ATan'
+  sinh = wrap . SinH'
+  cosh = wrap . CosH'
+  tanh = wrap . TanH'
+  asinh = wrap . ASinH'
+  acosh = wrap . ACosH'
+  atanh = wrap . ATanH'
+
+  pi = pure pi
+  exp = wrap . Exp'
+  log = wrap . Log'
