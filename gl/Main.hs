@@ -10,8 +10,8 @@ import GL.Exception
 import GL.Program
 import GL.Shader
 import GL.Setup
-import qualified Linear.V4 as Linear
 import qualified Linear.Matrix as Linear
+import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 import System.Exit
 import UI.Drawing
