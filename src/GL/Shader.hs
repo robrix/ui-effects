@@ -78,6 +78,11 @@ data Shader (k :: ShaderType) t where
 
   Exp, Log :: Num a => Shader k a -> Shader k a
 
+
+data Var' a where
+  Var' :: String -> Var' a
+  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
+
 data ShaderF a where
   -- Arithmetic
   Add', Sub', Mul', Div' :: a -> a -> ShaderF a
