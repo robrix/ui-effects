@@ -33,10 +33,10 @@ import Foreign.Storable
 import GL.Exception
 import Graphics.GL.Core41
 import Graphics.GL.Types
+import qualified Linear.Matrix as Linear
 import qualified Linear.V2 as Linear
 import qualified Linear.V3 as Linear
 import qualified Linear.V4 as Linear
-import qualified Linear.Matrix as Linear
 import Prelude hiding (IO)
 
 data ShaderType = Fragment | Vertex
