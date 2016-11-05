@@ -84,6 +84,9 @@ data Var' a where
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 data ShaderF a where
+  -- Binding
+  Uniform' :: String -> ShaderF (Var' a)
+
   -- Arithmetic
   Add', Sub', Mul', Div' :: a -> a -> ShaderF a
   Abs', Signum' :: a -> ShaderF a
