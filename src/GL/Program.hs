@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances, RankNTypes #-}
 module GL.Program where
 
 import Control.Exception (bracket)
@@ -8,7 +8,7 @@ import GL.Exception
 import GL.Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
-import Linear.V4
+import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 newtype GLProgram = GLProgram { unGLProgram :: GLuint }
@@ -38,8 +38,11 @@ checkProgram :: GLProgram -> IO GLProgram
 checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog Other GL_LINK_STATUS . unGLProgram
 
 
-setUniformValue :: GLProgram -> String -> V4 Float -> IO ()
-setUniformValue program name (V4 x y z w) = do
-  location <- withCString name (glGetUniformLocation (unGLProgram program))
-  glProgramUniform4f (unGLProgram program) location x y z w
-  checkGLError
+class GLProgramUniform t where
+  setUniformValue :: GLProgram -> String -> t -> IO ()
+
+instance GLProgramUniform (Linear.V4 Float) where
+  setUniformValue program name (Linear.V4 x y z w)= do
+    location <- withCString name (glGetUniformLocation (unGLProgram program))
+    glProgramUniform4f (unGLProgram program) location x y z w
+    checkGLError
