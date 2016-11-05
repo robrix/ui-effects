@@ -46,3 +46,9 @@ instance GLProgramUniform (Linear.V4 Float) where
     location <- withCString name (glGetUniformLocation (unGLProgram program))
     glProgramUniform4f (unGLProgram program) location x y z w
     checkGLError
+
+instance GLProgramUniform (Linear.V4 Double) where
+  setUniformValue program name (Linear.V4 x y z w)= do
+    location <- withCString name (glGetUniformLocation (unGLProgram program))
+    glProgramUniform4d (unGLProgram program) location x y z w
+    checkGLError
