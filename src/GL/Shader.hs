@@ -24,6 +24,7 @@ module GL.Shader
 ) where
 
 import Control.Exception
+import Control.Monad.Free.Freer
 import Data.List (intersperse)
 import Data.Monoid ((<>))
 import Foreign.C.String
@@ -76,6 +77,21 @@ data Shader (k :: ShaderType) t where
   ASinH, ACosH, ATanH :: Num a => Shader k a -> Shader k a
 
   Exp, Log :: Num a => Shader k a -> Shader k a
+
+data ShaderF a where
+  Add', Sub', Mul', Div' :: a -> a -> ShaderF a
+  Abs', Signum' :: a -> ShaderF a
+
+  Sin', Cos', Tan' :: a -> ShaderF a
+  ASin', ACos', ATan' :: a -> ShaderF a
+  SinH', CosH', TanH' :: a -> ShaderF a
+  ASinH', ACosH', ATanH' :: a -> ShaderF a
+
+  Exp', Log' :: a -> ShaderF a
+  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
+
+type Shader' = Freer ShaderF
+
 
 position :: Var 'Out 'Vertex (Linear.V4 Float)
 position = Position
