@@ -130,6 +130,15 @@ infixl 7 !*
 (!*) :: Shader' (Linear.M44 a) -> Shader' (Linear.V4 a) -> Shader' (Linear.V4 a)
 matrix !* column = Freer (Free pure (MulMV matrix column))
 
+vertexShader :: Shader' ()
+vertexShader = do
+  matrix <- uniform' "matrix" :: Shader' (Var' (Linear.M44 Float))
+  time <- uniform' "time" :: Shader' (Var' (Linear.V4 Float))
+  position <- bind "position" :: Shader' (Var' (Linear.V4 Float))
+  _ <- set' gl_Position (get' matrix !* (get' time * v4' 0.3 0.3 0.3 0.3 * get' position))
+  pure ()
+  where gl_Position = Var' "gl_Position"
+
 
 position :: Var 'Out 'Vertex (Linear.V4 Float)
 position = Position
