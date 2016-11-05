@@ -90,7 +90,6 @@ data ShaderF a where
   ASinH', ACosH', ATanH' :: a -> ShaderF a
 
   Exp', Log' :: a -> ShaderF a
-  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 type Shader' = Freer ShaderF
 
@@ -309,3 +308,8 @@ instance Floating a => Floating (Shader' a) where
   pi = pure pi
   exp = wrap . Exp'
   log = wrap . Log'
+
+deriving instance Eq a => Eq (ShaderF a)
+deriving instance Foldable ShaderF
+deriving instance Ord a => Ord (ShaderF a)
+deriving instance Show a => Show (ShaderF a)
