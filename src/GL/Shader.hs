@@ -102,6 +102,10 @@ data ShaderF a where
 type Shader' = Freer ShaderF
 
 
+uniform' :: String -> Shader' (Var' a)
+uniform' s = Freer (Free pure (Uniform' s))
+
+
 position :: Var 'Out 'Vertex (Linear.V4 Float)
 position = Position
 
