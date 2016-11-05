@@ -62,7 +62,10 @@ draw program array = do
   drawArrays TriangleStrip 0 4
 
 view :: View
-view = UI.View.text "hello, world"
+view = list
+  [ UI.View.text "hello, world"
+  , UI.View.text "what’s up?"
+  ]
 
 orthographic :: Fractional a => a -> a -> a -> a -> a -> a -> Linear.M44 a
 orthographic left right bottom top near far = Linear.V4
