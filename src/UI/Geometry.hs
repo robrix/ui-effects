@@ -62,7 +62,7 @@ instance Monoid a => Monoid (Size a) where
   mappend = liftA2 mappend
 
 instance Show1 Size where
-  liftShowsPrec sp _ d (Size w h) = showsBinaryWith sp sp "Show" d w h
+  liftShowsPrec sp _ d (Size w h) = showsBinaryWith sp sp "Size" d w h
 
 instance Show a => Show (Size a) where
   showsPrec = liftShowsPrec showsPrec showList
