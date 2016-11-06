@@ -78,7 +78,7 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
   Pure size -> Pure size
   Free runF rendering -> case rendering of
     InL drawing -> case drawing of
-      Text size string -> Free ((,,) offset maxSize . runF) $ InL (Text size string)
+      Text size string -> Free ((,,) offset maxSize . runF) (InL (Text size string))
       Clip size child -> Free id (InL (Clip size (offset, maxSize, runF child)))
     InR layout -> case layout of
       Inset by child -> Free id (InR (Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
