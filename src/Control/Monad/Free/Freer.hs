@@ -124,3 +124,15 @@ instance (Show1 f, Show a, Show b) => Show (FreerF f a b) where
 
 instance (Show1 f, Show a) => Show (Freer f a) where
   showsPrec = liftShowsPrec showsPrec showList
+
+instance Eq1 f => Eq2 (FreerF f) where
+  liftEq2 eqA eqB f1 f2 = case (f1, f2) of
+    (Pure a1, Pure a2) -> eqA a1 a2
+    (Free t1 r1, Free t2 r2) -> liftEq (\ x1 x2 -> eqB (t1 x1) (t2 x2)) r1 r2
+    _ -> False
+
+instance (Eq1 f, Eq a) => Eq1 (FreerF f a) where
+  liftEq = liftEq2 (==)
+
+instance (Eq1 f, Eq a, Eq b) => Eq (FreerF f a b) where
+  (==) = liftEq (==)
