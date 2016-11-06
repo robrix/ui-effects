@@ -111,7 +111,7 @@ instance Corecursive (Freer f a) where embed = Freer
 instance Show1 f => Show2 (FreerF f) where
   liftShowsPrec2 sp1 _ sp2 sa2 d f = case f of
     Pure a -> showsUnaryWith sp1 "Pure" d a
-    Free t r -> showsBinaryWith (const (const ("id" ++))) (liftShowsPrec (\ i -> sp2 i . t) (sa2 . fmap t)) "Free" d () r
+    Free t r -> showsBinaryWith (const showString) (liftShowsPrec (\ i -> sp2 i . t) (sa2 . fmap t)) "Free" d "id" r
 
 instance (Show1 f, Show a) => Show1 (FreerF f a) where
   liftShowsPrec = liftShowsPrec2 showsPrec showList

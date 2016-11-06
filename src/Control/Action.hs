@@ -30,7 +30,7 @@ instance Foldable f => Foldable (Action f) where
   foldMap f (Action g a) = foldMap (f . a) g
 
 instance Show1 f => Show1 (Action f) where
-  liftShowsPrec sp sl d (Action f run) = showsBinaryWith (liftShowsPrec (\ i -> sp i . run) (sl . fmap run)) (const (const ("id" ++))) "Action" d f ()
+  liftShowsPrec sp sl d (Action f run) = showsBinaryWith (liftShowsPrec (\ i -> sp i . run) (sl . fmap run)) (const showString) "Action" d f "id"
 
 instance (Show1 f, Show a) => Show (Action f a) where
   showsPrec = liftShowsPrec showsPrec showList
