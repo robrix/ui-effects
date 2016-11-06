@@ -13,8 +13,7 @@ import UI.Geometry
 data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
-  Resizeable :: (Size (Maybe a) -> f) -> LayoutF a f
-  deriving Functor
+  GetMaxSize :: LayoutF a (Size (Maybe a))
 
 type Layout a = Freer (LayoutF a)
 type ALayout a b = Cofreer (FreerF (LayoutF a) b)
@@ -30,10 +29,10 @@ offset (Point 0 0) = id
 offset by = wrap . Offset by
 
 resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
-resizeable = wrap . Resizeable
+resizeable = (getMaxSize >>=)
 
 getMaxSize :: Layout a (Size (Maybe a))
-getMaxSize = wrap (Resizeable pure)
+getMaxSize = liftF GetMaxSize
 
 newtype Stack a b = Stack { unStack :: Layout a b }
 
@@ -65,10 +64,10 @@ fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
 layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just (Rect offset (fromMaybe <$> size <*> maxSize))
-  Free runF l -> case runC . runF <$> l of
-    Inset by child -> Rect offset . (2 * by +) . size <$> child
-    Offset by child -> Rect offset . (pointSize by +) . size <$> child
-    Resizeable resize -> resize maxSize
+  Free runF layout -> case layout of
+    Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
+    Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
+    GetMaxSize -> runC (runF maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
@@ -85,10 +84,10 @@ fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Point 0 0,
 fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Point a, Size (Maybe a), Layout a (Size a))
 fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case runFreer layout of
   Pure size -> Pure size
-  Free run l -> Free id $ case run <$> l of
-    Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
-    Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
-    Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
+  Free run layout -> case layout of
+    Inset by child -> Free id $ Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
+    Offset by child -> Free id $ Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
+    GetMaxSize -> Free ((,,) offset maxSize . run) GetMaxSize
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
@@ -99,7 +98,7 @@ instance Foldable (LayoutF a) where
   foldMap f layout = case layout of
     Inset _ child -> f child
     Offset _ child -> f child
-    Resizeable with -> f (with (pure Nothing))
+    GetMaxSize -> f (pure Nothing)
 
 instance Real a => Monoid (Stack a (Size a)) where
   mempty = Stack (pure (Size 0 0))
@@ -115,14 +114,13 @@ instance Show a => Show1 (LayoutF a) where
   liftShowsPrec sp _ d layout = case layout of
     Inset by child -> showsBinaryWith showsPrec sp "Inset" d by child
     Offset by child -> showsBinaryWith showsPrec sp "Offset" d by child
-    Resizeable with -> showsUnaryWith showsConst "Resizeable" d (with (pure Nothing))
-    where showsConst i = showParen True . (showString "const " .) . sp i
+    GetMaxSize -> showString "GetMaxSize"
 
 instance Eq2 LayoutF where
   liftEq2 eqA eqF l1 l2 = case (l1, l2) of
     (Inset s1 c1, Inset s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
     (Offset p1 c1, Offset p2 c2) -> liftEq eqA p1 p2 && eqF c1 c2
-    (Resizeable r1, Resizeable r2) -> eqF (r1 (pure Nothing)) (r2 (pure Nothing))
+    (GetMaxSize, GetMaxSize) -> True
     _ -> False
 
 instance Eq a => Eq1 (LayoutF a) where

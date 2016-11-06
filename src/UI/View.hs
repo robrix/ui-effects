@@ -31,12 +31,12 @@ type AView a = Cofree ViewF a
 renderView :: Real a => View -> Rendering a (Size a)
 renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
   Text s -> do
-    maxSize <- wrapR (Resizeable pure)
+    maxSize <- liftFR GetMaxSize
     liftFL (Draw.Text maxSize s)
   Label s -> liftFL (Draw.Text (pure Nothing) s)
   List children -> foldr stack (pure 0) (intersperse spacer children)
   Scroll axis child -> do
-    Size maxW maxH <- wrapR (Resizeable pure)
+    Size maxW maxH <- liftFR GetMaxSize
     Size w h <- child
     wrapL (Clip (case axis of
       Just Horizontal -> Size w (fromMaybe h maxH)

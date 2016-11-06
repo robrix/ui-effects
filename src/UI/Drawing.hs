@@ -80,10 +80,10 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
     InL drawing -> case drawing of
       Text size string -> Free ((,,) offset maxSize . pure) $ InL (Text size string)
       Clip size child -> Free id (InL (Clip size (offset, maxSize, runF child)))
-    InR layout -> Free id . InR $ case runF <$> layout of
-      Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
-      Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
-      Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
+    InR layout -> case layout of
+      Inset by child -> Free id (InR (Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
+      Offset by child -> Free id (InR (Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), runF child)))
+      GetMaxSize -> Free ((,,) offset maxSize . runF) (InR GetMaxSize)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
