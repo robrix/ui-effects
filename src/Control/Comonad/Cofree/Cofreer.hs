@@ -104,6 +104,9 @@ instance Show1 f => Show2 (CofreerF f) where
     where showsTernaryWith :: (Int -> a -> ShowS) -> (Int -> b -> ShowS) -> (Int -> c -> ShowS) -> String -> Int -> a -> b -> c -> ShowS
           showsTernaryWith sp1 sp2 sp3 name d x y z = showParen (d > 10) $ showString name . showChar ' ' . sp1 11 x . showChar ' ' . sp2 11 y . showChar ' ' . sp3 11 z
 
+instance (Show1 f, Show a) => Show1 (CofreerF f a) where
+  liftShowsPrec = liftShowsPrec2 showsPrec showList
+
 instance Show1 f => Show1 (Cofreer f) where
   liftShowsPrec sp sa d (Cofreer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Cofreer" d c
 
