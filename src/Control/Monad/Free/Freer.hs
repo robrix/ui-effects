@@ -62,10 +62,10 @@ instance Functor (Freer f) where
   fmap f = Freer . bimap f (fmap f) . runFreer
 
 instance Applicative (Freer f) where
-   pure = Freer . Pure
-   Freer g <*> a = case g of
-     Pure f -> fmap f a
-     Free t r -> Freer (Free ((<*> a) . t) r)
+  pure = Freer . Pure
+  Freer g <*> a = case g of
+    Pure f -> fmap f a
+    Free t r -> Freer (Free ((<*> a) . t) r)
 
 instance Monad (Freer f) where
   return = pure
