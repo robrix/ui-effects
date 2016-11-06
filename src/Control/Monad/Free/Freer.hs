@@ -12,7 +12,7 @@ module Control.Monad.Free.Freer
 ) where
 
 import Control.Monad ((>=>))
-import Control.Monad.Free.Class
+import Control.Monad.Free.Class hiding (liftF)
 import Data.Bifunctor
 import Data.Functor.Classes
 import Data.Functor.Foldable
@@ -46,6 +46,10 @@ hoistFreerF :: (forall a. f a -> g a) -> FreerF f b c -> FreerF g b c
 hoistFreerF f r = case r of
   Pure a -> Pure a
   Free t r -> Free t (f r)
+
+
+liftF :: f a -> Freer f a
+liftF = Freer . Free pure
 
 
 -- Instances

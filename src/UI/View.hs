@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 module UI.View where
 
-import Control.Action
 import Control.Comonad.Cofree
 import Data.Functor.Algebraic
 import Data.Functor.Classes
@@ -33,16 +32,16 @@ renderView :: Real a => View -> Rendering a (Size a)
 renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
   Text s -> do
     maxSize <- wrapR (Resizeable pure)
-    wrapL (Action (Draw.Text maxSize s) pure)
-  Label s -> wrapL (Action (Draw.Text (pure Nothing) s) pure)
+    liftFL (Draw.Text maxSize s)
+  Label s -> liftFL (Draw.Text (pure Nothing) s)
   List children -> foldr stack (pure 0) (intersperse spacer children)
   Scroll axis child -> do
     Size maxW maxH <- wrapR (Resizeable pure)
     Size w h <- child
-    wrapL (liftAction (Clip (case axis of
+    wrapL (Clip (case axis of
       Just Horizontal -> Size w (fromMaybe h maxH)
       Just Vertical -> Size (fromMaybe w maxW) h
-      Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child))
+      Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)
   where stack each rest = do
           Size _ h <- each
           wrapR (Offset (Point 0 h) rest)
