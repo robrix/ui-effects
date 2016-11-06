@@ -110,7 +110,7 @@ instance Show1 f => Show2 (FreerF f) where
     Free t r -> showsUnaryWith (liftShowsPrec (\ i -> sp2 i . t) (sa2 . fmap t)) "Free" d r
 
 instance Show1 f => Show1 (Freer f) where
-  liftShowsPrec sp sa d (Freer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Cofreer" d c
+  liftShowsPrec sp sa d (Freer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Freer" d c
 
 instance (Functor f, Show (f (Freer f a)), Show a) => Show (Freer f a) where
   showsPrec d (Freer c) = showParen (d > 10) $ showString "Freer" . showChar ' ' . showsPrec 11 c
