@@ -28,19 +28,20 @@ type View = Fix ViewF
 type AView a = Cofree ViewF a
 
 
-renderView :: Real a => View -> Rendering a ()
+renderView :: Real a => View -> Rendering a (Size a)
 renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
   Text s -> wrapR (Resizeable (wrapL . flip Draw.Text s))
   Label s -> wrapL (Draw.Text (pure Nothing) s)
-  List children -> foldr stack (pure ()) (intersperse (wrapR (Offset (Point 0 3) (pure ()))) children)
-  Scroll axis child -> wrapR (Resizeable (\ (Size maxW maxH) ->
-    wrapR (Measure child (\ (Size w h) ->
-      wrapL (Clip (case axis of
-        Just Horizontal -> Size w (fromMaybe h maxH)
-        Just Vertical -> Size (fromMaybe w maxW) h
-        Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)))))
-  where stack each rest = wrapR (Measure each (\ (Size _ h) ->
-          each >> wrapR (Offset (Point 0 h) rest)))
+  List children -> foldr stack (pure (Size 0 0)) (intersperse (wrapR (Offset (Point 0 3) (pure (Size 0 0)))) children)
+  Scroll axis child -> wrapR (Resizeable (\ (Size maxW maxH) -> do
+    Size w h <- child
+    wrapL (Clip (case axis of
+      Just Horizontal -> Size w (fromMaybe h maxH)
+      Just Vertical -> Size (fromMaybe w maxW) h
+      Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)))
+  where stack each rest = do
+          Size _ h <- each
+          wrapR (Offset (Point 0 h) rest)
 
 
 -- Smart constructors

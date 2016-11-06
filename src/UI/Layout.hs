@@ -14,7 +14,6 @@ data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
   Resizeable :: (Size (Maybe a) -> f) -> LayoutF a f
-  Measure :: f -> (Size a -> f) -> LayoutF a f
   deriving Functor
 
 type Layout a = Freer (LayoutF a)
@@ -35,9 +34,6 @@ resizeable = wrap . Resizeable
 
 getMaxSize :: Layout a (Size (Maybe a))
 getMaxSize = wrap (Resizeable pure)
-
-measure :: Layout a b -> (Size a -> Layout a b) -> Layout a b
-measure child = wrap . Measure child
 
 newtype Stack a b = Stack { unStack :: Layout a b }
 
@@ -73,7 +69,6 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
     Inset by child -> Rect offset . (2 * by +) . size <$> child
     Offset by child -> Rect offset . (pointSize by +) . size <$> child
     Resizeable resize -> resize maxSize
-    Measure child withMeasurement -> child >>= withMeasurement . size
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
@@ -94,19 +89,17 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
     Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
     Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
     Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
-    Measure child withMeasurement -> Measure (offset, maxSize, child) ((,,) offset maxSize . withMeasurement)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 
 -- Instances
 
-instance Num a => Foldable (LayoutF a) where
+instance Foldable (LayoutF a) where
   foldMap f layout = case layout of
     Inset _ child -> f child
     Offset _ child -> f child
     Resizeable with -> f (with (pure Nothing))
-    Measure child with -> mappend (f child) (f (with (pure 0)))
 
 instance Real a => Monoid (Stack a (Size a)) where
   mempty = Stack (pure (Size 0 0))
@@ -115,13 +108,12 @@ instance Real a => Monoid (Stack a (Size a)) where
     Size w2 h2 <- unStack b
     pure (Size (max w1 w2) (h1 + h2))
 
-instance (Show a, Show b, Num a) => Show (LayoutF a b) where
+instance (Show a, Show b) => Show (LayoutF a b) where
   showsPrec = liftShowsPrec showsPrec showList
 
-instance (Show a, Num a) => Show1 (LayoutF a) where
+instance Show a => Show1 (LayoutF a) where
   liftShowsPrec sp _ d layout = case layout of
     Inset by child -> showsBinaryWith showsPrec sp "Inset" d by child
     Offset by child -> showsBinaryWith showsPrec sp "Offset" d by child
     Resizeable with -> showsUnaryWith showsConst "Resizeable" d (with (pure Nothing))
-    Measure child with -> showsBinaryWith sp showsConst "Measure" d child (with (pure 0))
     where showsConst i = showParen True . (showString "const " .) . sp i

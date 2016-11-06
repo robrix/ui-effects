@@ -85,7 +85,6 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
       Inset by child -> Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), child)
       Offset by child -> Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), child)
       Resizeable resize -> Resizeable ((,,) offset maxSize . resize)
-      Measure child withMeasurement -> Measure (offset, maxSize, child) ((,,) offset maxSize . withMeasurement)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
