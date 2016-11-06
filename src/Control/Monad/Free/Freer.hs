@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, RankNTypes, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GADTs, MultiParamTypeClasses, RankNTypes, TypeFamilies #-}
 module Control.Monad.Free.Freer
 ( FreerF(..)
 , Freer(..)
@@ -119,10 +119,5 @@ instance (Show1 f, Show a) => Show1 (FreerF f a) where
 instance Show1 f => Show1 (Freer f) where
   liftShowsPrec sp sa d (Freer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Freer" d c
 
-instance (Functor f, Show (f (Freer f a)), Show a) => Show (Freer f a) where
-  showsPrec d (Freer c) = showParen (d > 10) $ showString "Freer" . showChar ' ' . showsPrec 11 c
-
-instance (Functor f, Show (f b), Show a) => Show (FreerF f a b) where
-  showsPrec d f = case f of
-    Pure a -> showParen (d > 10) $ showString "Pure" . showChar ' ' . showsPrec 11 a
-    Free t r -> showParen (d > 10) $ showString "Free" . showChar ' ' . showsPrec 11 (t <$> r)
+instance (Show1 f, Show a) => Show (Freer f a) where
+  showsPrec = liftShowsPrec showsPrec showList
