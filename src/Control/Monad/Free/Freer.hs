@@ -104,10 +104,10 @@ instance Recursive (Freer f a) where project = runFreer
 instance Corecursive (Freer f a) where embed = Freer
 
 
-instance (Functor f, Show1 f) => Show2 (FreerF f) where
+instance Show1 f => Show2 (FreerF f) where
   liftShowsPrec2 sp1 _ sp2 sa2 d f = case f of
     Pure a -> showsUnaryWith sp1 "Pure" d a
-    Free t r -> showsUnaryWith (liftShowsPrec sp2 sa2) "Free" d (t <$> r)
+    Free t r -> showsUnaryWith (liftShowsPrec (\ i -> sp2 i . t) (sa2 . fmap t)) "Free" d r
 
 instance (Functor f, Show1 f) => Show1 (Freer f) where
   liftShowsPrec sp sa d (Freer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Cofreer" d c
