@@ -1,6 +1,7 @@
 module UI.Geometry where
 
 import Control.Applicative (liftA, liftA2)
+import Data.Functor.Classes
 import Data.Semigroup
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
@@ -12,7 +13,7 @@ pointSize :: Point a -> Size a
 pointSize (Point x y) = Size x y
 
 data Size a = Size { width :: !a, height :: !a }
-  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
+  deriving (Eq, Foldable, Functor, Ord, Traversable)
 
 encloses :: Ord a => Size a -> Size a -> Bool
 encloses a b = and ((>=) <$> a <*> b)
@@ -46,3 +47,9 @@ instance Semigroup a => Semigroup (Size a) where
 instance Monoid a => Monoid (Size a) where
   mempty = pure mempty
   mappend = liftA2 mappend
+
+instance Show1 Size where
+  liftShowsPrec sp _ d (Size w h) = showsBinaryWith sp sp "Show" d w h
+
+instance Show a => Show (Size a) where
+  showsPrec = liftShowsPrec showsPrec showList
