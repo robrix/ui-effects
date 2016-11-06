@@ -70,7 +70,7 @@ drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Point a, Size (Maybe a),
 drawingCoalgebra (offset, maxSize, drawing) = Cofree (offset, maxSize) id $ case runFreer drawing of
   Pure size -> Pure size
   Free runF drawing -> case drawing of
-    Text size string -> Free ((,,) offset maxSize . pure) (Text size string)
+    Text size string -> Free ((,,) offset maxSize . runF) (Text size string)
     Clip size child -> Free id (Clip size (offset, maxSize, runF child))
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Point a, Size (Maybe a), Rendering a (Size a))
@@ -78,7 +78,7 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
   Pure size -> Pure size
   Free runF rendering -> case rendering of
     InL drawing -> case drawing of
-      Text size string -> Free ((,,) offset maxSize . pure) $ InL (Text size string)
+      Text size string -> Free ((,,) offset maxSize . runF) $ InL (Text size string)
       Clip size child -> Free id (InL (Clip size (offset, maxSize, runF child)))
     InR layout -> case layout of
       Inset by child -> Free id (InR (Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
