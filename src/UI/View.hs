@@ -1,11 +1,15 @@
+{-# LANGUAGE FlexibleContexts #-}
 module UI.View where
 
 import Control.Comonad.Cofree
+import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.List (intersperse)
 import Data.Maybe (fromMaybe)
-import UI.Layout
+import UI.Drawing hiding (Text)
+import qualified UI.Drawing as Draw
+import UI.Geometry
 
 -- Datatypes
 
@@ -24,40 +28,34 @@ type View = Fix ViewF
 type AView a = Cofree ViewF a
 
 
-measureString :: Num a => String -> Size a
-measureString s = Size (fromIntegral (length s) * fontW) lineH
-  where (fontW, fontH) = (5, 8)
-        lineH = fontH + 5
-
-measureStringForWidth :: Real a => a -> String -> Size a
-measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (toRational (length s) / (toRational maxW / toRational (width char)))))
-  where char = Size 5 8
-        line = char + Size 10 5
-
-layoutView :: Real a => View -> Layout a (Size a)
-layoutView = cata $ \ view -> case view of
-  Text s -> inset margins (resizeable (\ maxSize ->
-    pure (fromMaybe <$> maybe measureString measureStringForWidth (width maxSize) s <*> maxSize)))
-  Label s -> inset margins (pure (measureString s))
-  Scroll axis child -> inset margins (case axis of
-    Just Vertical -> resizeable (\ (Size _ maxH) -> do
-      Size w h <- child
-      pure (Size w (fromMaybe h maxH)))
-    Just Horizontal -> resizeable (\ (Size maxW _) -> do
-      Size w h <- child
-      pure (Size (fromMaybe w maxW) h))
-    _ -> resizeable (\ maxSize -> do
-      childSize <- child
-      pure (fromMaybe <$> childSize <*> maxSize)))
-  List children -> inset margins (stack (intersperse (offset spacing (pure (Size 0 0))) children))
-  where margins = Size 5 3
-        spacing = Point 0 3
+renderView :: Real a => View -> Rendering a (Size a)
+renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
+  Text s -> do
+    maxSize <- liftFR GetMaxSize
+    liftFL (Draw.Text maxSize s)
+  Label s -> liftFL (Draw.Text (pure Nothing) s)
+  List children -> fromMaybe (pure 0) (foldr stack Nothing (intersperse spacer children))
+  Scroll axis child -> do
+    Size maxW maxH <- liftFR GetMaxSize
+    Size w h <- child
+    wrapL (Clip (case axis of
+      Just Horizontal -> Size w (fromMaybe h maxH)
+      Just Vertical -> Size (fromMaybe w maxW) h
+      Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)
+  where stack each (Just rest) = Just $ do
+          Size _ h <- each
+          wrapR (Offset (Point 0 h) rest)
+        stack each Nothing = Just each
+        spacer = pure (Size 0 3)
 
 
 -- Smart constructors
 
 text :: String -> View
 text = Fix . Text
+
+label :: String -> View
+label = Fix . Label
 
 list :: [View] -> View
 list = Fix . List

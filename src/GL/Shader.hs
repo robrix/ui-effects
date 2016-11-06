@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, GADTs, KindSignatures, RankNTypes, StandaloneDeriving #-}
+{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, RankNTypes, StandaloneDeriving #-}
 module GL.Shader
 ( Var
 , Shader
@@ -14,6 +14,7 @@ module GL.Shader
 , get
 , out
 , uniform
+, mat4Uniform
 , v2
 , v3
 , v4
@@ -23,6 +24,7 @@ module GL.Shader
 ) where
 
 import Control.Exception
+import Control.Monad.Free.Freer
 import Data.List (intersperse)
 import Data.Monoid ((<>))
 import Foreign.C.String
@@ -32,6 +34,7 @@ import Foreign.Storable
 import GL.Exception
 import Graphics.GL.Core41
 import Graphics.GL.Types
+import qualified Linear.Matrix as Linear
 import qualified Linear.V2 as Linear
 import qualified Linear.V3 as Linear
 import qualified Linear.V4 as Linear
@@ -75,6 +78,68 @@ data Shader (k :: ShaderType) t where
 
   Exp, Log :: Num a => Shader k a -> Shader k a
 
+
+data Var' a where
+  Var' :: String -> Var' a
+  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
+
+data ShaderF a where
+  -- Binding
+  Uniform' :: String -> ShaderF (Var' a)
+  Bind :: String -> ShaderF (Var' a)
+
+  -- Accessors
+  Get' :: Var' a -> ShaderF a
+  Set' :: Foldable t => Var' a -> t a -> ShaderF a
+
+  -- Arithmetic
+  Add', Sub', Mul', Div' :: a -> a -> ShaderF a
+  Abs', Signum' :: a -> ShaderF a
+
+  -- Matrix arithmetic
+  MulMV :: (Foldable term, Foldable row, Foldable column) => term (row (column a)) -> term (column a) -> ShaderF (column a)
+
+  -- Trigonometric
+  Sin', Cos', Tan' :: a -> ShaderF a
+  ASin', ACos', ATan' :: a -> ShaderF a
+  SinH', CosH', TanH' :: a -> ShaderF a
+  ASinH', ACosH', ATanH' :: a -> ShaderF a
+
+  Exp', Log' :: a -> ShaderF a
+
+type Shader' = Freer ShaderF
+
+
+uniform' :: String -> Shader' (Var' a)
+uniform' s = Freer (Free pure (Uniform' s))
+
+bind :: String -> Shader' (Var' a)
+bind s = Freer (Free pure (Bind s))
+
+get' :: Var' a -> Shader' a
+get' v = Freer (Free pure (Get' v))
+
+set' :: Var' a -> Shader' a -> Shader' a
+set' var value = Freer (Free pure (Set' var value))
+
+v4' :: a -> a -> a -> a -> Shader' (Linear.V4 a)
+v4' x y z w = pure (Linear.V4 x y z w)
+
+infixl 7 !*
+
+(!*) :: Shader' (Linear.M44 a) -> Shader' (Linear.V4 a) -> Shader' (Linear.V4 a)
+matrix !* column = Freer (Free pure (MulMV matrix column))
+
+vertexShader :: Shader' ()
+vertexShader = do
+  matrix <- uniform' "matrix" :: Shader' (Var' (Linear.M44 Float))
+  time <- uniform' "time" :: Shader' (Var' (Linear.V4 Float))
+  position <- bind "position" :: Shader' (Var' (Linear.V4 Float))
+  _ <- set' gl_Position (get' matrix !* (get' time * v4' 0.3 0.3 0.3 0.3 * get' position))
+  pure ()
+  where gl_Position = Var' "gl_Position"
+
+
 position :: Var 'Out 'Vertex (Linear.V4 Float)
 position = Position
 
@@ -107,6 +172,9 @@ out = Var
 
 uniform :: String -> Shader k a
 uniform = Get . Uniform
+
+mat4Uniform :: String -> Shader k (Linear.M44 a)
+mat4Uniform = Get . Uniform
 
 
 v2 :: Show a => a -> a -> Shader k (Linear.V2 a)
@@ -215,6 +283,9 @@ toGLSL shader
         pragma k v = showString $ "#" <> k <> " " <> v <> "\n"
         main body = showString "void main(void) {\n" . body . showString "}"
 
+
+-- Instances
+
 instance (Show a, Num a) => Num (Shader k a) where
   (+) = Add
   (-) = Sub
@@ -249,3 +320,39 @@ deriving instance Eq (Var t k a)
 deriving instance Ord (Var t k a)
 deriving instance Eq a => Eq (Shader k a)
 deriving instance Ord a => Ord (Shader k a)
+deriving instance Foldable (Var io k)
+deriving instance Foldable (Shader k)
+
+
+instance Num a => Num (Shader' a) where
+  (+) = (wrap .) . Add'
+  (-) = (wrap .) . Sub'
+  (*) = (wrap .) . Mul'
+
+  abs = wrap . Abs'
+  signum = wrap . Signum'
+  fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (Shader' a) where
+  (/) = (wrap .) . Div'
+  fromRational = pure . fromRational
+
+instance Floating a => Floating (Shader' a) where
+  sin = wrap . Sin'
+  cos = wrap . Cos'
+  tan = wrap . Tan'
+  asin = wrap . ASin'
+  acos = wrap . ACos'
+  atan = wrap . ATan'
+  sinh = wrap . SinH'
+  cosh = wrap . CosH'
+  tanh = wrap . TanH'
+  asinh = wrap . ASinH'
+  acosh = wrap . ACosH'
+  atanh = wrap . ATanH'
+
+  pi = pure pi
+  exp = wrap . Exp'
+  log = wrap . Log'
+
+deriving instance Foldable ShaderF

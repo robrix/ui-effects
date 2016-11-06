@@ -16,6 +16,9 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Control.Action
+                     , Control.Comonad.Cofree.Cofreer
+                     , Control.Monad.Free.Freer
+                     , Data.Functor.Algebraic
                      , GL.Array
                      , GL.Draw
                      , GL.Exception
@@ -24,6 +27,8 @@ library
                      , GL.Setup
                      , GL.Shader
                      , UI.Drawing
+                     , UI.Font
+                     , UI.Geometry
                      , UI.Layout
                      , UI.View
                      , UI.Window
@@ -35,7 +40,7 @@ library
                      , recursion-schemes
                      , sdl2
   default-language:    Haskell2010
-  default-extensions:  DeriveFoldable, DeriveFunctor, DeriveTraversable
+  default-extensions:  DeriveFoldable, DeriveFunctor, DeriveGeneric, DeriveTraversable
   ghc-options:         -Wall -fno-warn-name-shadowing
 
 executable ui-effects

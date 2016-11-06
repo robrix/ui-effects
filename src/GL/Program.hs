@@ -1,14 +1,18 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances, RankNTypes #-}
 module GL.Program where
 
 import Control.Exception (bracket)
-import Data.Foldable (for_)
+import Data.Foldable (for_, toList)
 import Foreign.C.String
+import Foreign.Marshal.Alloc
+import Foreign.Ptr
+import Foreign.Storable
 import GL.Exception
 import GL.Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
-import Linear.V4
+import qualified Linear.V4 as Linear
+import qualified Linear.Matrix as Linear
 import Prelude hiding (IO)
 
 newtype GLProgram = GLProgram { unGLProgram :: GLuint }
@@ -38,8 +42,28 @@ checkProgram :: GLProgram -> IO GLProgram
 checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog Other GL_LINK_STATUS . unGLProgram
 
 
-setUniformValue :: GLProgram -> String -> V4 Float -> IO ()
-setUniformValue program name (V4 x y z w) = do
-  location <- withCString name (glGetUniformLocation (unGLProgram program))
-  glProgramUniform4f (unGLProgram program) location x y z w
-  checkGLError
+class GLProgramUniform t where
+  setUniformValue :: GLProgram -> String -> t -> IO ()
+
+instance GLProgramUniform (Linear.V4 Float) where
+  setUniformValue program name (Linear.V4 x y z w)= do
+    location <- withCString name (glGetUniformLocation (unGLProgram program))
+    glProgramUniform4f (unGLProgram program) location x y z w
+    checkGLError
+
+instance GLProgramUniform (Linear.V4 Double) where
+  setUniformValue program name (Linear.V4 x y z w)= do
+    location <- withCString name (glGetUniformLocation (unGLProgram program))
+    glProgramUniform4d (unGLProgram program) location x y z w
+    checkGLError
+
+instance GLProgramUniform (Linear.M44 Float) where
+  setUniformValue program name matrix = do
+    location <- withCString name (glGetUniformLocation (unGLProgram program))
+    let fieldCount = sum (length <$> matrix)
+    let fieldSize = sizeOf (0 :: Float)
+    let byteCount = fieldCount * fieldSize
+    allocaBytes byteCount $ \ p -> do
+      for_ (zip [0..] (toList matrix >>= toList)) (uncurry (pokeElemOff p))
+      glProgramUniformMatrix4fv (unGLProgram program) location 1 GL_FALSE (castPtr p)
+    checkGLError
