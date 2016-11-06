@@ -23,3 +23,6 @@ instance Applicative f => Applicative (Action f) where
 instance Monad m => Monad (Action m) where
   return = pure
   a >>= f = liftAction (lowerAction a >>= lowerAction . f)
+
+instance Foldable f => Foldable (Action f) where
+  foldMap f (Action g a) = foldMap (f . a) g
