@@ -115,3 +115,13 @@ instance (Show1 f, Show a, Show b) => Show (CofreerF f a b) where
 
 instance (Show1 f, Show a) => Show (Cofreer f a) where
   showsPrec = liftShowsPrec showsPrec showList
+
+instance Eq1 f => Eq2 (CofreerF f) where
+  liftEq2 eqA eqB (Cofree a1 t1 r1) (Cofree a2 t2 r2) = eqA a1 a2 && liftEq (\ x1 x2 -> eqB (t1 x1) (t2 x2)) r1 r2
+
+instance (Eq1 f, Eq a) => Eq1 (CofreerF f a) where
+  liftEq = liftEq2 (==)
+
+instance (Eq1 f, Eq a, Eq b) => Eq (CofreerF f a b) where
+  (==) = liftEq (==)
+
