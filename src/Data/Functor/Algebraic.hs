@@ -31,6 +31,12 @@ wrapL = wrap . InL
 wrapR :: r (Freer (Sum l r) a) -> Freer (Sum l r) a
 wrapR = wrap . InR
 
+liftFL :: l a -> Freer (Sum l r) a
+liftFL = liftF . InL
+
+liftFR :: r a -> Freer (Sum l r) a
+liftFR = liftF . InR
+
 collect :: (Foldable f, Functor f) => Algebra f a -> Algebra f [a]
 collect algebra c = wrapAlgebra ((++ fold c) . pure) head algebra c
 
