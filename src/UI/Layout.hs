@@ -117,3 +117,16 @@ instance Show a => Show1 (LayoutF a) where
     Offset by child -> showsBinaryWith showsPrec sp "Offset" d by child
     Resizeable with -> showsUnaryWith showsConst "Resizeable" d (with (pure Nothing))
     where showsConst i = showParen True . (showString "const " .) . sp i
+
+instance Eq2 LayoutF where
+  liftEq2 eqA eqF l1 l2 = case (l1, l2) of
+    (Inset s1 c1, Inset s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
+    (Offset p1 c1, Offset p2 c2) -> liftEq eqA p1 p2 && eqF c1 c2
+    (Resizeable r1, Resizeable r2) -> eqF (r1 (pure Nothing)) (r2 (pure Nothing))
+    _ -> False
+
+instance Eq a => Eq1 (LayoutF a) where
+  liftEq = liftEq2 (==)
+
+instance (Eq a, Eq f) => Eq (LayoutF a f) where
+  (==) = liftEq (==)
