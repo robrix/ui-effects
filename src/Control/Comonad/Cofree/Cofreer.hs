@@ -125,3 +125,8 @@ instance (Eq1 f, Eq a) => Eq1 (CofreerF f a) where
 instance (Eq1 f, Eq a, Eq b) => Eq (CofreerF f a b) where
   (==) = liftEq (==)
 
+instance Eq1 f => Eq1 (Cofreer f) where
+  liftEq eqA = go where go (Cofreer f1) (Cofreer f2) = liftEq2 eqA go f1 f2
+
+instance (Eq1 f, Eq a) => Eq (Cofreer f a) where
+  (==) = liftEq (==)
