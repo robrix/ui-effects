@@ -105,3 +105,15 @@ instance Real a => Foldable (DrawingF a) where
   foldMap f drawing = case drawing of
     Text (Size w _) s -> f (measureText w s)
     Clip _ child -> f child
+
+instance Eq2 DrawingF where
+  liftEq2 eqA eqF d1 d2 = case (d1, d2) of
+    (Text m1 s1, Text m2 s2) -> liftEq (liftEq eqA) m1 m2 && s1 == s2
+    (Clip s1 c1, Clip s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
+    _ -> False
+
+instance Eq a => Eq1 (DrawingF a) where
+  liftEq = liftEq2 (==)
+
+instance (Eq a, Eq f) => Eq (DrawingF a f) where
+  (==) = liftEq (==)
