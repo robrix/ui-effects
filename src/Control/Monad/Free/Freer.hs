@@ -136,3 +136,9 @@ instance (Eq1 f, Eq a) => Eq1 (FreerF f a) where
 
 instance (Eq1 f, Eq a, Eq b) => Eq (FreerF f a b) where
   (==) = liftEq (==)
+
+instance Eq1 f => Eq1 (Freer f) where
+  liftEq eqA = go where go (Freer f1) (Freer f2) = liftEq2 eqA go f1 f2
+
+instance (Eq1 f, Eq a) => Eq (Freer f a) where
+  (==) = liftEq (==)
