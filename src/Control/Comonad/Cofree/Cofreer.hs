@@ -99,12 +99,12 @@ instance Recursive (Cofreer f a) where project = runCofreer
 instance Corecursive (Cofreer f a) where embed = Cofreer
 
 
-instance (Functor f, Show1 f) => Show2 (CofreerF f) where
-  liftShowsPrec2 sp1 _ sp2 sa2 d (Cofree a t r) = showsTernaryWith sp1 (const showString) (liftShowsPrec sp2 sa2) "Cofree" d a "id" (t <$> r)
+instance Show1 f => Show2 (CofreerF f) where
+  liftShowsPrec2 sp1 _ sp2 sa2 d (Cofree a t r) = showsTernaryWith sp1 (const showString) (liftShowsPrec (\ i -> sp2 i . t) (sa2 . fmap t)) "Cofree" d a "id" r
     where showsTernaryWith :: (Int -> a -> ShowS) -> (Int -> b -> ShowS) -> (Int -> c -> ShowS) -> String -> Int -> a -> b -> c -> ShowS
           showsTernaryWith sp1 sp2 sp3 name d x y z = showParen (d > 10) $ showString name . showChar ' ' . sp1 11 x . showChar ' ' . sp2 11 y . showChar ' ' . sp3 11 z
 
-instance (Functor f, Show1 f) => Show1 (Cofreer f) where
+instance Show1 f => Show1 (Cofreer f) where
   liftShowsPrec sp sa d (Cofreer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Cofreer" d c
 
 instance (Functor f, Show (f (Cofreer f a)), Show a) => Show (Cofreer f a) where
