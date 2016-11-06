@@ -110,5 +110,8 @@ instance (Show1 f, Show a) => Show1 (CofreerF f a) where
 instance Show1 f => Show1 (Cofreer f) where
   liftShowsPrec sp sa d (Cofreer c) = showsUnaryWith (liftShowsPrec2 sp sa (liftShowsPrec sp sa) (liftShowList sp sa)) "Cofreer" d c
 
+instance (Show1 f, Show a, Show b) => Show (CofreerF f a b) where
+  showsPrec = liftShowsPrec showsPrec showList
+
 instance (Show1 f, Show a) => Show (Cofreer f a) where
   showsPrec = liftShowsPrec showsPrec showList
