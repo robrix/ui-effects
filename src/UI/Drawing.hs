@@ -8,9 +8,9 @@ module UI.Drawing
 , RenderingF
 , text
 , clip
-, drawingBoundingRectAlgebra
+, drawingRectAlgebra
 , drawingRectanglesAlgebra
-, renderingBoundingRectAlgebra
+, renderingRectAlgebra
 , drawingCoalgebra
 , renderingCoalgebra
 , renderingRects
@@ -49,21 +49,21 @@ clip :: Size a -> Drawing a b -> Drawing a b
 clip size = wrap . Clip size
 
 
-drawingBoundingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
-drawingBoundingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
+drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
+drawingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
   Pure size -> size
   Free runF drawing -> case drawing of
     Text maxSize s -> size (runC (runF (measureText (width maxSize) s)))
     Clip size _ -> size
 
 drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
-drawingRectanglesAlgebra = collect drawingBoundingRectAlgebra
+drawingRectanglesAlgebra = collect drawingRectAlgebra
 
-renderingBoundingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
-renderingBoundingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
+renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
+renderingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
   Pure size -> Rect origin size
   Free runF sum -> case sum of
-    InL drawing -> drawingBoundingRectAlgebra (Cofree a id (Free runF drawing))
+    InL drawing -> drawingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Point a, Size (Maybe a), Drawing a (Size a))
@@ -88,7 +88,7 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingRects = hylo (collect renderingBoundingRectAlgebra) renderingCoalgebra . (,,) (pure 0) (pure Nothing)
+renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,,) (pure 0) (pure Nothing)
 
 
 -- Instances
