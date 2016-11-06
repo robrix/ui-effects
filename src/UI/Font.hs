@@ -15,3 +15,6 @@ measureStringForWidth :: Real a => a -> String -> Size a
 measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (toRational (length s) / (toRational maxW / toRational (width char)))))
   where char = Size 5 8
         line = char + Size 10 5
+
+measureText :: Real a => Maybe a -> String -> Size a
+measureText = maybe measureString measureStringForWidth
