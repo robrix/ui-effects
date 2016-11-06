@@ -37,7 +37,7 @@ data Colour a = RGBA !a !a !a !a
 data DrawingF a f where
   Text :: Size (Maybe a) -> String -> DrawingF a f
   Clip :: Size a -> f -> DrawingF a f
-  deriving (Foldable, Functor, Show)
+  deriving (Foldable, Functor)
 
 type Drawing a = Freer (DrawingF a)
 type Rendering a = Freer (RenderingF a)
@@ -98,3 +98,6 @@ instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
     Text size string -> showsBinaryWith showsPrec showsPrec "Text" d size string
     Clip size f -> showsBinaryWith showsPrec sp "Clip" d size f
+
+instance (Show a, Show b) => Show (DrawingF a b) where
+  showsPrec = liftShowsPrec showsPrec showList
