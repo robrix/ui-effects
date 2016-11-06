@@ -5,7 +5,7 @@ import Data.Functor.Classes
 import Data.Semigroup
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
-  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
+  deriving (Eq, Foldable, Functor, Ord, Traversable)
 data Point a = Point { x :: !a, y :: !a }
   deriving (Eq, Foldable, Functor, Ord, Traversable)
 
@@ -23,6 +23,13 @@ sizeExtent (Size w h) = Point w h
 
 
 -- Instances
+
+instance Show1 Rect where
+  liftShowsPrec sp sl d (Rect origin size) = showsBinaryWith (liftShowsPrec sp sl) (liftShowsPrec sp sl) "Rect" d origin size
+
+instance Show a => Show (Rect a) where
+  showsPrec = liftShowsPrec showsPrec showList
+
 
 instance Applicative Point where
   pure a = Point a a
