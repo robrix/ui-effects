@@ -49,6 +49,9 @@ renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
 text :: String -> View
 text = Fix . Text
 
+label :: String -> View
+label = Fix . Label
+
 list :: [View] -> View
 list = Fix . List
 
