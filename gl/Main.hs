@@ -63,8 +63,8 @@ draw program array = do
 
 view :: View
 view = list
-  [ UI.View.text "hello, world"
-  , UI.View.text "what’s up?"
+  [ label "hello, world"
+  , label "what’s up?"
   ]
 
 orthographic :: Fractional a => a -> a -> a -> a -> a -> a -> Linear.M44 a
