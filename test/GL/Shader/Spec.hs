@@ -1,5 +1,6 @@
 module GL.Shader.Spec where
 
+import Control.Monad (void)
 import Data.List (intercalate)
 import GL.Shader
 import Linear.V4 as Linear
@@ -11,10 +12,8 @@ spec = do
     it "compiles constants" $
       toGLSL (do
         fragColour <- bind "fragColour"
-        function "main" [] $ do
-          _ <- set fragColour (v4 1 0 0 1.0 :: Shader (Linear.V4 Float))
-          pure ()
-        pure id) `shouldBe` intercalate "\n"
+        function "main" [] $
+          void $ set fragColour (v4 1 0 0 1.0 :: Shader (Linear.V4 Float))) `shouldBe` intercalate "\n"
         [ "#version 410"
         , "out vec4 fragColour;"
         , "void main(void) {"
