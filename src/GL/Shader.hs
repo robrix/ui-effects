@@ -116,8 +116,8 @@ toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra
 
 toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . run (Var s)
-  Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . run (Var s)
+  Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
+  Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
 
   Function n a b -> showsGLSLType (Proxy :: Proxy x) . sp . showString n . showParen True (foldr (.) id (intersperse (showString ", ") (run <$> a))) . sp . showBrace True (run b)
 
@@ -154,6 +154,7 @@ toGLSLAlgebra run shader = case shader of
         fun f a = showString f . showParen True (run a)
         var (Var s) = showString s
         sp = showChar ' '
+        nl = showChar '\n'
         vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
         recur = (iterFreer toGLSLAlgebra .) . fmap
         showBrace c b = if c then showChar '{' . b . showChar '}' else b
