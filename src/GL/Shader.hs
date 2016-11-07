@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving #-}
+{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving #-}
 module GL.Shader
 ( Var
 , Shader
@@ -14,7 +14,6 @@ module GL.Shader
 , toGLSL
 , GLShader(..)
 , withCompiledShaders
-, GLSLType(..)
 , GLSLValue(..)
 ) where
 
@@ -36,15 +35,15 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  Var :: GLSLType a => String -> Var a
+  Var :: GLSLValue a => String -> Var a
 
 data ShaderF a where
   -- Binding
-  Uniform :: GLSLType a => String -> ShaderF (Var (Shader a))
-  Bind :: GLSLType a => String -> ShaderF (Var (Shader a))
+  Uniform :: GLSLValue a => String -> ShaderF (Var (Shader a))
+  Bind :: GLSLValue a => String -> ShaderF (Var (Shader a))
 
   -- Functions
-  Function :: GLSLType a => String -> [a] -> a -> ShaderF a
+  Function :: GLSLValue a => String -> [a] -> a -> ShaderF a
 
   -- Accessors
   Get :: Var (Shader a) -> ShaderF a
@@ -81,13 +80,13 @@ data ShaderF a where
 type Shader = Freer ShaderF
 
 
-uniform :: GLSLType a => String -> Shader (Var (Shader a))
+uniform :: GLSLValue a => String -> Shader (Var (Shader a))
 uniform = liftF . Uniform
 
-bind :: GLSLType a => String -> Shader (Var (Shader a))
+bind :: GLSLValue a => String -> Shader (Var (Shader a))
 bind = liftF . Bind
 
-function :: GLSLType a => String -> [Shader a] -> Shader a -> Shader a
+function :: GLSLValue a => String -> [Shader a] -> Shader a -> Shader a
 function name args body = wrap (Function name args body)
 
 get :: Var (Shader a) -> Shader a
@@ -193,11 +192,12 @@ checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLo
 
 -- Classes
 
-class GLSLType t where
-  showsGLSLType :: Proxy t -> ShowS
-
 class GLSLValue v where
+  showsGLSLType :: Proxy v -> ShowS
+  showsGLSLVecType :: Proxy v -> ShowS
   showsGLSLValue :: v -> ShowS
+  default showsGLSLValue :: Show v => v -> ShowS
+  showsGLSLValue = shows
 
 
 -- Instances
@@ -279,38 +279,30 @@ instance Show1 ShaderF where
           showsTernaryWith sp1 sp2 sp3 name d x y z = showParen (d > 10) $ showString name . showChar ' ' . sp1 11 x . showChar ' ' . sp2 11 y . showChar ' ' . sp3 11 z
 
 
-instance GLSLType () where
-  showsGLSLType _ = showString "void"
-
-instance GLSLType Float where
-  showsGLSLType _ = showString "float"
-
-instance GLSLType Bool where
-  showsGLSLType _ = showString "bool"
-
-instance GLSLType (Linear.V4 Float) where
-  showsGLSLType _ = showString "vec4"
-
-instance GLSLType (Linear.V4 Bool) where
-  showsGLSLType _ = showString "bvec4"
-
-instance GLSLType (Linear.M44 Float) where
-  showsGLSLType _ = showString "mat4"
-
-instance GLSLType a => GLSLType (Shader a) where
-  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
-
-instance GLSLType a => GLSLType (Var a) where
-  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
-
 instance GLSLValue () where
+  showsGLSLType _ = showString "void"
+  showsGLSLVecType _ = showString "void"
   showsGLSLValue = shows
 
 instance GLSLValue Float where
-  showsGLSLValue = shows
+  showsGLSLType _ = showString "float"
+  showsGLSLVecType _ = showString "vec4"
 
 instance GLSLValue Bool where
+  showsGLSLType _ = showString "bool"
+  showsGLSLVecType _ = showString "bvec4"
   showsGLSLValue v = showString $ if v then "true" else "false"
 
-instance GLSLValue (Linear.V4 Float) where
-  showsGLSLValue v = showString "vec4" . showParen True (foldr (.) id (intersperse (showString ", ") (shows <$> toList v)))
+instance GLSLValue a => GLSLValue (Shader a) where
+  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
+  showsGLSLVecType _ = showsGLSLVecType (Proxy :: Proxy a)
+  showsGLSLValue _ = id
+
+instance GLSLValue a => GLSLValue (Var a) where
+  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
+  showsGLSLVecType _ = showsGLSLVecType (Proxy :: Proxy a)
+
+instance GLSLValue a => GLSLValue (Linear.V4 a) where
+  showsGLSLType _ = showsGLSLVecType (Proxy :: Proxy a)
+  showsGLSLVecType _ = showString "mat4"
+  showsGLSLValue v = showsGLSLVecType (Proxy :: Proxy a) . showParen True (foldr (.) id (intersperse (showString ", ") (showsGLSLValue <$> toList v)))
