@@ -32,6 +32,7 @@ import Prelude hiding (IO)
 
 data Var a where
   Var :: Typeable a => String -> Var a
+  deriving Typeable
 
 data ShaderF a where
   -- Binding
