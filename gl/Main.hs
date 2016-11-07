@@ -58,7 +58,9 @@ setup f = do
         fragmentShader = do
           time <- uniform "time" :: Shader (Var (Shader (Linear.V4 Float)))
           colour <- bind "colour"
-          _ <- set colour (get time + v4 0 0 1 (0.5 :: Float))
+          function "main" [] $ do
+            _ <- set colour (get time + v4 0 0 1 (0.5 :: Float))
+            pure ()
           pure id
 
 draw :: GLProgram -> GLArray Float -> Draw ()
