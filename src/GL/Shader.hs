@@ -258,6 +258,9 @@ instance Show1 ShaderF where
     Log a -> showsUnaryWith sp "Log" d a
 
 
+instance GLSLType () where
+  showsGLSLType _ = showString "void"
+
 instance GLSLType Float where
   showsGLSLType _ = showString "float"
 
