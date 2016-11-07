@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, KindSignatures, RankNTypes, StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances, GADTs, RankNTypes, StandaloneDeriving #-}
 module GL.Shader
 ( Var
 , Shader
