@@ -90,7 +90,7 @@ position = Var "gl_Position"
 -- Compilation
 
 toGLSL :: Shader ShowS -> String
-toGLSL = ($ "") . iterFreer toGLSLAlgebra
+toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra
 
 toGLSLAlgebra :: (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
@@ -131,7 +131,6 @@ toGLSLAlgebra run shader = case shader of
         var (Var s) = showString s
         sp = showChar ' '
         vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
-        recur :: (a -> ShowS) -> Shader a -> ShowS
         recur = (iterFreer toGLSLAlgebra .) . fmap
 
 
