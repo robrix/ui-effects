@@ -116,8 +116,8 @@ toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra
 
 toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';'
-  Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';'
+  Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . run (Var s)
+  Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . run (Var s)
 
   Function n a b -> showsGLSLType (Proxy :: Proxy x) . sp . showString n . showParen True (foldr (.) id (intersperse (showString ", ") (run <$> a))) . sp . showBrace True (run b)
 
