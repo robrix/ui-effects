@@ -18,6 +18,7 @@ module GL.Shader
 import Control.Exception
 import Control.Monad.Free.Freer
 import Data.Functor.Classes
+import Data.Typeable
 import Foreign.C.String
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
@@ -56,6 +57,7 @@ data ShaderF a where
   ASinH, ACosH, ATanH :: a -> ShaderF a
 
   Exp, Log :: a -> ShaderF a
+  deriving Typeable
 
 type Shader = Freer ShaderF
 
