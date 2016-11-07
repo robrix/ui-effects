@@ -2,31 +2,21 @@
 module GL.Shader
 ( Var
 , Shader
-, ShaderType(..)
-, position
-, pointSize
-, coord
-, pointCoord
-, frontFacing
-, depth
-, lambda
+, ShaderF
 , set
 , get
-, out
 , uniform
-, mat4Uniform
-, v2
-, v3
+, bind
 , v4
-, GLShader(..)
+, (!*)
+, position
 , toGLSL
+, GLShader(..)
 , withCompiledShaders
 ) where
 
 import Control.Exception
 import Control.Monad.Free.Freer
-import Data.List (intersperse)
-import Data.Monoid ((<>))
 import Foreign.C.String
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
@@ -35,156 +25,108 @@ import GL.Exception
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.Matrix as Linear
-import qualified Linear.V2 as Linear
-import qualified Linear.V3 as Linear
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
-data ShaderType = Fragment | Vertex
-data VarType = In | Out
-
-data Var (t :: VarType) (k :: ShaderType) a where
-  Var :: String -> Var t k a
-  Uniform :: String -> Var t k a
-
-  Position :: Var 'Out 'Vertex (Linear.V4 Float)
-  PointSize :: Var 'Out 'Vertex Float
-
-  Coord :: Var 'In 'Fragment (Linear.V4 Float)
-  PointCoord :: Var 'In 'Fragment (Linear.V2 Float)
-  FrontFacing :: Var 'In 'Fragment Bool
-  Depth :: Var 'Out 'Fragment Float
-
-data Shader (k :: ShaderType) t where
-  Lambda :: String -> Shader k a -> Shader k a
-  Get :: Var 'In k a -> Shader k a
-  Set :: Var 'Out k a -> Shader k a -> Shader k a
-
-  -- Literals
-  Scalar :: Show a => a -> Shader k a
-  V2 :: Show a => Linear.V2 a -> Shader k (Linear.V2 a)
-  V3 :: Show a => Linear.V3 a -> Shader k (Linear.V3 a)
-  V4 :: Show a => Linear.V4 a -> Shader k (Linear.V4 a)
-
-  -- Arithmetic
-  Add, Sub, Mul, Div :: Num a => Shader k a -> Shader k a -> Shader k a
-  Abs, Signum :: Num a => Shader k a -> Shader k a
-
-  -- Trigonometric
-  Sin, Cos, Tan :: Num a => Shader k a -> Shader k a
-  ASin, ACos, ATan :: Num a => Shader k a -> Shader k a
-  SinH, CosH, TanH :: Num a => Shader k a -> Shader k a
-  ASinH, ACosH, ATanH :: Num a => Shader k a -> Shader k a
-
-  Exp, Log :: Num a => Shader k a -> Shader k a
-
-
-data Var' a where
-  Var' :: String -> Var' a
+data Var a where
+  Var :: String -> Var a
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 data ShaderF a where
   -- Binding
-  Uniform' :: String -> ShaderF (Var' a)
-  Bind :: String -> ShaderF (Var' a)
+  Uniform :: String -> ShaderF (Var a)
+  Bind :: String -> ShaderF (Var a)
 
   -- Accessors
-  Get' :: Var' a -> ShaderF a
-  Set' :: Foldable t => Var' a -> t a -> ShaderF a
+  Get :: Var a -> ShaderF a
+  Set :: Foldable t => Var a -> t a -> ShaderF a
 
   -- Arithmetic
-  Add', Sub', Mul', Div' :: a -> a -> ShaderF a
-  Abs', Signum' :: a -> ShaderF a
+  Add, Sub, Mul, Div :: a -> a -> ShaderF a
+  Abs, Signum :: a -> ShaderF a
 
   -- Matrix arithmetic
   MulMV :: (Foldable term, Foldable row, Foldable column) => term (row (column a)) -> term (column a) -> ShaderF (column a)
 
   -- Trigonometric
-  Sin', Cos', Tan' :: a -> ShaderF a
-  ASin', ACos', ATan' :: a -> ShaderF a
-  SinH', CosH', TanH' :: a -> ShaderF a
-  ASinH', ACosH', ATanH' :: a -> ShaderF a
+  Sin, Cos, Tan :: a -> ShaderF a
+  ASin, ACos, ATan :: a -> ShaderF a
+  SinH, CosH, TanH :: a -> ShaderF a
+  ASinH, ACosH, ATanH :: a -> ShaderF a
 
-  Exp', Log' :: a -> ShaderF a
+  Exp, Log :: a -> ShaderF a
 
-type Shader' = Freer ShaderF
+type Shader = Freer ShaderF
 
 
-uniform' :: String -> Shader' (Var' a)
-uniform' s = Freer (Free pure (Uniform' s))
+uniform :: String -> Shader (Var a)
+uniform s = Freer (Free pure (Uniform s))
 
-bind :: String -> Shader' (Var' a)
+bind :: String -> Shader (Var a)
 bind s = Freer (Free pure (Bind s))
 
-get' :: Var' a -> Shader' a
-get' v = Freer (Free pure (Get' v))
+get :: Var a -> Shader a
+get v = Freer (Free pure (Get v))
 
-set' :: Var' a -> Shader' a -> Shader' a
-set' var value = Freer (Free pure (Set' var value))
+set :: Var a -> Shader a -> Shader a
+set var value = Freer (Free pure (Set var value))
 
-v4' :: a -> a -> a -> a -> Shader' (Linear.V4 a)
-v4' x y z w = pure (Linear.V4 x y z w)
+v4 :: a -> a -> a -> a -> Shader (Linear.V4 a)
+v4 x y z w = pure (Linear.V4 x y z w)
 
 infixl 7 !*
 
-(!*) :: Shader' (Linear.M44 a) -> Shader' (Linear.V4 a) -> Shader' (Linear.V4 a)
+(!*) :: Shader (Linear.M44 a) -> Shader (Linear.V4 a) -> Shader (Linear.V4 a)
 matrix !* column = Freer (Free pure (MulMV matrix column))
 
-vertexShader :: Shader' ()
-vertexShader = do
-  matrix <- uniform' "matrix" :: Shader' (Var' (Linear.M44 Float))
-  time <- uniform' "time" :: Shader' (Var' (Linear.V4 Float))
-  position <- bind "position" :: Shader' (Var' (Linear.V4 Float))
-  _ <- set' gl_Position (get' matrix !* (get' time * v4' 0.3 0.3 0.3 0.3 * get' position))
-  pure ()
-  where gl_Position = Var' "gl_Position"
+
+-- Variables
+
+position :: Var (Linear.V4 a)
+position = Var "gl_Position"
 
 
-position :: Var 'Out 'Vertex (Linear.V4 Float)
-position = Position
+-- Compilation
 
-pointSize :: Var 'Out 'Vertex Float
-pointSize = PointSize
+toGLSL :: Shader ShowS -> String
+toGLSL = ($ "") . iterFreer toGLSLAlgebra
 
-coord :: Var 'In 'Fragment (Linear.V4 Float)
-coord = Coord
+toGLSLAlgebra :: (x -> ShowS) -> ShaderF x -> ShowS
+toGLSLAlgebra run shader = case shader of
+  -- Uniform :: String -> ShaderF (Var a)
+  -- Bind :: String -> ShaderF (Var a)
 
-pointCoord :: Var 'In 'Fragment (Linear.V2 Float)
-pointCoord = PointCoord
+  Get (Var s) -> showString s
+  -- Set :: Foldable t => Var a -> t a -> ShaderF a
 
-frontFacing :: Var 'In 'Fragment Bool
-frontFacing = FrontFacing
+  Add a b -> op '+' a b
+  Sub a b -> op '-' a b
+  Mul a b -> op '*' a b
+  Div a b -> op '/' a b
 
-depth :: Var 'Out 'Fragment Float
-depth = Depth
+  Abs a -> fun "abs" a
+  Signum a -> fun "sign" a
 
-lambda :: String -> (Var 'In k a -> Shader k b) -> Shader k b
-lambda s f = Lambda s (f (Var s))
+  -- MulMV :: (Foldable term, Foldable row, Foldable column) => term (row (column a)) -> term (column a) -> ShaderF (column a)
 
-get :: Var 'In k a -> Shader k a
-get = Get
+  Sin a -> fun "sin" a
+  Cos a -> fun "cos" a
+  Tan a -> fun "tan" a
+  ASin a -> fun "asin" a
+  ACos a -> fun "acos" a
+  ATan a -> fun "atan" a
+  SinH a -> fun "sinh" a
+  CosH a -> fun "cosh" a
+  TanH a -> fun "tanh" a
+  ASinH a -> fun "asinh" a
+  ACosH a -> fun "acosh" a
+  ATanH a -> fun "atanh" a
 
-set :: Var 'Out k a -> Shader k a -> Shader k a
-set = Set
+  Exp a -> fun "exp" a
+  Log a -> fun "log" a
 
-out :: String -> Var 'Out k a
-out = Var
-
-uniform :: String -> Shader k a
-uniform = Get . Uniform
-
-mat4Uniform :: String -> Shader k (Linear.M44 a)
-mat4Uniform = Get . Uniform
-
-
-v2 :: Show a => a -> a -> Shader k (Linear.V2 a)
-v2 x y = V2 $ Linear.V2 x y
-
-v3 :: Show a => a -> a -> a -> Shader k (Linear.V3 a)
-v3 x y z = V3 $ Linear.V3 x y z
-
-v4 :: Show a => a -> a -> a -> a -> Shader k (Linear.V4 a)
-v4 x y z w = V4 $ Linear.V4 x y z w
+  where op o a b = showParen True $ run a . showChar ' ' . showChar o . showChar ' ' . run b
+        fun f a = showString f . showParen True (run a)
 
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
@@ -213,146 +155,37 @@ checkShader :: String -> GLShader -> IO GLShader
 checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog (Source source) GL_COMPILE_STATUS . unGLShader
 
 
-toGLSL :: Shader k a -> String
-toGLSL shader
-  = pragma "version" "410"
-  . foldr (.) id ((. showString "\n") <$> uniforms shader)
-  . foldr (.) id ((. showString "\n") <$> inputs shader)
-  . foldr (.) id ((. showString "\n") <$> outputs shader)
-  . main (go shader) $ ""
-  where go :: Shader k a -> ShowS
-        go (Set v value) = showString "  " . showString (set v) . showString " = " . go value . showString ";\n"
-        go (Get v) = showString $ get v
-        go (Lambda _ a) = go a
-        go (V4 (Linear.V4 x y z w)) = vector [ x, y, z, w ]
-        go (V3 (Linear.V3 x y z)) = vector [ x, y, z ]
-        go (V2 (Linear.V2 x y)) = vector [ x, y ]
-        go (Scalar x) = shows x
-        go (Add a b) = showParen True $ go a . showString " + " . go b
-        go (Mul a b) = showParen True $ go a . showString " * " . go b
-        go (Sub a b) = showParen True $ go a . showString " - " . go b
-        go (Div a b) = showParen True $ go a . showString " / " . go b
-        go (Sin a) = showString "sin" . showParen True (go a)
-        go (Abs a) = showString "abs" . showParen True (go a)
-        go _ = id
-
-        vector vs = showString "vec" . shows (length vs) . showParen True (foldr (.) id (intersperse (showString ", ") (shows <$> vs)))
-
-        set :: Var 'Out k a -> String
-        set Position = "gl_Position"
-        set PointSize = "gl_PointSize"
-        set Depth = "gl_FragDepth"
-        set (Var s) = s
-        set (Uniform s) = s
-
-        get :: Var 'In k a -> String
-        get Coord = "gl_FragCoord"
-        get PointCoord = "gl_PointCoord"
-        get FrontFacing = "gl_FrontFacing"
-        get (Var s) = s
-        get (Uniform s) = s
-
-        inputs :: Shader k a -> [ShowS]
-        inputs (Set _ p) = inputs p
-        inputs (Get (Var s)) = [ showString $ "in vec4 " <> s <> ";" ]
-        inputs (Lambda _ a) = inputs a
-        inputs (Add a b) = inputs a <> inputs b
-        inputs (Mul a b) = inputs a <> inputs b
-        inputs (Div a b) = inputs a <> inputs b
-        inputs _ = []
-
-        outputs :: Shader k a -> [ShowS]
-        outputs (Set (Var s) c) = showString ("out vec4 " <> s <> ";") : outputs c
-        outputs (Lambda _ a) = outputs a
-        outputs (Add a b) = outputs a <> outputs b
-        outputs (Mul a b) = outputs a <> outputs b
-        outputs (Div a b) = outputs a <> outputs b
-        outputs _ = []
-
-        uniforms :: Shader k a -> [ShowS]
-        uniforms (Set _ v) = uniforms v
-        uniforms (Lambda _ a) = uniforms a
-        uniforms (Get (Uniform s)) = [ showString $ "uniform vec4 " <> s <> ";" ]
-        uniforms (Add a b) = uniforms a <> uniforms b
-        uniforms (Mul a b) = uniforms a <> uniforms b
-        uniforms (Div a b) = uniforms a <> uniforms b
-        uniforms (Sin a) = uniforms a
-        uniforms (Abs a) = uniforms a
-        uniforms _ = []
-
-        pragma k v = showString $ "#" <> k <> " " <> v <> "\n"
-        main body = showString "void main(void) {\n" . body . showString "}"
-
-
 -- Instances
 
-instance (Show a, Num a) => Num (Shader k a) where
-  (+) = Add
-  (-) = Sub
-  (*) = Mul
-  abs = Abs
-  signum = Signum
-  fromInteger = Scalar . fromInteger
+instance Num a => Num (Shader a) where
+  (+) = (wrap .) . Add
+  (-) = (wrap .) . Sub
+  (*) = (wrap .) . Mul
 
-instance (Show a, Fractional a) => Fractional (Shader k a) where
-  (/) = Div
-  fromRational = Scalar . fromRational
-
-instance (Show a, Floating a) => Floating (Shader k a) where
-  sin = Sin
-  cos = Cos
-  tan = Tan
-  asin = ASin
-  acos = ACos
-  atan = ATan
-  sinh = SinH
-  cosh = CosH
-  tanh = TanH
-  asinh = ASinH
-  acosh = ACosH
-  atanh = ATanH
-
-  pi = Scalar pi
-  exp = Exp
-  log = Log
-
-deriving instance Eq (Var t k a)
-deriving instance Ord (Var t k a)
-deriving instance Eq a => Eq (Shader k a)
-deriving instance Ord a => Ord (Shader k a)
-deriving instance Foldable (Var io k)
-deriving instance Foldable (Shader k)
-
-
-instance Num a => Num (Shader' a) where
-  (+) = (wrap .) . Add'
-  (-) = (wrap .) . Sub'
-  (*) = (wrap .) . Mul'
-
-  abs = wrap . Abs'
-  signum = wrap . Signum'
+  abs = wrap . Abs
+  signum = wrap . Signum
   fromInteger = pure . fromInteger
 
-instance Fractional a => Fractional (Shader' a) where
-  (/) = (wrap .) . Div'
+instance Fractional a => Fractional (Shader a) where
+  (/) = (wrap .) . Div
   fromRational = pure . fromRational
 
-instance Floating a => Floating (Shader' a) where
-  sin = wrap . Sin'
-  cos = wrap . Cos'
-  tan = wrap . Tan'
-  asin = wrap . ASin'
-  acos = wrap . ACos'
-  atan = wrap . ATan'
-  sinh = wrap . SinH'
-  cosh = wrap . CosH'
-  tanh = wrap . TanH'
-  asinh = wrap . ASinH'
-  acosh = wrap . ACosH'
-  atanh = wrap . ATanH'
+instance Floating a => Floating (Shader a) where
+  sin = wrap . Sin
+  cos = wrap . Cos
+  tan = wrap . Tan
+  asin = wrap . ASin
+  acos = wrap . ACos
+  atan = wrap . ATan
+  sinh = wrap . SinH
+  cosh = wrap . CosH
+  tanh = wrap . TanH
+  asinh = wrap . ASinH
+  acosh = wrap . ACosH
+  atanh = wrap . ATanH
 
   pi = pure pi
-  exp = wrap . Exp'
-  log = wrap . Log'
+  exp = wrap . Exp
+  log = wrap . Log
 
 deriving instance Foldable ShaderF

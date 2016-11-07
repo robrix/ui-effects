@@ -9,7 +9,7 @@ import GL.Draw
 import GL.Exception
 import GL.Program
 import GL.Shader
-import GL.Setup
+import GL.Setup hiding (Shader)
 import qualified Linear.Matrix as Linear
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
@@ -42,12 +42,20 @@ setup f = do
   setDepthFunc Less
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
-  program <- buildProgram [ GL.Setup.Vertex vertexShader, GL.Setup.Fragment fragmentShader ]
+  program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (pure 0 <* renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
-  where vertexShader = lambda "position" $ \ p ->
-          set position ((get p + v4 (negate 1) (negate 1) 0 0) * v4 (1/1024) (1/768) 1 1)
-        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.5 :: Float))
+  where vertexShader = do
+          matrix <- uniform "matrix" :: Shader (Var (Linear.M44 Float))
+          time <- uniform "time" :: Shader (Var (Linear.V4 Float))
+          position <- bind "position" :: Shader (Var (Linear.V4 Float))
+          _ <- set position (get matrix !* (get time * v4 0.3 0.3 0.3 0.3 * get position))
+          pure id
+        fragmentShader = do
+          time <- uniform "time" :: Shader (Var (Linear.V4 Float))
+          colour <- bind "colour"
+          _ <- set colour (get time + v4 0 0 1 (0.5 :: Float))
+          pure id
 
 draw :: GLProgram -> GLArray Float -> Draw ()
 draw program array = do
