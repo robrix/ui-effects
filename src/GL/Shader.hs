@@ -18,6 +18,7 @@ module GL.Shader
 import Control.Exception
 import Control.Monad.Free.Freer
 import Data.Functor.Classes
+import Data.Proxy
 import Data.Typeable
 import Foreign.C.String
 import Foreign.Marshal.Alloc
@@ -175,6 +176,12 @@ checkShader :: String -> GLShader -> IO GLShader
 checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog (Source source) GL_COMPILE_STATUS . unGLShader
 
 
+-- Classes
+
+class GLSLType t where
+  showsGLSLType :: Proxy t -> ShowS
+
+
 -- Instances
 
 deriving instance Eq (Var a)
@@ -248,3 +255,16 @@ instance Show1 ShaderF where
 
     Exp a -> showsUnaryWith sp "Exp" d a
     Log a -> showsUnaryWith sp "Log" d a
+
+
+instance GLSLType Float where
+  showsGLSLType _ = showString "float"
+
+instance GLSLType Bool where
+  showsGLSLType _ = showString "bool"
+
+instance GLSLType (Linear.V4 Float) where
+  showsGLSLType _ = showString "vec4"
+
+instance GLSLType (Linear.V4 Bool) where
+  showsGLSLType _ = showString "bvec4"
