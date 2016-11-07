@@ -31,8 +31,7 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  Var :: String -> Var a
-  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
+  Var :: Typeable a => String -> Var a
 
 data ShaderF a where
   -- Binding
@@ -163,6 +162,11 @@ checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLo
 
 
 -- Instances
+
+deriving instance Eq (Var a)
+deriving instance Foldable Var
+deriving instance Ord (Var a)
+deriving instance Show (Var a)
 
 instance Num a => Num (Shader a) where
   (+) = (wrap .) . Add
