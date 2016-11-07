@@ -122,7 +122,7 @@ toGLSLAlgebra run shader = case shader of
   Function n a b -> showsGLSLType (Proxy :: Proxy x) . sp . showString n . showParen True (foldr (.) id (intersperse (showString ", ") (if null a then [ showsGLSLType (Proxy :: Proxy ()) ] else run <$> a))) . sp . showBrace True (run b)
 
   Get v -> var v
-  Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';'
+  Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';' . nl
 
   Add a b -> op '+' a b
   Sub a b -> op '-' a b
