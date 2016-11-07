@@ -28,8 +28,6 @@ data Factor
   | OneMinusSourceAlpha
   | OneMinusSourceColour
 
--- GL_CONSTANT_ALPHA_EXT, GL_CONSTANT_COLOR_EXT,, GL_ONE_MINUS_CONSTANT_ALPHA_EXT, GL_ONE_MINUS_CONSTANT_COLOR_EXT
-
 data Shader a where
   Vertex :: Shader.Shader 'Shader.Vertex a -> Shader a
   Fragment :: Shader.Shader 'Shader.Fragment a -> Shader a
