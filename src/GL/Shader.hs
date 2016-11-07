@@ -6,7 +6,8 @@ module GL.Shader
 , set
 , get
 , uniform
-, bind
+, input
+, output
 , function
 , v4
 , (!*)
@@ -40,7 +41,8 @@ data Var a where
 data ShaderF a where
   -- Binding
   Uniform :: GLSLValue a => String -> ShaderF (Var (Shader a))
-  Bind :: GLSLValue a => String -> ShaderF (Var (Shader a))
+  In :: GLSLValue a => String -> ShaderF (Var (Shader a))
+  Out :: GLSLValue a => String -> ShaderF (Var (Shader a))
 
   -- Functions
   Function :: GLSLValue a => String -> [a] -> a -> ShaderF a
@@ -86,8 +88,11 @@ type Shader = Freer ShaderF
 uniform :: GLSLValue a => String -> Shader (Var (Shader a))
 uniform = liftF . Uniform
 
-bind :: GLSLValue a => String -> Shader (Var (Shader a))
-bind = liftF . Bind
+input :: GLSLValue a => String -> Shader (Var (Shader a))
+input = liftF . In
+
+output :: GLSLValue a => String -> Shader (Var (Shader a))
+output = liftF . Out
 
 function :: GLSLValue a => String -> [Shader a] -> Shader a -> Shader a
 function name args body = wrap (Function name args body)
@@ -121,7 +126,8 @@ toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fm
 toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
   Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
-  Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
+  In s -> showString "in" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
+  Out s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
 
   Function name args body ->
     showsGLSLType (Proxy :: Proxy x) . sp . showString name
@@ -248,7 +254,8 @@ deriving instance Foldable ShaderF
 instance Show1 ShaderF where
   liftShowsPrec sp sl d shader = case shader of
     Uniform s -> showsUnaryWith showsPrec "Uniform" d s
-    Bind s -> showsUnaryWith showsPrec "Bind" d s
+    In s -> showsUnaryWith showsPrec "In" d s
+    Out s -> showsUnaryWith showsPrec "Out" d s
 
     Function n a b -> showsTernaryWith showsPrec (liftShowsPrec sp sl) sp "Function" d n a b
 

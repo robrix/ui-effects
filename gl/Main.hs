@@ -48,12 +48,12 @@ setup f = do
   where vertexShader = do
           matrix <- uniform "matrix" :: Shader (Var (Shader (Linear.M44 Float)))
           time <- uniform "time" :: Shader (Var (Shader (Linear.V4 Float)))
-          p <- bind "position" :: Shader (Var (Shader (Linear.V4 Float)))
+          p <- input "position" :: Shader (Var (Shader (Linear.V4 Float)))
           function "main" [] $
             void $ set position (get matrix !* (get time * v4 0.3 0.3 0.3 0.3 * get p))
         fragmentShader = do
           time <- uniform "time" :: Shader (Var (Shader (Linear.V4 Float)))
-          colour <- bind "colour"
+          colour <- output "colour"
           function "main" [] $
             void $ set colour (get time + v4 0 0 1 (0.5 :: Float))
 
