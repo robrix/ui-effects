@@ -49,6 +49,9 @@ data ShaderF a where
   Get :: Var (Shader a) -> ShaderF a
   Set :: Var a -> a -> ShaderF a
 
+  -- Literals
+  V4 :: GLSLValue a => Linear.V4 a -> ShaderF (Linear.V4 a)
+
   -- Arithmetic
   Add :: a -> a -> ShaderF a
   Sub :: a -> a -> ShaderF a
@@ -95,8 +98,8 @@ get = liftF . Get
 set :: Var (Shader a) -> Shader a -> Shader a
 set var value = wrap (Set var value)
 
-v4 :: a -> a -> a -> a -> Shader (Linear.V4 a)
-v4 x y z w = pure (Linear.V4 x y z w)
+v4 :: GLSLValue a => a -> a -> a -> a -> Shader (Linear.V4 a)
+v4 x y z w = liftF (V4 (Linear.V4 x y z w))
 
 infixl 7 !*
 
@@ -127,6 +130,8 @@ toGLSLAlgebra run shader = case shader of
 
   Get v -> var v
   Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';' . nl
+
+  V4 v -> showsGLSLValue v
 
   Add a b -> op '+' a b
   Sub a b -> op '-' a b
@@ -249,6 +254,8 @@ instance Show1 ShaderF where
 
     Get v -> showsUnaryWith showsPrec "Get" d v
     Set v value -> showsBinaryWith showsPrec sp "Set" d v value
+
+    V4 v -> showsUnaryWith sp "V4" d v
 
     Add a b -> showsBinaryWith sp sp "Add" d a b
     Sub a b -> showsBinaryWith sp sp "Sub" d a b
