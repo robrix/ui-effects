@@ -17,6 +17,7 @@ module GL.Shader
 
 import Control.Exception
 import Control.Monad.Free.Freer
+import Data.Functor.Classes
 import Foreign.C.String
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
@@ -34,19 +35,19 @@ data Var a where
 
 data ShaderF a where
   -- Binding
-  Uniform :: String -> ShaderF (Var a)
-  Bind :: String -> ShaderF (Var a)
+  Uniform :: String -> ShaderF (Var (Shader a))
+  Bind :: String -> ShaderF (Var (Shader a))
 
   -- Accessors
-  Get :: Var a -> ShaderF a
-  Set :: Foldable t => Var a -> t a -> ShaderF a
+  Get :: Var (Shader a) -> ShaderF a
+  Set :: Var a -> a -> ShaderF a
 
   -- Arithmetic
   Add, Sub, Mul, Div :: a -> a -> ShaderF a
   Abs, Signum :: a -> ShaderF a
 
   -- Matrix arithmetic
-  MulMV :: (Foldable term, Foldable row, Foldable column) => term (row (column a)) -> term (column a) -> ShaderF (column a)
+  MulMV :: Shader (Linear.V4 a) -> Shader a -> ShaderF a
 
   -- Trigonometric
   Sin, Cos, Tan :: a -> ShaderF a
@@ -59,17 +60,17 @@ data ShaderF a where
 type Shader = Freer ShaderF
 
 
-uniform :: String -> Shader (Var a)
-uniform s = Freer (Free pure (Uniform s))
+uniform :: String -> Shader (Var (Shader a))
+uniform = liftF . Uniform
 
-bind :: String -> Shader (Var a)
-bind s = Freer (Free pure (Bind s))
+bind :: String -> Shader (Var (Shader a))
+bind = liftF . Bind
 
-get :: Var a -> Shader a
-get v = Freer (Free pure (Get v))
+get :: Var (Shader a) -> Shader a
+get = liftF . Get
 
-set :: Var a -> Shader a -> Shader a
-set var value = Freer (Free pure (Set var value))
+set :: Var (Shader a) -> Shader a -> Shader a
+set var value = wrap (Set var value)
 
 v4 :: a -> a -> a -> a -> Shader (Linear.V4 a)
 v4 x y z w = pure (Linear.V4 x y z w)
@@ -93,11 +94,11 @@ toGLSL = ($ "") . iterFreer toGLSLAlgebra
 
 toGLSLAlgebra :: (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  -- Uniform :: String -> ShaderF (Var a)
-  -- Bind :: String -> ShaderF (Var a)
+  Uniform s -> showString "uniform" . sp . showString s . showChar ';'
+  Bind s -> showString "out" . sp . showString s . showChar ';'
 
-  Get (Var s) -> showString s
-  -- Set :: Foldable t => Var a -> t a -> ShaderF a
+  Get v -> var v
+  Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';'
 
   Add a b -> op '+' a b
   Sub a b -> op '-' a b
@@ -107,7 +108,7 @@ toGLSLAlgebra run shader = case shader of
   Abs a -> fun "abs" a
   Signum a -> fun "sign" a
 
-  -- MulMV :: (Foldable term, Foldable row, Foldable column) => term (row (column a)) -> term (column a) -> ShaderF (column a)
+  MulMV matrix column -> recur vec matrix . showChar '*' . recur run column
 
   Sin a -> fun "sin" a
   Cos a -> fun "cos" a
@@ -125,8 +126,13 @@ toGLSLAlgebra run shader = case shader of
   Exp a -> fun "exp" a
   Log a -> fun "log" a
 
-  where op o a b = showParen True $ run a . showChar ' ' . showChar o . showChar ' ' . run b
+  where op o a b = showParen True $ run a . sp . showChar o . sp . run b
         fun f a = showString f . showParen True (run a)
+        var (Var s) = showString s
+        sp = showChar ' '
+        vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
+        recur :: (a -> ShowS) -> Shader a -> ShowS
+        recur = (iterFreer toGLSLAlgebra .) . fmap
 
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
@@ -189,3 +195,37 @@ instance Floating a => Floating (Shader a) where
   log = wrap . Log
 
 deriving instance Foldable ShaderF
+
+instance Show1 ShaderF where
+  liftShowsPrec sp sl d shader = case shader of
+    Uniform s -> showsUnaryWith showsPrec "Uniform" d s
+    Bind s -> showsUnaryWith showsPrec "Bind" d s
+
+    Get v -> showsUnaryWith showsPrec "Get" d v
+    Set v value -> showsBinaryWith showsPrec sp "Set" d v value
+
+    Add a b -> showsBinaryWith sp sp "Add" d a b
+    Sub a b -> showsBinaryWith sp sp "Sub" d a b
+    Mul a b -> showsBinaryWith sp sp "Mul" d a b
+    Div a b -> showsBinaryWith sp sp "Div" d a b
+
+    Abs a -> showsUnaryWith sp "Abs" d a
+    Signum a -> showsUnaryWith sp "Signum" d a
+
+    MulMV a b -> showsBinaryWith (liftShowsPrec (liftShowsPrec sp sl) (liftShowList sp sl)) (liftShowsPrec sp sl) "MulMV" d a b
+
+    Sin a -> showsUnaryWith sp "Sin" d a
+    Cos a -> showsUnaryWith sp "Cos" d a
+    Tan a -> showsUnaryWith sp "Tan" d a
+    ASin a -> showsUnaryWith sp "ASin" d a
+    ACos a -> showsUnaryWith sp "ACos" d a
+    ATan a -> showsUnaryWith sp "ATan" d a
+    SinH a -> showsUnaryWith sp "SinH" d a
+    CosH a -> showsUnaryWith sp "CosH" d a
+    TanH a -> showsUnaryWith sp "TanH" d a
+    ASinH a -> showsUnaryWith sp "ASinH" d a
+    ACosH a -> showsUnaryWith sp "ACosH" d a
+    ATanH a -> showsUnaryWith sp "ATanH" d a
+
+    Exp a -> showsUnaryWith sp "Exp" d a
+    Log a -> showsUnaryWith sp "Log" d a
