@@ -44,19 +44,32 @@ data ShaderF a where
   Set :: Var a -> a -> ShaderF a
 
   -- Arithmetic
-  Add, Sub, Mul, Div :: a -> a -> ShaderF a
-  Abs, Signum :: a -> ShaderF a
+  Add :: a -> a -> ShaderF a
+  Sub :: a -> a -> ShaderF a
+  Mul :: a -> a -> ShaderF a
+  Div :: a -> a -> ShaderF a
+  Abs :: a -> ShaderF a
+  Signum :: a -> ShaderF a
 
   -- Matrix arithmetic
   MulMV :: Shader (Linear.V4 a) -> Shader a -> ShaderF a
 
   -- Trigonometric
-  Sin, Cos, Tan :: a -> ShaderF a
-  ASin, ACos, ATan :: a -> ShaderF a
-  SinH, CosH, TanH :: a -> ShaderF a
-  ASinH, ACosH, ATanH :: a -> ShaderF a
+  Sin :: a -> ShaderF a
+  Cos :: a -> ShaderF a
+  Tan :: a -> ShaderF a
+  ASin :: a -> ShaderF a
+  ACos :: a -> ShaderF a
+  ATan :: a -> ShaderF a
+  SinH :: a -> ShaderF a
+  CosH :: a -> ShaderF a
+  TanH :: a -> ShaderF a
+  ASinH :: a -> ShaderF a
+  ACosH :: a -> ShaderF a
+  ATanH :: a -> ShaderF a
 
-  Exp, Log :: a -> ShaderF a
+  Exp :: a -> ShaderF a
+  Log :: a -> ShaderF a
   deriving Typeable
 
 type Shader = Freer ShaderF
