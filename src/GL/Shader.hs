@@ -268,3 +268,6 @@ instance GLSLType (Linear.V4 Float) where
 
 instance GLSLType (Linear.V4 Bool) where
   showsGLSLType _ = showString "bvec4"
+
+instance GLSLType (Linear.M44 Float) where
+  showsGLSLType _ = showString "mat4"
