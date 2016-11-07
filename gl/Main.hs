@@ -43,7 +43,7 @@ setup f = do
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
-  array <- bindArray (rectVertices =<< renderingRects (pure 0 <* renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
+  array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
   where vertexShader = do
           matrix <- uniform "matrix" :: Shader (Var (Shader (Linear.M44 Float)))
