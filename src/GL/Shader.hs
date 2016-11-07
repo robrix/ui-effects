@@ -22,7 +22,6 @@ import Control.Monad.Free.Freer
 import Data.Functor.Classes
 import Data.List (intersperse)
 import Data.Proxy
-import Data.Typeable
 import Foreign.C.String
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
@@ -36,7 +35,6 @@ import Prelude hiding (IO)
 
 data Var a where
   Var :: GLSLType a => String -> Var a
-  deriving Typeable
 
 data ShaderF a where
   -- Binding
@@ -77,7 +75,6 @@ data ShaderF a where
 
   Exp :: a -> ShaderF a
   Log :: a -> ShaderF a
-  deriving Typeable
 
 type Shader = Freer ShaderF
 
