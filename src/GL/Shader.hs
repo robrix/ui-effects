@@ -113,8 +113,8 @@ position = Var "gl_Position"
 
 -- Compilation
 
-toGLSL :: Shader ShowS -> String
-toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra
+toGLSL :: GLSLValue a => Shader a -> String
+toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap showsGLSLValue
 
 toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
