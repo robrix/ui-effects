@@ -121,10 +121,10 @@ toGLSLAlgebra run shader = case shader of
   Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
   Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
 
-  Function n a b ->
-    showsGLSLType (Proxy :: Proxy x) . sp . showString n
-    . showParen True (foldr (.) id (intersperse (showString ", ") (if null a then [ showsGLSLType (Proxy :: Proxy ()) ] else run <$> a))) . sp
-    . showBrace True (nl . sp . sp . run b)
+  Function name args body ->
+    showsGLSLType (Proxy :: Proxy x) . sp . showString name
+    . showParen True (foldr (.) id (intersperse (showString ", ") (if null args then [ showsGLSLType (Proxy :: Proxy ()) ] else run <$> args))) . sp
+    . showBrace True (nl . sp . sp . run body)
 
   Get v -> var v
   Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';' . nl
