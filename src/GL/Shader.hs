@@ -19,6 +19,7 @@ module GL.Shader
 
 import Control.Exception
 import Control.Monad.Free.Freer
+import Data.Foldable (toList)
 import Data.Functor.Classes
 import Data.List (intersperse)
 import Data.Proxy
@@ -191,6 +192,9 @@ checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLo
 class GLSLType t where
   showsGLSLType :: Proxy t -> ShowS
 
+class GLSLValue v where
+  showsGLSLValue :: v -> ShowS
+
 
 -- Instances
 
@@ -294,3 +298,12 @@ instance GLSLType a => GLSLType (Shader a) where
 
 instance GLSLType a => GLSLType (Var a) where
   showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
+
+instance GLSLValue Float where
+  showsGLSLValue = shows
+
+instance GLSLValue Bool where
+  showsGLSLValue v = showString $ if v then "true" else "false"
+
+instance GLSLValue (Linear.V4 Float) where
+  showsGLSLValue v = showString "vec4" . showParen True (foldr (.) id (intersperse (showString ", ") (shows <$> toList v)))
