@@ -85,7 +85,7 @@ matrix !* column = Freer (Free pure (MulMV matrix column))
 
 -- Variables
 
-position :: Var (Linear.V4 a)
+position :: Var (Linear.V4 Float)
 position = Var "gl_Position"
 
 
