@@ -15,6 +15,7 @@ module GL.Shader
 , GLShader(..)
 , withCompiledShaders
 , GLSLType(..)
+, GLSLValue(..)
 ) where
 
 import Control.Exception
