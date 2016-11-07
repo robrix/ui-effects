@@ -9,7 +9,7 @@ import GL.Draw
 import GL.Exception
 import GL.Program
 import GL.Shader
-import GL.Setup
+import GL.Setup hiding (Shader)
 import qualified Linear.Matrix as Linear
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
@@ -42,12 +42,19 @@ setup f = do
   setDepthFunc Less
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
-  program <- buildProgram [ GL.Setup.Vertex vertexShader, GL.Setup.Fragment fragmentShader ]
-  array <- bindArray (rectVertices =<< renderingRects (pure 0 <* renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
+  program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
+  array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
-  where vertexShader = lambda "position" $ \ p ->
-          set position ((get p + v4 (negate 1) (negate 1) 0 0) * v4 (1/1024) (1/768) 1 1)
-        fragmentShader = set (out "colour") (uniform "time" + v4 0 0 1 (0.5 :: Float))
+  where vertexShader = do
+          matrix <- uniform "matrix" :: Shader (Var (Shader (Linear.M44 Float)))
+          p <- input "position" :: Shader (Var (Shader (Linear.V4 Float)))
+          function "main" [] $
+            void $ set position (get matrix !* get p)
+        fragmentShader = do
+          time <- uniform "time" :: Shader (Var (Shader (Linear.V4 Float)))
+          colour <- output "colour"
+          function "main" [] $
+            void $ set colour (get time + v4 0 0 1 (0.5 :: Float))
 
 draw :: GLProgram -> GLArray Float -> Draw ()
 draw program array = do
@@ -57,6 +64,7 @@ draw program array = do
 
   t <- drawIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
   setUniform program "time" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0 :: Linear.V4 Float)
+  setUniform program "matrix" (orthographic 0 1024 0 768 (negate 1) 1 :: Linear.M44 Float)
 
   bindVertexArray array
   drawArrays TriangleStrip 0 4
