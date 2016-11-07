@@ -64,6 +64,6 @@ instance GLProgramUniform (Linear.M44 Float) where
     let fieldSize = sizeOf (0 :: Float)
     let byteCount = fieldCount * fieldSize
     allocaBytes byteCount $ \ p -> do
-      for_ (zip [0..] (toList matrix >>= toList)) (uncurry (pokeElemOff p))
+      for_ (zip [0..] (toList (Linear.transpose matrix) >>= toList)) (uncurry (pokeElemOff p))
       glProgramUniformMatrix4fv (unGLProgram program) location 1 GL_FALSE (castPtr p)
     checkGLError
