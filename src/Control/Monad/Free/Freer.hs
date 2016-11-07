@@ -5,6 +5,7 @@ module Control.Monad.Free.Freer
 , liftFreerF
 , iter
 , iterA
+, iterFreer
 , hoistFreer
 , hoistFreerF
 , liftF
@@ -36,6 +37,11 @@ iterA :: (Functor f, Applicative m) => (f (m a) -> m a) -> Freer f a -> m a
 iterA algebra = cata $ \ r -> case r of
   Pure a -> pure a
   Free t r -> algebra (t <$> r)
+
+iterFreer :: (forall x. (x -> a) -> f x -> a) -> Freer f a -> a
+iterFreer algebra = cata $ \ r -> case r of
+  Pure a -> a
+  Free t r -> algebra t r
 
 
 hoistFreer :: (forall a. f a -> g a) -> Freer f b -> Freer g b
