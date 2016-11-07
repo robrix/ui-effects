@@ -11,7 +11,9 @@ spec = do
     it "compiles constants" $
       toGLSL (do
         fragColour <- bind "fragColour"
-        _ <- set fragColour (v4 1 0 0 1.0 :: Shader (Linear.V4 Float))
+        function "main" [] $ do
+          _ <- set fragColour (v4 1 0 0 1.0 :: Shader (Linear.V4 Float))
+          pure ()
         pure id) `shouldBe` intercalate "\n"
         [ "#version 410"
         , "out vec4 fragColour;"
