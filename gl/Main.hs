@@ -50,7 +50,9 @@ setup f = do
           matrix <- uniform "matrix" :: Shader (Var (Shader (Linear.M44 Float)))
           time <- uniform "time" :: Shader (Var (Shader (Linear.V4 Float)))
           position <- bind "position" :: Shader (Var (Shader (Linear.V4 Float)))
-          _ <- set position (get matrix !* (get time * v4 0.3 0.3 0.3 0.3 * get position))
+          function "main" [] $ do
+            _ <- set position (get matrix !* (get time * v4 0.3 0.3 0.3 0.3 * get position))
+            pure ()
           pure id
         fragmentShader :: Shader ShowS
         fragmentShader = do

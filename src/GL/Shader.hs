@@ -7,6 +7,7 @@ module GL.Shader
 , get
 , uniform
 , bind
+, function
 , v4
 , (!*)
 , position
@@ -19,6 +20,7 @@ module GL.Shader
 import Control.Exception
 import Control.Monad.Free.Freer
 import Data.Functor.Classes
+import Data.List (intersperse)
 import Data.Proxy
 import Data.Typeable
 import Foreign.C.String
@@ -40,6 +42,9 @@ data ShaderF a where
   -- Binding
   Uniform :: GLSLType a => String -> ShaderF (Var (Shader a))
   Bind :: GLSLType a => String -> ShaderF (Var (Shader a))
+
+  -- Functions
+  Function :: GLSLType a => String -> [a] -> a -> ShaderF a
 
   -- Accessors
   Get :: Var (Shader a) -> ShaderF a
@@ -83,6 +88,9 @@ uniform = liftF . Uniform
 bind :: GLSLType a => String -> Shader (Var (Shader a))
 bind = liftF . Bind
 
+function :: GLSLType a => String -> [Shader a] -> Shader a -> Shader a
+function name args body = wrap (Function name args body)
+
 get :: Var (Shader a) -> Shader a
 get = liftF . Get
 
@@ -113,6 +121,8 @@ toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
   Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';'
   Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';'
+
+  Function n a b -> showsGLSLType (Proxy :: Proxy x) . sp . showString n . showParen True (foldr (.) id (intersperse (showString ", ") (run <$> a))) . sp . showBrace True (run b)
 
   Get v -> var v
   Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';'
@@ -149,6 +159,7 @@ toGLSLAlgebra run shader = case shader of
         sp = showChar ' '
         vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
         recur = (iterFreer toGLSLAlgebra .) . fmap
+        showBrace c b = if c then showChar '{' . b . showChar '}' else b
 
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
@@ -228,6 +239,8 @@ instance Show1 ShaderF where
     Uniform s -> showsUnaryWith showsPrec "Uniform" d s
     Bind s -> showsUnaryWith showsPrec "Bind" d s
 
+    Function n a b -> showsTernaryWith showsPrec (liftShowsPrec sp sl) sp "Function" d n a b
+
     Get v -> showsUnaryWith showsPrec "Get" d v
     Set v value -> showsBinaryWith showsPrec sp "Set" d v value
 
@@ -256,6 +269,8 @@ instance Show1 ShaderF where
 
     Exp a -> showsUnaryWith sp "Exp" d a
     Log a -> showsUnaryWith sp "Log" d a
+    where showsTernaryWith :: (Int -> a -> ShowS) -> (Int -> b -> ShowS) -> (Int -> c -> ShowS) -> String -> Int -> a -> b -> c -> ShowS
+          showsTernaryWith sp1 sp2 sp3 name d x y z = showParen (d > 10) $ showString name . showChar ' ' . sp1 11 x . showChar ' ' . sp2 11 y . showChar ' ' . sp3 11 z
 
 
 instance GLSLType () where
