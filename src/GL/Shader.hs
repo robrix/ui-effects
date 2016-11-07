@@ -300,6 +300,9 @@ instance GLSLType a => GLSLType (Shader a) where
 instance GLSLType a => GLSLType (Var a) where
   showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
 
+instance GLSLValue () where
+  showsGLSLValue = shows
+
 instance GLSLValue Float where
   showsGLSLValue = shows
 
