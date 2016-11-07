@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, RankNTypes, StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving #-}
 module GL.Shader
 ( Var
 , Shader
@@ -13,6 +13,7 @@ module GL.Shader
 , toGLSL
 , GLShader(..)
 , withCompiledShaders
+, GLSLType(..)
 ) where
 
 import Control.Exception
@@ -32,13 +33,13 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  Var :: Typeable a => String -> Var a
+  Var :: GLSLType a => String -> Var a
   deriving Typeable
 
 data ShaderF a where
   -- Binding
-  Uniform :: String -> ShaderF (Var (Shader a))
-  Bind :: String -> ShaderF (Var (Shader a))
+  Uniform :: GLSLType a => String -> ShaderF (Var (Shader a))
+  Bind :: GLSLType a => String -> ShaderF (Var (Shader a))
 
   -- Accessors
   Get :: Var (Shader a) -> ShaderF a
@@ -76,10 +77,10 @@ data ShaderF a where
 type Shader = Freer ShaderF
 
 
-uniform :: String -> Shader (Var (Shader a))
+uniform :: GLSLType a => String -> Shader (Var (Shader a))
 uniform = liftF . Uniform
 
-bind :: String -> Shader (Var (Shader a))
+bind :: GLSLType a => String -> Shader (Var (Shader a))
 bind = liftF . Bind
 
 get :: Var (Shader a) -> Shader a
@@ -108,10 +109,10 @@ position = Var "gl_Position"
 toGLSL :: Shader ShowS -> String
 toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra
 
-toGLSLAlgebra :: (x -> ShowS) -> ShaderF x -> ShowS
+toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  Uniform s -> showString "uniform" . sp . showString s . showChar ';'
-  Bind s -> showString "out" . sp . showString s . showChar ';'
+  Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';'
+  Bind s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';'
 
   Get v -> var v
   Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';'
@@ -271,3 +272,9 @@ instance GLSLType (Linear.V4 Bool) where
 
 instance GLSLType (Linear.M44 Float) where
   showsGLSLType _ = showString "mat4"
+
+instance GLSLType a => GLSLType (Shader a) where
+  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
+
+instance GLSLType a => GLSLType (Var a) where
+  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
