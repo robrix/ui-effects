@@ -369,7 +369,7 @@ instance IsShader (Shader a) where
 instance (GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
   type ShaderResult (Var (Shader a) -> b) = ShaderResult b
   toShader' f i = do
-    var <- input ('v' : show i)
+    var <- input ('i' : show i)
     toShader' (f var) (succ i)
 
 deriving instance Show UniformVar
