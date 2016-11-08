@@ -1,8 +1,7 @@
 {-# LANGUAGE DataKinds, GADTs, RankNTypes #-}
 module GL.Setup where
 
-import Control.Action
-import Control.Monad.Free
+import Control.Monad.Free.Freer
 import GL.Array
 import GL.Exception
 import GL.Program
@@ -41,52 +40,52 @@ data SetupF a where
   BuildProgram :: Shader.GLSLValue a => [Shader a] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
 
-type Setup = Free (Action SetupF)
+type Setup = Freer SetupF
 
 enable :: Flag -> Setup ()
-enable = liftF . liftAction . (`Flag` True)
+enable = liftF . (`Flag` True)
 
 disable :: Flag -> Setup ()
-disable = liftF . liftAction . (`Flag` False)
+disable = liftF . (`Flag` False)
 
 setClearColour :: Linear.V4 Float -> Setup ()
-setClearColour = liftF . liftAction . SetClearColour
+setClearColour = liftF . SetClearColour
 
 setDepthFunc :: Func -> Setup ()
-setDepthFunc = liftF . liftAction . SetDepthFunc
+setDepthFunc = liftF . SetDepthFunc
 
 setBlendFactors :: Factor -> Factor -> Setup ()
-setBlendFactors = ((liftF .) liftAction .) . SetBlendFactors
+setBlendFactors = (liftF .) . SetBlendFactors
 
 bindArray :: (Foldable v, GLScalar n) => [v n] -> Setup (GLArray n)
-bindArray = liftF . liftAction . BindArray
+bindArray = liftF . BindArray
 
 buildProgram :: Shader.GLSLValue a => [Shader a] -> Setup GLProgram
-buildProgram = liftF . liftAction . BuildProgram
+buildProgram = liftF . BuildProgram
 
 setupIO :: IO a -> Setup a
-setupIO = liftF . liftAction . RunIO
+setupIO = liftF . RunIO
 
 runSetup :: Setup a -> IO a
-runSetup = iterM $ \ s -> case s of
-  Action (Flag f b) rest -> do
+runSetup = iterFreerA $ \ rest s -> case s of
+  Flag f b -> do
     toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST
       Blending -> GL_BLEND
     checkingGLError (rest ())
-  Action (SetDepthFunc f) rest -> do
+  SetDepthFunc f -> do
     glDepthFunc $ case f of
       Less -> GL_LESS
     checkingGLError (rest ())
-  Action (SetBlendFactors source destination) rest -> do
+  SetBlendFactors source destination -> do
     glBlendFunc (factor source) (factor destination)
     checkingGLError (rest ())
-  Action (SetClearColour (Linear.V4 r g b a)) rest -> do
+  SetClearColour (Linear.V4 r g b a) -> do
     glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
     checkingGLError (rest ())
-  Action (BindArray vertices) rest -> withVertices vertices (checkingGLError . rest)
-  Action (BuildProgram shaders) rest -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . rest)
-  Action (RunIO io) rest -> io >>= rest
+  BindArray vertices -> withVertices vertices (checkingGLError . rest)
+  BuildProgram shaders -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . rest)
+  RunIO io -> io >>= rest
   where toggle b = if b then glEnable else glDisable
         factor f = case f of
           Zero -> GL_ZERO
