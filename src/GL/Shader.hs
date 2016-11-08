@@ -180,7 +180,7 @@ toGLSLAlgebra run shader = case shader of
   Abs a -> fun "abs" a
   Signum a -> fun "sign" a
 
-  MulMV matrix column -> foldMap run matrix . showChar '*' . run column
+  MulMV matrix column -> foldMap run matrix . sp . showChar '*' . sp . run column
 
   Sin a -> fun "sin" a
   Cos a -> fun "cos" a
