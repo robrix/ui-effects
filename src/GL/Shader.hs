@@ -23,7 +23,7 @@ import Control.Monad
 import Control.Monad.Free.Freer
 import Data.Foldable (toList, for_)
 import Data.Functor.Classes
-import Data.List (intersperse, unionBy)
+import Data.List (intersperse)
 import Data.Monoid ((<>))
 import Data.Proxy
 import Foreign.C.String
@@ -392,9 +392,4 @@ instance (GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
 
 instance Monoid CompilerState where
   mempty = CompilerState [] id
-  mappend (CompilerState u1 s1) (CompilerState u2 s2) = CompilerState (unionBy eqVars u1 u2) (s1 . s2)
-    where eqVars (UniformVar v1) (UniformVar v2) = case (v1, v2) of
-            (Uniform s1, Uniform s2) -> s1 == s2
-            (In s1, In s2) -> s1 == s2
-            (Out s1, Out s2) -> s1 == s2
-            _ -> False
+  mappend (CompilerState u1 s1) (CompilerState u2 s2) = CompilerState (mappend u1 u2) (s1 . s2)
