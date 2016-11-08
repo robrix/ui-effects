@@ -170,7 +170,7 @@ toGLSLAlgebra run shader = case shader of
   Get v -> var v
   Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';' . nl
 
-  V4 v -> showsGLSLValue v
+  V4 v -> showsGLSLValue v . run v
 
   Add a b -> op '+' a b
   Sub a b -> op '-' a b
