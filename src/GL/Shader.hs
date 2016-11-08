@@ -19,7 +19,7 @@ module GL.Shader
 ) where
 
 import Control.Exception
-import Control.Monad
+import Control.Monad (join, void)
 import Control.Monad.Free.Freer
 import Data.Foldable (toList, for_)
 import Data.Functor.Classes
@@ -69,7 +69,7 @@ data ShaderF a where
   Signum :: a -> ShaderF a
 
   -- Matrix arithmetic
-  MulMV :: Shader (Linear.V4 a) -> Shader a -> ShaderF a
+  MulMV :: Linear.M44 a -> Linear.V4 a -> ShaderF (Linear.V4 a)
 
   -- Trigonometric
   Sin :: a -> ShaderF a
@@ -118,7 +118,7 @@ v4 x y z w = liftF (V4 (Linear.V4 x y z w))
 infixl 7 !*
 
 (!*) :: Shader (Linear.M44 a) -> Shader (Linear.V4 a) -> Shader (Linear.V4 a)
-matrix !* column = liftF (MulMV matrix column)
+matrix !* column = join $ (liftF .) . MulMV <$> matrix <*> column
 
 
 -- Elaboration
@@ -135,7 +135,6 @@ uniformVars = iterFreer uniformVarsAlgebra . fmap (const [])
           Bind v -> run v
           Get var@(Uniform _) -> [ UniformVar var ]
           Set var@(Uniform _) value -> UniformVar var : run value
-          MulMV a b -> uniformVars a ++ uniformVars b
           _ -> foldMap run s
 
 elaborateVertexShader :: Shader Vertex -> Shader ()
@@ -181,7 +180,7 @@ toGLSLAlgebra run shader = case shader of
   Abs a -> fun "abs" a
   Signum a -> fun "sign" a
 
-  MulMV matrix column -> recur vec matrix . showChar '*' . recur run column
+  MulMV matrix column -> foldMap run matrix . showChar '*' . run column
 
   Sin a -> fun "sin" a
   Cos a -> fun "cos" a
@@ -204,8 +203,6 @@ toGLSLAlgebra run shader = case shader of
         var = showString . varName
         sp = showChar ' '
         nl = showChar '\n'
-        vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
-        recur = (iterFreer toGLSLAlgebra .) . fmap
         showBrace c b = if c then showChar '{' . b . showChar '}' else b
         showVarDeclQualifier var = showString $ case var of
           Uniform _ -> "uniform"
@@ -316,7 +313,7 @@ instance Show1 ShaderF where
     Abs a -> showsUnaryWith sp "Abs" d a
     Signum a -> showsUnaryWith sp "Signum" d a
 
-    MulMV a b -> showsBinaryWith (liftShowsPrec (liftShowsPrec sp sl) (liftShowList sp sl)) (liftShowsPrec sp sl) "MulMV" d a b
+    MulMV a b -> showsBinaryWith (liftShowsPrec sp sl) sp "MulMV" d a b
 
     Sin a -> showsUnaryWith sp "Sin" d a
     Cos a -> showsUnaryWith sp "Cos" d a
