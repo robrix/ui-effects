@@ -71,26 +71,26 @@ uniform :: Shader.GLSLValue a => String -> Setup (Shader.Var (Shader.Shader a))
 uniform = liftF . Uniform
 
 runSetup :: Setup a -> IO a
-runSetup = iterFreerA $ \ rest s -> case s of
+runSetup = iterFreerA $ \ run s -> case s of
   Flag f b -> do
     toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST
       Blending -> GL_BLEND
-    checkingGLError (rest ())
+    checkingGLError (run ())
   SetDepthFunc f -> do
     glDepthFunc $ case f of
       Less -> GL_LESS
-    checkingGLError (rest ())
+    checkingGLError (run ())
   SetBlendFactors source destination -> do
     glBlendFunc (factor source) (factor destination)
-    checkingGLError (rest ())
+    checkingGLError (run ())
   SetClearColour (Linear.V4 r g b a) -> do
     glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
-    checkingGLError (rest ())
-  BindArray vertices -> withVertices vertices (checkingGLError . rest)
-  BuildProgram shaders -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . rest)
-  RunIO io -> io >>= rest
-  Uniform s -> rest (Shader.Uniform s)
+    checkingGLError (run ())
+  BindArray vertices -> withVertices vertices (checkingGLError . run)
+  BuildProgram shaders -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . run)
+  RunIO io -> io >>= run
+  Uniform s -> run (Shader.Uniform s)
   where toggle b = if b then glEnable else glDisable
         factor f = case f of
           Zero -> GL_ZERO
