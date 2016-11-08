@@ -132,9 +132,7 @@ uniformVars :: Shader a -> [UniformVar]
 uniformVars = iterFreer uniformVarsAlgebra . fmap (const [])
   where uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF x -> [UniformVar]
         uniformVarsAlgebra run s = case s of
-          Get var -> case var of
-            Uniform _ -> pure (UniformVar var)
-            _ -> []
+          Get var@(Uniform _) -> [ UniformVar var ]
           _ -> foldMap run s
 
 elaborateVertexShader :: Shader Vertex -> Shader ()
