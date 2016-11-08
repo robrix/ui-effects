@@ -1,7 +1,6 @@
 {-# LANGUAGE GADTs, RankNTypes #-}
 module GL.Draw where
 
-import Control.Action
 import Control.Monad.Free.Freer
 import Data.Bits
 import GL.Array
@@ -21,46 +20,46 @@ data DrawF a where
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
   RunIO :: IO a -> DrawF a
 
-type Draw = Freer (Action DrawF)
+type Draw = Freer DrawF
 
 
 clear :: [Buffer] -> Draw ()
-clear = liftF . liftAction . Clear
+clear = liftF . Clear
 
 useProgram :: GLProgram -> Draw ()
-useProgram = liftF . liftAction . UseProgram
+useProgram = liftF . UseProgram
 
 setUniform :: GLProgramUniform v => GLProgram -> String -> v -> Draw ()
-setUniform program var value = liftF (liftAction (SetUniform program var value))
+setUniform program var value = liftF (SetUniform program var value)
 
 bindVertexArray :: GLArray n -> Draw ()
-bindVertexArray = liftF . liftAction . BindVertexArray
+bindVertexArray = liftF . BindVertexArray
 
 drawArrays :: Mode -> Int -> Int -> Draw ()
-drawArrays mode from to = liftF (liftAction (DrawArrays mode from to))
+drawArrays mode from to = liftF (DrawArrays mode from to)
 
 drawIO :: IO a -> Draw a
-drawIO = liftF . liftAction . RunIO
+drawIO = liftF . RunIO
 
 
 runDraw :: Draw a -> IO a
-runDraw = iterA $ \ d -> case d of
-  Action (Clear buffers) rest -> do
+runDraw = iterFreerA $ \ rest d -> case d of
+  Clear buffers -> do
     glClear $ foldr (.|.) 0 ((\ b -> case b of
       ColourBuffer -> GL_COLOR_BUFFER_BIT
       DepthBuffer -> GL_DEPTH_BUFFER_BIT
       StencilBuffer -> GL_STENCIL_BUFFER_BIT) <$> buffers)
     checkingGLError (rest ())
-  Action (UseProgram program) rest -> do
+  UseProgram program -> do
     glUseProgram (unGLProgram program)
     checkingGLError (rest ())
-  Action (SetUniform program var value) rest -> do
+  SetUniform program var value -> do
     setUniformValue program var value
     checkingGLError (rest ())
-  Action (BindVertexArray array) rest -> do
+  BindVertexArray array -> do
     glBindVertexArray (unGLArray array)
     checkingGLError (rest ())
-  Action (DrawArrays mode from to) rest -> do
+  DrawArrays mode from to -> do
     glDrawArrays (case mode of
       Points -> GL_POINTS
       Lines -> GL_LINES
@@ -69,4 +68,4 @@ runDraw = iterA $ \ d -> case d of
       Triangles -> GL_TRIANGLES
       TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral to)
     checkingGLError (rest ())
-  Action (RunIO io) rest -> io >>= rest
+  RunIO io -> io >>= rest
