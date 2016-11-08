@@ -139,16 +139,15 @@ uniformVars = iterFreer uniformVarsAlgebra . fmap (const [])
           _ -> foldMap run s
 
 elaborateVertexShader :: Shader Vertex -> Shader ()
-elaborateVertexShader shader = do
-  Vertex pos _ _ <- elaborateShaderUniforms shader
+elaborateVertexShader shader = elaborateShaderUniforms $ do
+  Vertex pos _ _ <- shader
   function "main" [] . void $ set gl_Position pos
   where gl_Position = Out "gl_Position"
 
 elaborateShader :: GLSLValue a => Shader a -> Shader ()
-elaborateShader shader = do
-  let s = elaborateShaderUniforms shader
+elaborateShader shader = elaborateShaderUniforms $ do
   out <- output "result"
-  function "main" [] . void $ set out s
+  function "main" [] . void $ set out shader
 
 
 -- Compilation
