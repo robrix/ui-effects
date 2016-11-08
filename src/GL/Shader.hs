@@ -1,12 +1,11 @@
 {-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
 module GL.Shader
-( Var
+( Var(Uniform)
 , Shader
 , ShaderF
 , Vertex(position, pointSize, clipDistance)
 , vertex
 , get
-, uniform
 , v4
 , (!*)
 , elaborateVertexShader

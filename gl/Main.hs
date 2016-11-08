@@ -42,15 +42,13 @@ setup f = do
   setDepthFunc Less
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
+  matrix <- uniform "matrix"
+  time <- uniform "time"
+  let vertexShader = toShader (\ p -> pure (vertex { position = get matrix !* get p }) :: Shader Vertex)
+  let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
-  where vertexShader = toShader $ \ p -> do
-          matrix <- uniform "matrix"
-          pure (vertex { position = get matrix !* get p })
-        fragmentShader = do
-          time <- uniform "time"
-          get time + v4 0 0 1 (0.5 :: Float)
 
 draw :: (GLProgram, GLArray Float) -> Draw ()
 draw (program, array) = do

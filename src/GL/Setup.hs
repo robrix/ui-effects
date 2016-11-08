@@ -39,6 +39,7 @@ data SetupF a where
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
   BuildProgram :: [Shader] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
+  Uniform :: Shader.GLSLValue a => String -> SetupF (Shader.Var (Shader.Shader a))
 
 type Setup = Freer SetupF
 
@@ -66,6 +67,9 @@ buildProgram = liftF . BuildProgram
 setupIO :: IO a -> Setup a
 setupIO = liftF . RunIO
 
+uniform :: Shader.GLSLValue a => String -> Setup (Shader.Var (Shader.Shader a))
+uniform = liftF . Uniform
+
 runSetup :: Setup a -> IO a
 runSetup = iterFreerA $ \ rest s -> case s of
   Flag f b -> do
@@ -86,6 +90,7 @@ runSetup = iterFreerA $ \ rest s -> case s of
   BindArray vertices -> withVertices vertices (checkingGLError . rest)
   BuildProgram shaders -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . rest)
   RunIO io -> io >>= rest
+  Uniform s -> rest (Shader.Uniform s)
   where toggle b = if b then glEnable else glDisable
         factor f = case f of
           Zero -> GL_ZERO
