@@ -118,7 +118,7 @@ v4 x y z w = liftF (V4 (Linear.V4 x y z w))
 infixl 7 !*
 
 (!*) :: Shader (Linear.M44 a) -> Shader (Linear.V4 a) -> Shader (Linear.V4 a)
-matrix !* column = Freer (Free pure (MulMV matrix column))
+matrix !* column = liftF (MulMV matrix column)
 
 
 -- Elaboration
