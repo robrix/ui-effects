@@ -11,8 +11,8 @@ spec = do
     it "compiles constants" $
       toGLSL (elaborateShader (v4 1 0 0 1.0 :: Shader (Linear.V4 Float))) `shouldBe` intercalate "\n"
         [ "#version 410"
-        , "out vec4 fragColour;"
+        , "out vec4 result;"
         , "void main(void) {"
-        , "  fragColour = vec4(1.0, 0.0, 0.0, 1.0);"
+        , "  result = vec4(1.0, 0.0, 0.0, 1.0);"
         , "}"
         ]
