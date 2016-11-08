@@ -5,12 +5,8 @@ module GL.Shader
 , ShaderF
 , Vertex(position, pointSize, clipDistance)
 , vertex
-, set
 , get
 , uniform
-, input
-, output
-, function
 , v4
 , (!*)
 , elaborateVertexShader
