@@ -326,3 +326,7 @@ instance GLSLValue a => GLSLValue (Linear.V4 a) where
   showsGLSLType _ = showsGLSLVecType (Proxy :: Proxy a)
   showsGLSLVecType _ = showString "mat4"
   showsGLSLValue v = showsGLSLVecType (Proxy :: Proxy a) . showParen True (foldr (.) id (intersperse (showString ", ") (showsGLSLValue <$> toList v)))
+
+instance IsShader (Shader a) where
+  type ShaderResult (Shader a) = a
+  toShader = id
