@@ -91,6 +91,7 @@ data ShaderF a where
 type Shader = Freer ShaderF
 
 data Vertex = Vertex { position :: Shader (Linear.V4 Float), pointSize :: Shader Float, clipDistance :: Shader [Float] }
+  deriving Show
 
 vertex :: Vertex
 vertex = Vertex (pure (Linear.V4 0 0 0 0)) (pure 0) (pure [])
