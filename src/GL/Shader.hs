@@ -122,7 +122,7 @@ matrix !* column = Freer (Free pure (MulMV matrix column))
 -- Variables
 
 position :: Var (Shader (Linear.V4 Float))
-position = In "gl_Position"
+position = Out "gl_Position"
 
 
 -- Compilation
