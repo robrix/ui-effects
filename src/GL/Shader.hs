@@ -12,6 +12,7 @@ module GL.Shader
 , v4
 , (!*)
 , position
+, elaborateShader
 , toGLSL
 , GLShader(..)
 , withCompiledShaders
@@ -21,6 +22,7 @@ module GL.Shader
 ) where
 
 import Control.Exception
+import Control.Monad
 import Control.Monad.Free.Freer
 import Data.Foldable (toList)
 import Data.Functor.Classes
@@ -123,6 +125,14 @@ matrix !* column = Freer (Free pure (MulMV matrix column))
 
 position :: Var (Shader (Linear.V4 Float))
 position = Out "gl_Position"
+
+
+-- Elaboration
+
+elaborateShader :: GLSLValue a => Shader a -> Shader ()
+elaborateShader shader = do
+  out <- output "result"
+  function "main" [] . void $ set out shader
 
 
 -- Compilation
