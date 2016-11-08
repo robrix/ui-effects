@@ -330,3 +330,9 @@ instance GLSLValue a => GLSLValue (Linear.V4 a) where
 instance IsShader (Shader a) where
   type ShaderResult (Shader a) = a
   toShader = id
+
+instance (GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
+  type ShaderResult (Var (Shader a) -> b) = ShaderResult b
+  toShader f = do
+    var <- input ""
+    toShader (f var)
