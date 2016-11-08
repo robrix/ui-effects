@@ -97,6 +97,9 @@ vertex :: Vertex
 vertex = Vertex (pure (Linear.V4 0 0 0 0)) (pure 0) (pure [])
 
 
+uniform :: GLSLValue a => String -> Shader (Var (Shader a))
+uniform = liftF . Bind . Uniform
+
 input :: GLSLValue a => String -> Shader (Var (Shader a))
 input = liftF . Bind . In
 
