@@ -2,7 +2,7 @@
 module GL.Setup where
 
 import Control.Action
-import Control.Monad.Free
+import Control.Monad.Free.Freer
 import GL.Array
 import GL.Exception
 import GL.Program
@@ -41,7 +41,7 @@ data SetupF a where
   BuildProgram :: Shader.GLSLValue a => [Shader a] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
 
-type Setup = Free (Action SetupF)
+type Setup = Freer (Action SetupF)
 
 enable :: Flag -> Setup ()
 enable = liftF . liftAction . (`Flag` True)
@@ -68,7 +68,7 @@ setupIO :: IO a -> Setup a
 setupIO = liftF . liftAction . RunIO
 
 runSetup :: Setup a -> IO a
-runSetup = iterM $ \ s -> case s of
+runSetup = iterA $ \ s -> case s of
   Action (Flag f b) rest -> do
     toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST
