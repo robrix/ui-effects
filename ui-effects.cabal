@@ -15,8 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Control.Action
-                     , Control.Comonad.Cofree.Cofreer
+  exposed-modules:     Control.Comonad.Cofree.Cofreer
                      , Control.Monad.Free.Freer
                      , Data.Functor.Algebraic
                      , GL.Array
