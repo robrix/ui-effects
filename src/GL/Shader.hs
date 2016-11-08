@@ -38,13 +38,18 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  Var :: GLSLValue a => String -> Var a
+  In :: GLSLValue a => String -> Var a
+  Out :: GLSLValue a => String -> Var a
+  Uniform :: GLSLValue a => String -> Var a
+
+varName :: Var a -> String
+varName (In s) = s
+varName (Out s) = s
+varName (Uniform s) = s
 
 data ShaderF a where
   -- Binding
-  Uniform :: GLSLValue a => String -> ShaderF (Var (Shader a))
-  In :: GLSLValue a => String -> ShaderF (Var (Shader a))
-  Out :: GLSLValue a => String -> ShaderF (Var (Shader a))
+  Bind :: GLSLValue a => Var (Shader a) -> ShaderF (Var (Shader a))
 
   -- Functions
   Function :: GLSLValue a => String -> [a] -> a -> ShaderF a
@@ -88,13 +93,13 @@ type Shader = Freer ShaderF
 
 
 uniform :: GLSLValue a => String -> Shader (Var (Shader a))
-uniform = liftF . Uniform
+uniform = liftF . Bind . Uniform
 
 input :: GLSLValue a => String -> Shader (Var (Shader a))
-input = liftF . In
+input = liftF . Bind . In
 
 output :: GLSLValue a => String -> Shader (Var (Shader a))
-output = liftF . Out
+output = liftF . Bind . Out
 
 function :: GLSLValue a => String -> [Shader a] -> Shader a -> Shader a
 function name args body = wrap (Function name args body)
@@ -117,7 +122,7 @@ matrix !* column = Freer (Free pure (MulMV matrix column))
 -- Variables
 
 position :: Var (Shader (Linear.V4 Float))
-position = Var "gl_Position"
+position = In "gl_Position"
 
 
 -- Compilation
@@ -127,9 +132,10 @@ toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fm
 
 toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
-  In s -> showString "in" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
-  Out s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
+  Bind var -> case var of
+    Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
+    In s -> showString "in" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
+    Out s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
 
   Function name args body ->
     showsGLSLType (Proxy :: Proxy x) . sp . showString name
@@ -169,7 +175,7 @@ toGLSLAlgebra run shader = case shader of
 
   where op o a b = showParen True $ run a . sp . showChar o . sp . run b
         fun f a = showString f . showParen True (run a)
-        var (Var s) = showString s
+        var = showString . varName
         sp = showChar ' '
         nl = showChar '\n'
         vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
@@ -263,9 +269,7 @@ deriving instance Foldable ShaderF
 
 instance Show1 ShaderF where
   liftShowsPrec sp sl d shader = case shader of
-    Uniform s -> showsUnaryWith showsPrec "Uniform" d s
-    In s -> showsUnaryWith showsPrec "In" d s
-    Out s -> showsUnaryWith showsPrec "Out" d s
+    Bind v -> showsUnaryWith showsPrec "Bind" d v
 
     Function n a b -> showsTernaryWith showsPrec (liftShowsPrec sp sl) sp "Function" d n a b
 
