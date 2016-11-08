@@ -21,7 +21,7 @@ import UI.Window
 
 main :: IO ()
 main = runWindow "UI" (\ swap ->
-  runSetup (setup (\ state -> forever (runDraw (uncurry draw state) >> swap))))
+  runSetup (setup (\ state -> forever (runDraw (draw state) >> swap))))
   `catch`
     (putStrLn . displayException :: SomeException -> IO ())
   `finally`
@@ -52,8 +52,8 @@ setup f = do
           time <- uniform "time"
           get time + v4 0 0 1 (0.5 :: Float)
 
-draw :: GLProgram -> GLArray Float -> Draw ()
-draw program array = do
+draw :: (GLProgram, GLArray Float) -> Draw ()
+draw (program, array) = do
   clear [ ColourBuffer, DepthBuffer ]
 
   useProgram program
