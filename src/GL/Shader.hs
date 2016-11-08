@@ -160,10 +160,7 @@ toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fm
 
 toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  Bind var -> case var of
-    Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
-    In s -> showString "in" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
-    Out s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
+  Bind var -> showVarDeclQualifier var . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString (varName var) . showChar ';' . nl . run var
 
   Function name args body ->
     showsGLSLType (Proxy :: Proxy x) . sp . showString name
@@ -209,6 +206,10 @@ toGLSLAlgebra run shader = case shader of
         vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
         recur = (iterFreer toGLSLAlgebra .) . fmap
         showBrace c b = if c then showChar '{' . b . showChar '}' else b
+        showVarDeclQualifier var = showString $ case var of
+          Uniform _ -> "uniform"
+          In _ -> "in"
+          Out _ -> "out"
 
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
