@@ -37,9 +37,9 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  In :: GLSLValue a => String -> Var a
-  Out :: GLSLValue a => String -> Var a
-  Uniform :: GLSLValue a => String -> Var a
+  In :: GLSLValue a => String -> Var (Shader a)
+  Out :: GLSLValue a => String -> Var (Shader a)
+  Uniform :: GLSLValue a => String -> Var (Shader a)
 
 varName :: Var a -> String
 varName (In s) = s
@@ -150,6 +150,10 @@ elaborateShader shader = do
 
 
 -- Compilation
+
+data UniformVar where
+  UniformVar :: GLSLValue a => Var (Shader a) -> UniformVar
+
 
 toGLSL :: GLSLValue a => Shader a -> String
 toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap showsGLSLValue
