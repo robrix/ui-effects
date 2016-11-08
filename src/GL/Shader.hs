@@ -17,6 +17,7 @@ module GL.Shader
 , withCompiledShaders
 , GLSLValue(..)
 , IsShader
+, toShader
 ) where
 
 import Control.Exception
@@ -215,6 +216,9 @@ class IsShader t where
   type ShaderResult t :: *
 
   toShader' :: t -> Int -> Shader (ShaderResult t)
+
+toShader :: IsShader t => t -> Shader (ShaderResult t)
+toShader = flip toShader' 0
 
 
 -- Instances
