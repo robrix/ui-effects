@@ -163,7 +163,7 @@ toGLSLAlgebra run shader = case shader of
     <> showBrace True (nl <> sp <> sp <> run body)
 
   Get v -> case v of
-    v'@(Uniform _) -> let out = var v in out { uniforms = UniformVar v' : uniforms out }
+    Uniform _ -> let out = var v in out { uniforms = UniformVar v : uniforms out }
     _ -> var v
   Set v value -> var v <> sp <> showChar '=' <> sp <> run value <> showChar ';' <> nl
 
