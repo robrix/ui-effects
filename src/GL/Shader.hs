@@ -142,10 +142,6 @@ data UniformVar where
 
 data CompilerState = CompilerState { uniforms :: [UniformVar], program :: ShowS }
 
-instance Monoid CompilerState where
-  mempty = CompilerState [] id
-  mappend (CompilerState u1 s1) (CompilerState u2 s2) = CompilerState (mappend u1 u2) (s1 . s2)
-
 
 toGLSL :: GLSLValue a => Shader a -> String
 toGLSL = ($ "") . (showString "#version 410\n" .) . program . iterFreer toGLSLAlgebra . fmap (CompilerState [] . showsGLSLValue)
@@ -373,3 +369,7 @@ instance (GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
   toShader' f i = do
     var <- input ('v' : show i)
     toShader' (f var) (succ i)
+
+instance Monoid CompilerState where
+  mempty = CompilerState [] id
+  mappend (CompilerState u1 s1) (CompilerState u2 s2) = CompilerState (mappend u1 u2) (s1 . s2)
