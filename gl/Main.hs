@@ -46,11 +46,11 @@ setup f = do
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
   where vertexShader = toShader $ \ p -> do
-          matrix <- uniform "matrix" :: Shader (Var (Shader (Linear.M44 Float)))
+          matrix <- uniform "matrix"
           function "main" [] $
             void $ set position (get matrix !* get p)
         fragmentShader = do
-          time <- uniform "time" :: Shader (Var (Shader (Linear.V4 Float)))
+          time <- uniform "time"
           colour <- output "colour"
           function "main" [] $
             void $ set colour (get time + v4 0 0 1 (0.5 :: Float))
