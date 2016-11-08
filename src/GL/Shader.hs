@@ -21,7 +21,7 @@ module GL.Shader
 import Control.Exception
 import Control.Monad
 import Control.Monad.Free.Freer
-import Data.Foldable (toList)
+import Data.Foldable (toList, for_)
 import Data.Functor.Classes
 import Data.List (intersperse, unionBy)
 import Data.Monoid ((<>))
@@ -123,16 +123,31 @@ matrix !* column = Freer (Free pure (MulMV matrix column))
 
 -- Elaboration
 
+elaborateShaderUniforms :: Shader a -> Shader a
+elaborateShaderUniforms shader = do
+  for_ uniformVars $ \ (UniformVar v) -> void (liftF (Bind v))
+  shader
+  where uniformVars :: [UniformVar]
+        uniformVars = iterFreer uniformVarsAlgebra ([] <$ shader)
+
+        uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF x -> [UniformVar]
+        uniformVarsAlgebra run s = case s of
+          Get var -> case var of
+            Uniform _ -> pure (UniformVar var)
+            _ -> []
+          _ -> foldMap run s
+
 elaborateVertexShader :: Shader Vertex -> Shader ()
 elaborateVertexShader shader = do
-  Vertex pos _ _ <- shader
+  Vertex pos _ _ <- elaborateShaderUniforms shader
   function "main" [] . void $ set gl_Position pos
   where gl_Position = Out "gl_Position"
 
 elaborateShader :: GLSLValue a => Shader a -> Shader ()
 elaborateShader shader = do
+  let s = elaborateShaderUniforms shader
   out <- output "result"
-  function "main" [] . void $ set out shader
+  function "main" [] . void $ set out s
 
 
 -- Compilation
