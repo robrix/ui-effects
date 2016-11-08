@@ -1,4 +1,4 @@
-{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving #-}
+{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
 module GL.Shader
 ( Var
 , Shader
@@ -16,6 +16,7 @@ module GL.Shader
 , GLShader(..)
 , withCompiledShaders
 , GLSLValue(..)
+, IsShader(..)
 ) where
 
 import Control.Exception
@@ -209,6 +210,11 @@ class GLSLValue v where
   showsGLSLValue :: v -> ShowS
   default showsGLSLValue :: Show v => v -> ShowS
   showsGLSLValue = shows
+
+class IsShader t where
+  type ShaderResult t :: *
+
+  toShader :: t -> Shader (ShaderResult t)
 
 
 -- Instances
