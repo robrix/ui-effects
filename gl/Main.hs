@@ -45,9 +45,8 @@ setup f = do
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
   setupIO (f (program, array))
-  where vertexShader = do
+  where vertexShader = toShader $ \ p -> do
           matrix <- uniform "matrix" :: Shader (Var (Shader (Linear.M44 Float)))
-          p <- input "position" :: Shader (Var (Shader (Linear.V4 Float)))
           function "main" [] $
             void $ set position (get matrix !* get p)
         fragmentShader = do
