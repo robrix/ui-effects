@@ -2,7 +2,7 @@
 module GL.Draw where
 
 import Control.Action
-import Control.Monad.Free
+import Control.Monad.Free.Freer
 import Data.Bits
 import GL.Array
 import GL.Exception
@@ -21,7 +21,7 @@ data DrawF a where
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
   RunIO :: IO a -> DrawF a
 
-type Draw = Free (Action DrawF)
+type Draw = Freer (Action DrawF)
 
 
 clear :: [Buffer] -> Draw ()
@@ -44,7 +44,7 @@ drawIO = liftF . liftAction . RunIO
 
 
 runDraw :: Draw a -> IO a
-runDraw = iterM $ \ d -> case d of
+runDraw = iterA $ \ d -> case d of
   Action (Clear buffers) rest -> do
     glClear $ foldr (.|.) 0 ((\ b -> case b of
       ColourBuffer -> GL_COLOR_BUFFER_BIT
