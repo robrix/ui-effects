@@ -16,7 +16,7 @@ module GL.Shader
 , GLShader(..)
 , withCompiledShaders
 , GLSLValue(..)
-, IsShader(..)
+, IsShader
 ) where
 
 import Control.Exception
@@ -214,7 +214,7 @@ class GLSLValue v where
 class IsShader t where
   type ShaderResult t :: *
 
-  toShader :: t -> Int -> Shader (ShaderResult t)
+  toShader' :: t -> Int -> Shader (ShaderResult t)
 
 
 -- Instances
@@ -329,10 +329,10 @@ instance GLSLValue a => GLSLValue (Linear.V4 a) where
 
 instance IsShader (Shader a) where
   type ShaderResult (Shader a) = a
-  toShader = const
+  toShader' = const
 
 instance (GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
   type ShaderResult (Var (Shader a) -> b) = ShaderResult b
-  toShader f i = do
+  toShader' f i = do
     var <- input ('v' : show i)
-    toShader (f var) (succ i)
+    toShader' (f var) (succ i)
