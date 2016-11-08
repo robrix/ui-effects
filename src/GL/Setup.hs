@@ -27,9 +27,9 @@ data Factor
   | OneMinusSourceAlpha
   | OneMinusSourceColour
 
-data Shader a where
-  Vertex :: Shader.Shader a -> Shader a
-  Fragment :: Shader.Shader a -> Shader a
+data Shader where
+  Vertex :: Shader.Shader Shader.Vertex -> Shader
+  Fragment :: Shader.GLSLValue a => Shader.Shader a -> Shader
 
 data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
@@ -37,7 +37,7 @@ data SetupF a where
   SetBlendFactors :: Factor -> Factor -> SetupF ()
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
-  BuildProgram :: Shader.GLSLValue a => [Shader a] -> SetupF GLProgram
+  BuildProgram :: [Shader] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
 
 type Setup = Freer SetupF
@@ -60,7 +60,7 @@ setBlendFactors = (liftF .) . SetBlendFactors
 bindArray :: (Foldable v, GLScalar n) => [v n] -> Setup (GLArray n)
 bindArray = liftF . BindArray
 
-buildProgram :: Shader.GLSLValue a => [Shader a] -> Setup GLProgram
+buildProgram :: [Shader] -> Setup GLProgram
 buildProgram = liftF . BuildProgram
 
 setupIO :: IO a -> Setup a
@@ -100,6 +100,6 @@ runSetup = iterFreerA $ \ rest s -> case s of
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
 
-compileShader :: Shader.GLSLValue a => Shader a -> (GLenum, String)
-compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL shader)
-compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL shader)
+compileShader :: Shader -> (GLenum, String)
+compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
+compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL (Shader.elaborateShader shader))

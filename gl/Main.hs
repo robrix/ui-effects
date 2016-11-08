@@ -47,13 +47,10 @@ setup f = do
   setupIO (f (program, array))
   where vertexShader = toShader $ \ p -> do
           matrix <- uniform "matrix"
-          function "main" [] $
-            void $ set position (get matrix !* get p)
+          pure (vertex { position = get matrix !* get p })
         fragmentShader = do
           time <- uniform "time"
-          colour <- output "colour"
-          function "main" [] $
-            void $ set colour (get time + v4 0 0 1 (0.5 :: Float))
+          get time + v4 0 0 1 (0.5 :: Float)
 
 draw :: GLProgram -> GLArray Float -> Draw ()
 draw program array = do

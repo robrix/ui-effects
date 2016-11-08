@@ -3,6 +3,8 @@ module GL.Shader
 ( Var
 , Shader
 , ShaderF
+, Vertex(position, pointSize, clipDistance)
+, vertex
 , set
 , get
 , uniform
@@ -11,7 +13,7 @@ module GL.Shader
 , function
 , v4
 , (!*)
-, position
+, elaborateVertexShader
 , elaborateShader
 , toGLSL
 , GLShader(..)
@@ -93,6 +95,11 @@ data ShaderF a where
 
 type Shader = Freer ShaderF
 
+data Vertex = Vertex { position :: Shader (Linear.V4 Float), pointSize :: Shader Float, clipDistance :: Shader [Float] }
+
+vertex :: Vertex
+vertex = Vertex (pure (Linear.V4 0 0 0 0)) (pure 0) (pure [])
+
 
 uniform :: GLSLValue a => String -> Shader (Var (Shader a))
 uniform = liftF . Bind . Uniform
@@ -121,13 +128,13 @@ infixl 7 !*
 matrix !* column = Freer (Free pure (MulMV matrix column))
 
 
--- Variables
-
-position :: Var (Shader (Linear.V4 Float))
-position = Out "gl_Position"
-
-
 -- Elaboration
+
+elaborateVertexShader :: Shader Vertex -> Shader ()
+elaborateVertexShader shader = do
+  Vertex pos _ _ <- shader
+  function "main" [] . void $ set gl_Position pos
+  where gl_Position = Out "gl_Position"
 
 elaborateShader :: GLSLValue a => Shader a -> Shader ()
 elaborateShader shader = do
