@@ -146,12 +146,17 @@ data CompilerState = CompilerState { uniforms :: [UniformVar], program :: ShowS 
 toGLSL :: GLSLValue a => Shader a -> String
 toGLSL = ($ "") . (showString "#version 410\n" .) . program . iterFreer toGLSLAlgebra . fmap (CompilerState [] . showsGLSLValue)
 
+showVarDeclaration :: forall a. GLSLValue a => Var (Shader a) -> ShowS
+showVarDeclaration v = case v of
+  Uniform s -> showString "uniform" <> sp <> showsGLSLType (Proxy :: Proxy a) <> sp <> showString s <> showChar ';' <> nl
+  In s -> showString "in" <> sp <> showsGLSLType (Proxy :: Proxy a) <> sp <> showString s <> showChar ';' <> nl
+  Out s -> showString "out" <> sp <> showsGLSLType (Proxy :: Proxy a) <> sp <> showString s <> showChar ';' <> nl
+  where sp = showChar ' '
+        nl = showChar '\n'
+
 toGLSLAlgebra :: forall x. (x -> CompilerState) -> ShaderF x -> CompilerState
 toGLSLAlgebra run shader = case shader of
-  Bind var -> case var of
-    Uniform s -> showString "uniform" <> sp <> showsGLSLType (Proxy :: Proxy x) <> sp <> showString s <> showChar ';' <> nl <> run var
-    In s -> showString "in" <> sp <> showsGLSLType (Proxy :: Proxy x) <> sp <> showString s <> showChar ';' <> nl <> run var
-    Out s -> showString "out" <> sp <> showsGLSLType (Proxy :: Proxy x) <> sp <> showString s <> showChar ';' <> nl <> run var
+  Bind var -> state (showVarDeclaration var) <> run var
 
   Function name args body ->
     showsGLSLType (Proxy :: Proxy x) <> sp <> showString name
