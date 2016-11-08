@@ -24,6 +24,7 @@ import Control.Monad.Free.Freer
 import Data.Foldable (toList)
 import Data.Functor.Classes
 import Data.List (intersperse)
+import Data.Monoid ((<>))
 import Data.Proxy
 import Foreign.C.String
 import Foreign.Marshal.Alloc
@@ -37,9 +38,9 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  In :: GLSLValue a => String -> Var a
-  Out :: GLSLValue a => String -> Var a
-  Uniform :: GLSLValue a => String -> Var a
+  In :: GLSLValue a => String -> Var (Shader a)
+  Out :: GLSLValue a => String -> Var (Shader a)
+  Uniform :: GLSLValue a => String -> Var (Shader a)
 
 varName :: Var a -> String
 varName (In s) = s
@@ -136,23 +137,35 @@ elaborateShader shader = do
 
 -- Compilation
 
-toGLSL :: GLSLValue a => Shader a -> String
-toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap showsGLSLValue
+data UniformVar where
+  UniformVar :: GLSLValue a => Var (Shader a) -> UniformVar
 
-toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
+data CompilerState = CompilerState { uniforms :: [UniformVar], program :: ShowS }
+
+instance Monoid CompilerState where
+  mempty = CompilerState [] id
+  mappend (CompilerState u1 s1) (CompilerState u2 s2) = CompilerState (mappend u1 u2) (s1 . s2)
+
+
+toGLSL :: GLSLValue a => Shader a -> String
+toGLSL = ($ "") . (showString "#version 410\n" .) . program . iterFreer toGLSLAlgebra . fmap (CompilerState [] . showsGLSLValue)
+
+toGLSLAlgebra :: forall x. (x -> CompilerState) -> ShaderF x -> CompilerState
 toGLSLAlgebra run shader = case shader of
   Bind var -> case var of
-    Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
-    In s -> showString "in" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
-    Out s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run var
+    Uniform s -> showString "uniform" <> sp <> showsGLSLType (Proxy :: Proxy x) <> sp <> showString s <> showChar ';' <> nl <> run var
+    In s -> showString "in" <> sp <> showsGLSLType (Proxy :: Proxy x) <> sp <> showString s <> showChar ';' <> nl <> run var
+    Out s -> showString "out" <> sp <> showsGLSLType (Proxy :: Proxy x) <> sp <> showString s <> showChar ';' <> nl <> run var
 
   Function name args body ->
-    showsGLSLType (Proxy :: Proxy x) . sp . showString name
-    . showParen True (foldr (.) id (intersperse (showString ", ") (if null args then [ showsGLSLType (Proxy :: Proxy ()) ] else run <$> args))) . sp
-    . showBrace True (nl . sp . sp . run body)
+    showsGLSLType (Proxy :: Proxy x) <> sp <> showString name
+    <> showParen True (foldr (<>) mempty (intersperse (showString ", ") (if null args then [ showsGLSLType (Proxy :: Proxy ()) ] else run <$> args))) <> sp
+    <> showBrace True (nl <> sp <> sp <> run body)
 
-  Get v -> var v
-  Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';' . nl
+  Get v -> case v of
+    v'@(Uniform _) -> let out = var v in out { uniforms = UniformVar v' : uniforms out }
+    _ -> var v
+  Set v value -> var v <> sp <> showChar '=' <> sp <> run value <> showChar ';' <> nl
 
   V4 v -> showsGLSLValue v
 
@@ -164,7 +177,7 @@ toGLSLAlgebra run shader = case shader of
   Abs a -> fun "abs" a
   Signum a -> fun "sign" a
 
-  MulMV matrix column -> recur vec matrix . showChar '*' . recur run column
+  MulMV matrix column -> recur vec matrix <> showChar '*' <> recur run column
 
   Sin a -> fun "sin" a
   Cos a -> fun "cos" a
@@ -182,14 +195,21 @@ toGLSLAlgebra run shader = case shader of
   Exp a -> fun "exp" a
   Log a -> fun "log" a
 
-  where op o a b = showParen True $ run a . sp . showChar o . sp . run b
-        fun f a = showString f . showParen True (run a)
-        var = showString . varName
+  where op o a b = showParen True (run a <> sp <> showChar o <> sp <> run b)
+        fun f a = showString f <> showParen True (run a)
+        var s = showString (varName s)
         sp = showChar ' '
         nl = showChar '\n'
-        vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
+        vec v = showString "vec" <> shows (length v) <> showParen True (foldMap run v)
         recur = (iterFreer toGLSLAlgebra .) . fmap
-        showBrace c b = if c then showChar '{' . b . showChar '}' else b
+        showBrace c state = if c then showChar '{' <> state <> showChar '}' else state
+        state = CompilerState []
+        showParen c (CompilerState u p) = CompilerState u (Prelude.showParen c p)
+        showString s = state (Prelude.showString s)
+        shows a = state (Prelude.shows a)
+        showChar c = state (Prelude.showChar c)
+        showsGLSLValue a = state (GL.Shader.showsGLSLValue a)
+        showsGLSLType p = state (GL.Shader.showsGLSLType p)
 
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
