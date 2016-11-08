@@ -124,12 +124,12 @@ matrix !* column = Freer (Free pure (MulMV matrix column))
 
 elaborateShaderUniforms :: Shader a -> Shader a
 elaborateShaderUniforms shader = do
-  for_ uniformVars $ \ (UniformVar v) -> void (liftF (Bind v))
+  for_ (uniformVars shader) $ \ (UniformVar v) -> void (liftF (Bind v))
   shader
-  where uniformVars :: [UniformVar]
-        uniformVars = iterFreer uniformVarsAlgebra ([] <$ shader)
 
-        uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF x -> [UniformVar]
+uniformVars :: Shader a -> [UniformVar]
+uniformVars = iterFreer uniformVarsAlgebra . fmap (const [])
+  where uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF x -> [UniformVar]
         uniformVarsAlgebra run s = case s of
           Get var -> case var of
             Uniform _ -> pure (UniformVar var)
