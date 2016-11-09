@@ -21,7 +21,7 @@ import UI.Window
 
 main :: IO ()
 main = runWindow "UI" (\ swap ->
-  runSetup (setup (\ matrix time state -> forever (runDraw (draw matrix time state) >> swap))))
+  runSetup (setup (\ matrix time program array -> forever (runDraw (draw matrix time program array) >> swap))))
   `catch`
     (putStrLn . displayException :: SomeException -> IO ())
   `finally`
@@ -35,7 +35,7 @@ rectVertices (Rect (Point x y) (Size w h)) =
   , Linear.V4 (x + w) (y + h) 0 1
   ]
 
-setup :: (Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> (GLProgram, GLArray Float) -> IO a) -> Setup a
+setup :: (Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GLArray Float -> IO a) -> Setup a
 setup f = do
   enable DepthTest
   enable Blending
@@ -48,10 +48,10 @@ setup f = do
   let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
-  setupIO (f matrix time (program, array))
+  setupIO (f matrix time program array)
 
-draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> (GLProgram, GLArray Float) -> Draw ()
-draw matrix time (program, array) = do
+draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GLArray Float -> Draw ()
+draw matrix time program array = do
   clear [ ColourBuffer, DepthBuffer ]
 
   useProgram program
