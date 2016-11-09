@@ -1,6 +1,7 @@
 {-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
 module GL.Shader
 ( Var(Uniform)
+, varName
 , Shader
 , ShaderF
 , Vertex(position, pointSize, clipDistance)
