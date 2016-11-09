@@ -21,7 +21,7 @@ import UI.Window
 
 main :: IO ()
 main = runWindow "UI" (\ swap ->
-  runSetup (setup (\ state -> forever (runDraw (draw state) >> swap))))
+  runSetup (setup (\ matrix time state -> forever (runDraw (draw matrix time state) >> swap))))
   `catch`
     (putStrLn . displayException :: SomeException -> IO ())
   `finally`
@@ -35,7 +35,7 @@ rectVertices (Rect (Point x y) (Size w h)) =
   , Linear.V4 (x + w) (y + h) 0 1
   ]
 
-setup :: ((GLProgram, GLArray Float) -> IO a) -> Setup a
+setup :: (Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> (GLProgram, GLArray Float) -> IO a) -> Setup a
 setup f = do
   enable DepthTest
   enable Blending
@@ -48,17 +48,17 @@ setup f = do
   let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
-  setupIO (f (program, array))
+  setupIO (f matrix time (program, array))
 
-draw :: (GLProgram, GLArray Float) -> Draw ()
-draw (program, array) = do
+draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> (GLProgram, GLArray Float) -> Draw ()
+draw matrix time (program, array) = do
   clear [ ColourBuffer, DepthBuffer ]
 
   useProgram program
 
   t <- drawIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
-  setUniform program "u1" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0 :: Linear.V4 Float)
-  setUniform program "u0" (orthographic 0 1024 0 768 (negate 1) 1 :: Linear.M44 Float)
+  setUniform program time (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0 :: Linear.V4 Float)
+  setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1 :: Linear.M44 Float)
 
   bindVertexArray array
   drawArrays TriangleStrip 0 4

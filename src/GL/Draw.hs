@@ -6,6 +6,7 @@ import Data.Bits
 import GL.Array
 import GL.Exception
 import GL.Program
+import GL.Shader
 import Graphics.GL.Core41
 import Prelude hiding (IO)
 
@@ -15,7 +16,7 @@ data Mode = Points | Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 data DrawF a where
   Clear :: [Buffer] -> DrawF ()
   UseProgram :: GLProgram -> DrawF ()
-  SetUniform :: GLProgramUniform v => GLProgram -> String -> v -> DrawF ()
+  SetUniform :: GLProgramUniform v => GLProgram -> Var (Shader v) -> v -> DrawF ()
   BindVertexArray :: GLArray n -> DrawF ()
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
   RunIO :: IO a -> DrawF a
@@ -29,7 +30,7 @@ clear = liftF . Clear
 useProgram :: GLProgram -> Draw ()
 useProgram = liftF . UseProgram
 
-setUniform :: GLProgramUniform v => GLProgram -> String -> v -> Draw ()
+setUniform :: GLProgramUniform v => GLProgram -> Var (Shader v) -> v -> Draw ()
 setUniform program var value = liftF (SetUniform program var value)
 
 bindVertexArray :: GLArray n -> Draw ()
