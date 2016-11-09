@@ -19,7 +19,7 @@ module GL.Shader
 ) where
 
 import Control.Exception
-import Control.Monad
+import Control.Monad (void)
 import Control.Monad.Free.Freer
 import Data.Foldable (toList, for_)
 import Data.Functor.Classes
