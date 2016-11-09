@@ -340,7 +340,7 @@ instance Show1 ShaderF where
 instance GLSLValue () where
   showsGLSLType _ = showString "void"
   showsGLSLVecType _ = showString "void"
-  showsGLSLValue = shows
+  showsGLSLValue = const id
 
 instance GLSLValue Float where
   showsGLSLType _ = showString "float"
