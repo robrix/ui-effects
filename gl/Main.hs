@@ -39,7 +39,7 @@ setup :: ((GLProgram, GLArray Float) -> IO a) -> Setup a
 setup f = do
   enable DepthTest
   enable Blending
-  setDepthFunc Less
+  setDepthFunc Always
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
   matrix <- uniform "matrix"
