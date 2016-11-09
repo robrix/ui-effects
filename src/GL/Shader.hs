@@ -69,7 +69,7 @@ data ShaderF a where
   Signum :: a -> ShaderF a
 
   -- Matrix arithmetic
-  MulMV :: Linear.V4 a -> a -> ShaderF a
+  MulMV :: Linear.M44 a -> Linear.V4 a -> ShaderF (Linear.V4 a)
 
   -- Trigonometric
   Sin :: a -> ShaderF a
