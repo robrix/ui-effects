@@ -42,8 +42,8 @@ setup f = do
   setDepthFunc Always
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
-  matrix <- uniform "matrix"
-  time <- uniform "time"
+  matrix <- uniform
+  time <- uniform
   let vertexShader = toShader (\ p -> pure (vertex { position = get matrix !* get p }) :: Shader Vertex)
   let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
@@ -57,8 +57,8 @@ draw (program, array) = do
   useProgram program
 
   t <- drawIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
-  setUniform program "time" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0 :: Linear.V4 Float)
-  setUniform program "matrix" (orthographic 0 1024 0 768 (negate 1) 1 :: Linear.M44 Float)
+  setUniform program "u1" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0 :: Linear.V4 Float)
+  setUniform program "u0" (orthographic 0 1024 0 768 (negate 1) 1 :: Linear.M44 Float)
 
   bindVertexArray array
   drawArrays TriangleStrip 0 4

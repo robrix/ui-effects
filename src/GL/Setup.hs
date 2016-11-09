@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, GADTs, RankNTypes #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, RankNTypes, ScopedTypeVariables, TypeOperators #-}
 module GL.Setup
 ( Flag(..)
 , Func(..)
@@ -18,6 +18,9 @@ module GL.Setup
 , runSetup
 ) where
 
+import Control.Monad.Effect
+import Control.Monad.Effect.Internal
+import Control.Monad.Effect.State
 import Control.Monad.Free.Freer
 import GL.Array
 import GL.Exception
@@ -28,6 +31,7 @@ import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
+import qualified Prelude
 
 data Flag = DepthTest | Blending
 data Func = Less | LessEqual | Always
@@ -56,7 +60,7 @@ data SetupF a where
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
   BuildProgram :: [Shader] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
-  Uniform :: Shader.GLSLValue a => String -> SetupF (Shader.Var (Shader.Shader a))
+  Uniform :: Shader.GLSLValue a => SetupF (Shader.Var (Shader.Shader a))
 
 type Setup = Freer SetupF
 
@@ -84,32 +88,42 @@ buildProgram = liftF . BuildProgram
 setupIO :: IO a -> Setup a
 setupIO = liftF . RunIO
 
-uniform :: Shader.GLSLValue a => String -> Setup (Shader.Var (Shader.Shader a))
-uniform = liftF . Uniform
+uniform :: Shader.GLSLValue a => Setup (Shader.Var (Shader.Shader a))
+uniform = liftF Uniform
 
-runSetup :: Setup a -> IO a
-runSetup = iterFreerA $ \ run s -> case s of
+
+runSetup :: Setup a -> Prelude.IO a
+runSetup = runSetupEffects . iterFreerA runSetupAlgebra
+
+runSetupEffects :: Eff '[State Int, Prelude.IO] a -> Prelude.IO a
+runSetupEffects = runM . fmap fst . flip runState 0
+
+runSetupAlgebra :: forall a x. (x -> Eff '[State Int, Prelude.IO] a) -> SetupF x -> Eff '[State Int, Prelude.IO] a
+runSetupAlgebra run s = case s of
   Flag f b -> do
-    toggle b $ case f of
+    sendIO $ toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST
       Blending -> GL_BLEND
-    checkingGLError (run ())
+    send $ checkingGLError (runSetupEffects (run ()))
   SetDepthFunc f -> do
-    glDepthFunc $ case f of
+    sendIO $ glDepthFunc $ case f of
       Less -> GL_LESS
       LessEqual -> GL_LEQUAL
       Always -> GL_ALWAYS
-    checkingGLError (run ())
+    send $ checkingGLError (runSetupEffects (run ()))
   SetBlendFactors source destination -> do
-    glBlendFunc (factor source) (factor destination)
-    checkingGLError (run ())
+    sendIO (glBlendFunc (factor source) (factor destination))
+    send $ checkingGLError (runSetupEffects (run ()))
   SetClearColour (Linear.V4 r g b a) -> do
-    glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
-    checkingGLError (run ())
-  BindArray vertices -> withVertices vertices (checkingGLError . run)
-  BuildProgram shaders -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . run)
-  RunIO io -> io >>= run
-  Uniform s -> run (Shader.Uniform s)
+    sendIO (glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a))
+    send $ checkingGLError (runSetupEffects (run ()))
+  BindArray vertices -> send $ withVertices vertices (checkingGLError . runSetupEffects . run)
+  BuildProgram shaders -> send $ withBuiltProgram (compileShader <$> shaders) (checkingGLError . runSetupEffects . run)
+  RunIO io -> send io >>= run
+  Uniform -> do
+    name <- get
+    put (succ name)
+    run (Shader.Uniform ('u' : show (name :: Int)))
   where toggle b = if b then glEnable else glDisable
         factor f = case f of
           Zero -> GL_ZERO
@@ -123,6 +137,7 @@ runSetup = iterFreerA $ \ run s -> case s of
           SourceColour -> GL_SRC_COLOR
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
+        sendIO io = send (io :: Prelude.IO ())
 
 compileShader :: Shader -> (GLenum, String)
 compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
