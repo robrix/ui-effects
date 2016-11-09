@@ -1,5 +1,22 @@
 {-# LANGUAGE DataKinds, GADTs, RankNTypes #-}
-module GL.Setup where
+module GL.Setup
+( Flag(..)
+, Func(..)
+, Factor(..)
+, Shader(..)
+, SetupF
+, Setup
+, enable
+, disable
+, setClearColour
+, setDepthFunc
+, setBlendFactors
+, bindArray
+, buildProgram
+, setupIO
+, uniform
+, runSetup
+) where
 
 import Control.Monad.Free.Freer
 import GL.Array
