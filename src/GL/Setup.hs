@@ -13,7 +13,7 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Flag = DepthTest | Blending
-data Func = Less | LessEqual
+data Func = Less | LessEqual | Always
 data Factor
   = Zero
   | One
@@ -81,6 +81,7 @@ runSetup = iterFreerA $ \ run s -> case s of
     glDepthFunc $ case f of
       Less -> GL_LESS
       LessEqual -> GL_LEQUAL
+      Always -> GL_ALWAYS
     checkingGLError (run ())
   SetBlendFactors source destination -> do
     glBlendFunc (factor source) (factor destination)
