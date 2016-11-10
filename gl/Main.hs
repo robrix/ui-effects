@@ -56,8 +56,8 @@ draw matrix time program array = do
   useProgram program
 
   t <- drawIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
-  setUniform program time (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0 :: Linear.V4 Float)
-  setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1 :: Linear.M44 Float)
+  setUniform program time (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
+  setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1)
 
   bindVertexArray array
   drawArrays TriangleStrip 0 4
