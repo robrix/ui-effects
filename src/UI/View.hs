@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 module UI.View where
 
-import Control.Comonad.Cofree
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
@@ -24,8 +23,6 @@ data Axis = Horizontal | Vertical
   deriving (Eq, Show)
 
 type View = Fix ViewF
-
-type AView a = Cofree ViewF a
 
 
 renderView :: Real a => View -> Rendering a (Size a)
