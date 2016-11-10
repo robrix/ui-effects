@@ -48,7 +48,7 @@ setup swap = do
   let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
-  setupIO (forever (runDraw (draw matrix time program array) >> swap))
+  liftIO (forever (runDraw (draw matrix time program array) >> swap))
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GLArray Float -> Draw ()
 draw matrix time program array = do

@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, RankNTypes, ScopedTypeVariables, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, TypeOperators #-}
 module GL.Setup
 ( Flag(..)
 , Func(..)
@@ -13,7 +13,6 @@ module GL.Setup
 , setBlendFactors
 , bindArray
 , buildProgram
-, setupIO
 , uniform
 , runSetup
 ) where
@@ -22,6 +21,7 @@ import Control.Monad.Effect
 import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
 import Control.Monad.Free.Freer
+import Control.Monad.IO.Class
 import GL.Array
 import GL.Exception
 import GL.Program
@@ -85,9 +85,6 @@ bindArray = liftF . BindArray
 buildProgram :: [Shader] -> Setup GLProgram
 buildProgram = liftF . BuildProgram
 
-setupIO :: IO a -> Setup a
-setupIO = liftF . RunIO
-
 uniform :: Shader.GLSLValue a => Setup (Shader.Var (Shader.Shader a))
 uniform = liftF Uniform
 
@@ -142,3 +139,9 @@ runSetupAlgebra run s = case s of
 compileShader :: Shader -> (GLenum, String)
 compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
 compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL (Shader.elaborateShader shader))
+
+
+-- Instances
+
+instance MonadIO Setup where
+  liftIO = liftF . RunIO
