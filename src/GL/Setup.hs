@@ -1,6 +1,26 @@
-{-# LANGUAGE DataKinds, GADTs, RankNTypes #-}
-module GL.Setup where
+{-# LANGUAGE DataKinds, FlexibleContexts, GADTs, RankNTypes, ScopedTypeVariables, TypeOperators #-}
+module GL.Setup
+( Flag(..)
+, Func(..)
+, Factor(..)
+, Shader(..)
+, SetupF
+, Setup
+, enable
+, disable
+, setClearColour
+, setDepthFunc
+, setBlendFactors
+, bindArray
+, buildProgram
+, setupIO
+, uniform
+, runSetup
+) where
 
+import Control.Monad.Effect
+import Control.Monad.Effect.Internal
+import Control.Monad.Effect.State
 import Control.Monad.Free.Freer
 import GL.Array
 import GL.Exception
@@ -11,9 +31,10 @@ import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
+import qualified Prelude
 
 data Flag = DepthTest | Blending
-data Func = Less
+data Func = Less | LessEqual | Always
 data Factor
   = Zero
   | One
@@ -27,9 +48,9 @@ data Factor
   | OneMinusSourceAlpha
   | OneMinusSourceColour
 
-data Shader a where
-  Vertex :: Shader.Shader a -> Shader a
-  Fragment :: Shader.Shader a -> Shader a
+data Shader where
+  Vertex :: Shader.Shader Shader.Vertex -> Shader
+  Fragment :: Shader.GLSLValue a => Shader.Shader a -> Shader
 
 data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
@@ -37,8 +58,9 @@ data SetupF a where
   SetBlendFactors :: Factor -> Factor -> SetupF ()
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
-  BuildProgram :: Shader.GLSLValue a => [Shader a] -> SetupF GLProgram
+  BuildProgram :: [Shader] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
+  Uniform :: Shader.GLSLValue a => SetupF (Shader.Var (Shader.Shader a))
 
 type Setup = Freer SetupF
 
@@ -60,32 +82,48 @@ setBlendFactors = (liftF .) . SetBlendFactors
 bindArray :: (Foldable v, GLScalar n) => [v n] -> Setup (GLArray n)
 bindArray = liftF . BindArray
 
-buildProgram :: Shader.GLSLValue a => [Shader a] -> Setup GLProgram
+buildProgram :: [Shader] -> Setup GLProgram
 buildProgram = liftF . BuildProgram
 
 setupIO :: IO a -> Setup a
 setupIO = liftF . RunIO
 
-runSetup :: Setup a -> IO a
-runSetup = iterFreerA $ \ rest s -> case s of
+uniform :: Shader.GLSLValue a => Setup (Shader.Var (Shader.Shader a))
+uniform = liftF Uniform
+
+
+runSetup :: Setup a -> Prelude.IO a
+runSetup = runSetupEffects . iterFreerA runSetupAlgebra
+
+runSetupEffects :: Eff '[State Int, Prelude.IO] a -> Prelude.IO a
+runSetupEffects = runM . fmap fst . flip runState 0
+
+runSetupAlgebra :: forall a x. (x -> Eff '[State Int, Prelude.IO] a) -> SetupF x -> Eff '[State Int, Prelude.IO] a
+runSetupAlgebra run s = case s of
   Flag f b -> do
-    toggle b $ case f of
+    sendIO $ toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST
       Blending -> GL_BLEND
-    checkingGLError (rest ())
+    send $ checkingGLError (runSetupEffects (run ()))
   SetDepthFunc f -> do
-    glDepthFunc $ case f of
+    sendIO $ glDepthFunc $ case f of
       Less -> GL_LESS
-    checkingGLError (rest ())
+      LessEqual -> GL_LEQUAL
+      Always -> GL_ALWAYS
+    send $ checkingGLError (runSetupEffects (run ()))
   SetBlendFactors source destination -> do
-    glBlendFunc (factor source) (factor destination)
-    checkingGLError (rest ())
+    sendIO (glBlendFunc (factor source) (factor destination))
+    send $ checkingGLError (runSetupEffects (run ()))
   SetClearColour (Linear.V4 r g b a) -> do
-    glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a)
-    checkingGLError (rest ())
-  BindArray vertices -> withVertices vertices (checkingGLError . rest)
-  BuildProgram shaders -> withBuiltProgram (compileShader <$> shaders) (checkingGLError . rest)
-  RunIO io -> io >>= rest
+    sendIO (glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a))
+    send $ checkingGLError (runSetupEffects (run ()))
+  BindArray vertices -> send $ withVertices vertices (checkingGLError . runSetupEffects . run)
+  BuildProgram shaders -> send $ withBuiltProgram (compileShader <$> shaders) (checkingGLError . runSetupEffects . run)
+  RunIO io -> send io >>= run
+  Uniform -> do
+    name <- get
+    put (succ name)
+    run (Shader.Uniform ('u' : show (name :: Int)))
   where toggle b = if b then glEnable else glDisable
         factor f = case f of
           Zero -> GL_ZERO
@@ -99,7 +137,8 @@ runSetup = iterFreerA $ \ rest s -> case s of
           SourceColour -> GL_SRC_COLOR
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
+        sendIO io = send (io :: Prelude.IO ())
 
-compileShader :: Shader.GLSLValue a => Shader a -> (GLenum, String)
-compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL shader)
-compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL shader)
+compileShader :: Shader -> (GLenum, String)
+compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
+compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL (Shader.elaborateShader shader))

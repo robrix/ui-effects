@@ -43,23 +43,23 @@ checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog O
 
 
 class GLProgramUniform t where
-  setUniformValue :: GLProgram -> String -> t -> IO ()
+  setUniformValue :: GLProgram -> Var (Shader t) -> t -> IO ()
 
 instance GLProgramUniform (Linear.V4 Float) where
-  setUniformValue program name (Linear.V4 x y z w)= do
-    location <- withCString name (glGetUniformLocation (unGLProgram program))
+  setUniformValue program var (Linear.V4 x y z w)= do
+    location <- withCString (varName var) (glGetUniformLocation (unGLProgram program))
     glProgramUniform4f (unGLProgram program) location x y z w
     checkGLError
 
 instance GLProgramUniform (Linear.V4 Double) where
-  setUniformValue program name (Linear.V4 x y z w)= do
-    location <- withCString name (glGetUniformLocation (unGLProgram program))
+  setUniformValue program var (Linear.V4 x y z w)= do
+    location <- withCString (varName var) (glGetUniformLocation (unGLProgram program))
     glProgramUniform4d (unGLProgram program) location x y z w
     checkGLError
 
 instance GLProgramUniform (Linear.M44 Float) where
-  setUniformValue program name matrix = do
-    location <- withCString name (glGetUniformLocation (unGLProgram program))
+  setUniformValue program var matrix = do
+    location <- withCString (varName var) (glGetUniformLocation (unGLProgram program))
     let fieldCount = sum (length <$> matrix)
     let fieldSize = sizeOf (0 :: Float)
     let byteCount = fieldCount * fieldSize

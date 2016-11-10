@@ -20,8 +20,7 @@ import UI.View
 import UI.Window
 
 main :: IO ()
-main = runWindow "UI" (\ swap ->
-  runSetup (setup (\ state -> forever (runDraw (uncurry draw state) >> swap))))
+main = runWindow "UI" (runSetup . setup)
   `catch`
     (putStrLn . displayException :: SomeException -> IO ())
   `finally`
@@ -35,36 +34,30 @@ rectVertices (Rect (Point x y) (Size w h)) =
   , Linear.V4 (x + w) (y + h) 0 1
   ]
 
-setup :: ((GLProgram, GLArray Float) -> IO a) -> Setup a
-setup f = do
+setup :: IO () -> Setup a
+setup swap = do
   enable DepthTest
   enable Blending
-  setDepthFunc Less
+  setDepthFunc Always
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
+  matrix <- uniform
+  time <- uniform
+  let vertexShader = toShader (\ p -> pure (vertex { position = get matrix !* get p }) :: Shader Vertex)
+  let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
-  setupIO (f (program, array))
-  where vertexShader = do
-          matrix <- uniform "matrix" :: Shader (Var (Shader (Linear.M44 Float)))
-          p <- input "position" :: Shader (Var (Shader (Linear.V4 Float)))
-          function "main" [] $
-            void $ set position (get matrix !* get p)
-        fragmentShader = do
-          time <- uniform "time" :: Shader (Var (Shader (Linear.V4 Float)))
-          colour <- output "colour"
-          function "main" [] $
-            void $ set colour (get time + v4 0 0 1 (0.5 :: Float))
+  setupIO (forever (runDraw (draw matrix time program array) >> swap))
 
-draw :: GLProgram -> GLArray Float -> Draw ()
-draw program array = do
+draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GLArray Float -> Draw ()
+draw matrix time program array = do
   clear [ ColourBuffer, DepthBuffer ]
 
   useProgram program
 
   t <- drawIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
-  setUniform program "time" (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0 :: Linear.V4 Float)
-  setUniform program "matrix" (orthographic 0 1024 0 768 (negate 1) 1 :: Linear.M44 Float)
+  setUniform program time (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
+  setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1)
 
   bindVertexArray array
   drawArrays TriangleStrip 0 4

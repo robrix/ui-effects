@@ -1,26 +1,28 @@
-{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving #-}
+{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
 module GL.Shader
-( Var
+( Var(Uniform)
+, varName
 , Shader
 , ShaderF
-, set
+, Vertex(position, pointSize, clipDistance)
+, vertex
 , get
-, uniform
-, input
-, output
-, function
 , v4
 , (!*)
-, position
+, elaborateVertexShader
+, elaborateShader
 , toGLSL
 , GLShader(..)
 , withCompiledShaders
 , GLSLValue(..)
+, IsShader
+, toShader
 ) where
 
 import Control.Exception
+import Control.Monad (void)
 import Control.Monad.Free.Freer
-import Data.Foldable (toList)
+import Data.Foldable (toList, for_)
 import Data.Functor.Classes
 import Data.List (intersperse)
 import Data.Proxy
@@ -36,13 +38,18 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  Var :: GLSLValue a => String -> Var a
+  In :: GLSLValue a => String -> Var (Shader a)
+  Out :: GLSLValue a => String -> Var (Shader a)
+  Uniform :: GLSLValue a => String -> Var (Shader a)
+
+varName :: Var a -> String
+varName (In s) = s
+varName (Out s) = s
+varName (Uniform s) = s
 
 data ShaderF a where
   -- Binding
-  Uniform :: GLSLValue a => String -> ShaderF (Var (Shader a))
-  In :: GLSLValue a => String -> ShaderF (Var (Shader a))
-  Out :: GLSLValue a => String -> ShaderF (Var (Shader a))
+  Bind :: GLSLValue a => Var (Shader a) -> ShaderF (Var (Shader a))
 
   -- Functions
   Function :: GLSLValue a => String -> [a] -> a -> ShaderF a
@@ -84,15 +91,18 @@ data ShaderF a where
 
 type Shader = Freer ShaderF
 
+data Vertex = Vertex { position :: Shader (Linear.V4 Float), pointSize :: Shader Float, clipDistance :: Shader [Float] }
+  deriving Show
 
-uniform :: GLSLValue a => String -> Shader (Var (Shader a))
-uniform = liftF . Uniform
+vertex :: Vertex
+vertex = Vertex (pure (Linear.V4 0 0 0 0)) (pure 0) (pure [])
+
 
 input :: GLSLValue a => String -> Shader (Var (Shader a))
-input = liftF . In
+input = liftF . Bind . In
 
 output :: GLSLValue a => String -> Shader (Var (Shader a))
-output = liftF . Out
+output = liftF . Bind . Out
 
 function :: GLSLValue a => String -> [Shader a] -> Shader a -> Shader a
 function name args body = wrap (Function name args body)
@@ -109,25 +119,50 @@ v4 x y z w = liftF (V4 (Linear.V4 x y z w))
 infixl 7 !*
 
 (!*) :: Shader (Linear.M44 a) -> Shader (Linear.V4 a) -> Shader (Linear.V4 a)
-matrix !* column = Freer (Free pure (MulMV matrix column))
+matrix !* column = liftF (MulMV matrix column)
 
 
--- Variables
+-- Elaboration
 
-position :: Var (Shader (Linear.V4 Float))
-position = Var "gl_Position"
+elaborateShaderUniforms :: Shader a -> Shader a
+elaborateShaderUniforms shader = do
+  for_ (uniformVars shader) $ \ (UniformVar v) -> void (liftF (Bind v))
+  shader
+
+uniformVars :: Shader a -> [UniformVar]
+uniformVars = iterFreer uniformVarsAlgebra . fmap (const [])
+  where uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF x -> [UniformVar]
+        uniformVarsAlgebra run s = case s of
+          Bind v -> run v
+          Get var@(Uniform _) -> [ UniformVar var ]
+          Set var@(Uniform _) value -> UniformVar var : run value
+          MulMV a b -> uniformVars a ++ uniformVars b
+          _ -> foldMap run s
+
+elaborateVertexShader :: Shader Vertex -> Shader ()
+elaborateVertexShader shader = elaborateShaderUniforms $ do
+  Vertex pos _ _ <- shader
+  function "main" [] . void $ set gl_Position pos
+  where gl_Position = Out "gl_Position"
+
+elaborateShader :: GLSLValue a => Shader a -> Shader ()
+elaborateShader shader = elaborateShaderUniforms $ do
+  out <- output "result"
+  function "main" [] . void $ set out shader
 
 
 -- Compilation
+
+data UniformVar where
+  UniformVar :: GLSLValue a => Var (Shader a) -> UniformVar
+
 
 toGLSL :: GLSLValue a => Shader a -> String
 toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap showsGLSLValue
 
 toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  Uniform s -> showString "uniform" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
-  In s -> showString "in" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
-  Out s -> showString "out" . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString s . showChar ';' . nl . run (Var s)
+  Bind var -> showVarDeclQualifier var . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString (varName var) . showChar ';' . nl . run var
 
   Function name args body ->
     showsGLSLType (Proxy :: Proxy x) . sp . showString name
@@ -137,7 +172,7 @@ toGLSLAlgebra run shader = case shader of
   Get v -> var v
   Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';' . nl
 
-  V4 v -> showsGLSLValue v
+  V4 v -> showsGLSLValue v . run v
 
   Add a b -> op '+' a b
   Sub a b -> op '-' a b
@@ -167,12 +202,16 @@ toGLSLAlgebra run shader = case shader of
 
   where op o a b = showParen True $ run a . sp . showChar o . sp . run b
         fun f a = showString f . showParen True (run a)
-        var (Var s) = showString s
+        var = showString . varName
         sp = showChar ' '
         nl = showChar '\n'
         vec v = showString "vec" . shows (length v) . showParen True (foldr (.) id (run <$> v))
         recur = (iterFreer toGLSLAlgebra .) . fmap
         showBrace c b = if c then showChar '{' . b . showChar '}' else b
+        showVarDeclQualifier var = showString $ case var of
+          Uniform _ -> "uniform"
+          In _ -> "in"
+          Out _ -> "out"
 
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
@@ -209,6 +248,14 @@ class GLSLValue v where
   showsGLSLValue :: v -> ShowS
   default showsGLSLValue :: Show v => v -> ShowS
   showsGLSLValue = shows
+
+class IsShader t where
+  type ShaderResult t :: *
+
+  toShader' :: t -> Int -> Shader (ShaderResult t)
+
+toShader :: IsShader t => t -> Shader (ShaderResult t)
+toShader = flip toShader' 0
 
 
 -- Instances
@@ -253,9 +300,7 @@ deriving instance Foldable ShaderF
 
 instance Show1 ShaderF where
   liftShowsPrec sp sl d shader = case shader of
-    Uniform s -> showsUnaryWith showsPrec "Uniform" d s
-    In s -> showsUnaryWith showsPrec "In" d s
-    Out s -> showsUnaryWith showsPrec "Out" d s
+    Bind v -> showsUnaryWith showsPrec "Bind" d v
 
     Function n a b -> showsTernaryWith showsPrec (liftShowsPrec sp sl) sp "Function" d n a b
 
@@ -296,7 +341,7 @@ instance Show1 ShaderF where
 instance GLSLValue () where
   showsGLSLType _ = showString "void"
   showsGLSLVecType _ = showString "void"
-  showsGLSLValue = shows
+  showsGLSLValue = const id
 
 instance GLSLValue Float where
   showsGLSLType _ = showString "float"
@@ -320,3 +365,15 @@ instance GLSLValue a => GLSLValue (Linear.V4 a) where
   showsGLSLType _ = showsGLSLVecType (Proxy :: Proxy a)
   showsGLSLVecType _ = showString "mat4"
   showsGLSLValue v = showsGLSLVecType (Proxy :: Proxy a) . showParen True (foldr (.) id (intersperse (showString ", ") (showsGLSLValue <$> toList v)))
+
+instance IsShader (Shader a) where
+  type ShaderResult (Shader a) = a
+  toShader' = const
+
+instance (GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
+  type ShaderResult (Var (Shader a) -> b) = ShaderResult b
+  toShader' f i = do
+    var <- input ('i' : show i)
+    toShader' (f var) (succ i)
+
+deriving instance Show UniformVar
