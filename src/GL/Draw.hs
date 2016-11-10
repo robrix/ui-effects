@@ -1,7 +1,8 @@
-{-# LANGUAGE GADTs, RankNTypes #-}
+{-# LANGUAGE FlexibleInstances, GADTs, RankNTypes #-}
 module GL.Draw where
 
 import Control.Monad.Free.Freer
+import Control.Monad.IO.Class
 import Data.Bits
 import GL.Array
 import GL.Exception
@@ -39,9 +40,6 @@ bindVertexArray = liftF . BindVertexArray
 drawArrays :: Mode -> Int -> Int -> Draw ()
 drawArrays mode from to = liftF (DrawArrays mode from to)
 
-drawIO :: IO a -> Draw a
-drawIO = liftF . RunIO
-
 
 runDraw :: Draw a -> IO a
 runDraw = iterFreerA $ \ rest d -> case d of
@@ -70,3 +68,9 @@ runDraw = iterFreerA $ \ rest d -> case d of
       TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral to)
     checkingGLError (rest ())
   RunIO io -> io >>= rest
+
+
+-- Instances
+
+instance MonadIO Draw where
+  liftIO = liftF . RunIO

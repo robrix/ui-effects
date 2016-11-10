@@ -3,6 +3,7 @@ module Main where
 
 import Control.Exception
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Time.Clock.POSIX
 import GL.Array
 import GL.Draw
@@ -47,7 +48,7 @@ setup swap = do
   let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- bindArray (rectVertices =<< renderingRects (renderView view :: Rendering Float (Size Float)) :: [Linear.V4 Float])
-  setupIO (forever (runDraw (draw matrix time program array) >> swap))
+  liftIO (forever (runDraw (draw matrix time program array) >> swap))
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GLArray Float -> Draw ()
 draw matrix time program array = do
@@ -55,7 +56,7 @@ draw matrix time program array = do
 
   useProgram program
 
-  t <- drawIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
+  t <- liftIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
   setUniform program time (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
   setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1)
 
