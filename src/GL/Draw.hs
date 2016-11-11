@@ -6,20 +6,19 @@ import Control.Monad.IO.Class
 import Data.Bits
 import GL.Array
 import GL.Exception
+import GL.Geometry
 import GL.Program
 import GL.Shader
 import Graphics.GL.Core41
 import Prelude hiding (IO)
 
 data Buffer = ColourBuffer | DepthBuffer | StencilBuffer
-data Mode = Points | Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 
 data DrawF a where
   Clear :: [Buffer] -> DrawF ()
   UseProgram :: GLProgram -> DrawF ()
   SetUniform :: GLProgramUniform v => GLProgram -> Var (Shader v) -> v -> DrawF ()
-  BindVertexArray :: GLArray n -> DrawF ()
-  DrawArrays :: Mode -> Int -> Int -> DrawF ()
+  DrawGeometry :: GeometryArray n -> DrawF ()
   RunIO :: IO a -> DrawF a
 
 type Draw = Freer DrawF
@@ -34,11 +33,8 @@ useProgram = liftF . UseProgram
 setUniform :: GLProgramUniform v => GLProgram -> Var (Shader v) -> v -> Draw ()
 setUniform program var value = liftF (SetUniform program var value)
 
-bindVertexArray :: GLArray n -> Draw ()
-bindVertexArray = liftF . BindVertexArray
-
-drawArrays :: Mode -> Int -> Int -> Draw ()
-drawArrays mode from to = liftF (DrawArrays mode from to)
+drawGeometry :: GeometryArray n -> Draw ()
+drawGeometry = liftF . DrawGeometry
 
 
 runDraw :: Draw a -> IO a
@@ -55,19 +51,18 @@ runDraw = iterFreerA $ \ rest d -> case d of
   SetUniform program var value -> do
     setUniformValue program var value
     checkingGLError (rest ())
-  BindVertexArray array -> do
+  DrawGeometry (GeometryArray ranges array) -> do
     glBindVertexArray (unGLArray array)
-    checkingGLError (rest ())
-  DrawArrays mode from to -> do
-    glDrawArrays (case mode of
-      Points -> GL_POINTS
-      Lines -> GL_LINES
-      LineLoop -> GL_LINE_LOOP
-      LineStrip -> GL_LINE_STRIP
-      Triangles -> GL_TRIANGLES
-      TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral to)
+    _ <- traverse drawRange ranges
     checkingGLError (rest ())
   RunIO io -> io >>= rest
+  where drawRange (ArrayRange mode from count) = checkingGLError $ glDrawArrays (case mode of
+          Points -> GL_POINTS
+          Lines -> GL_LINES
+          LineLoop -> GL_LINE_LOOP
+          LineStrip -> GL_LINE_STRIP
+          Triangles -> GL_TRIANGLES
+          TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral (from + count))
 
 
 -- Instances
