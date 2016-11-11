@@ -20,6 +20,7 @@ data DrawF a where
   SetUniform :: GLProgramUniform v => GLProgram -> Var (Shader v) -> v -> DrawF ()
   BindVertexArray :: GLArray n -> DrawF ()
   DrawArrays :: Mode -> Int -> Int -> DrawF ()
+  DrawGeometry :: GeometryArray n -> DrawF ()
   RunIO :: IO a -> DrawF a
 
 type Draw = Freer DrawF
@@ -39,6 +40,9 @@ bindVertexArray = liftF . BindVertexArray
 
 drawArrays :: Mode -> Int -> Int -> Draw ()
 drawArrays mode from to = liftF (DrawArrays mode from to)
+
+drawGeometry :: GeometryArray n -> Draw ()
+drawGeometry = liftF . DrawGeometry
 
 
 runDraw :: Draw a -> IO a
@@ -60,6 +64,10 @@ runDraw = iterFreerA $ \ rest d -> case d of
     checkingGLError (rest ())
   DrawArrays mode from to -> do
     drawRange $ ArrayRange mode from (to - from)
+    checkingGLError (rest ())
+  DrawGeometry (GeometryArray ranges array) -> do
+    glBindVertexArray (unGLArray array)
+    _ <- traverse drawRange ranges
     checkingGLError (rest ())
   RunIO io -> io >>= rest
   where drawRange (ArrayRange mode from count) = checkingGLError $ glDrawArrays (case mode of
