@@ -4,7 +4,6 @@ module GL.Setup
 , Func(..)
 , Factor(..)
 , Shader(..)
-, GeometryArray(..)
 , SetupF
 , Setup
 , enable
@@ -54,15 +53,12 @@ data Shader where
   Vertex :: Shader.Shader Shader.Vertex -> Shader
   Fragment :: Shader.GLSLValue a => Shader.Shader a -> Shader
 
-data GeometryArray n = GeometryArray { geometryRanges :: [ArrayRange], geometryArray :: GLArray n }
-data ArrayRange = ArrayRange { mode :: Geometry.Mode, firstVertexIndex :: Int, vertexCount :: Int }
-
 data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
   SetDepthFunc :: Func -> SetupF ()
   SetBlendFactors :: Factor -> Factor -> SetupF ()
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
-  Geometry :: (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> SetupF (GeometryArray n)
+  Geometry :: (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> SetupF (Geometry.GeometryArray n)
   BuildProgram :: [Shader] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
   Uniform :: Shader.GLSLValue a => SetupF (Shader.Var (Shader.Shader a))
@@ -84,7 +80,7 @@ setDepthFunc = liftF . SetDepthFunc
 setBlendFactors :: Factor -> Factor -> Setup ()
 setBlendFactors = (liftF .) . SetBlendFactors
 
-geometry ::  (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> Setup (GeometryArray n)
+geometry ::  (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> Setup (Geometry.GeometryArray n)
 geometry = liftF . Geometry
 
 buildProgram :: [Shader] -> Setup GLProgram
@@ -100,7 +96,7 @@ runSetup = runSetupEffects . iterFreerA runSetupAlgebra
 runSetupEffects :: Eff '[State Int, Prelude.IO] a -> Prelude.IO a
 runSetupEffects = runM . fmap fst . flip runState 0
 
-data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [ArrayRange] }
+data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
 
 runSetupAlgebra :: forall a x. (x -> Eff '[State Int, Prelude.IO] a) -> SetupF x -> Eff '[State Int, Prelude.IO] a
 runSetupAlgebra run s = case s of
@@ -123,7 +119,7 @@ runSetupAlgebra run s = case s of
     send $ checkingGLError (runSetupEffects (run ()))
   Geometry geometry -> send $ do
     let vertices = foldr combineGeometry (ArrayVertices [] 0 []) geometry
-    withVertices (arrayVertices vertices) (checkingGLError . runSetupEffects . run . GeometryArray (arrayRanges vertices))
+    withVertices (arrayVertices vertices) (checkingGLError . runSetupEffects . run . Geometry.GeometryArray (arrayRanges vertices))
   BuildProgram shaders -> send $ withBuiltProgram (compileShader <$> shaders) (checkingGLError . runSetupEffects . run)
   RunIO io -> send io >>= run
   Uniform -> do
@@ -150,7 +146,7 @@ runSetupAlgebra run s = case s of
           in ArrayVertices
             (vertices ++ arrayVertices)
             (prevIndex + count)
-            (ArrayRange { mode = mode, firstVertexIndex = prevIndex, vertexCount = count } : arrayRanges)
+            (Geometry.ArrayRange { mode = mode, firstVertexIndex = prevIndex, vertexCount = count } : arrayRanges)
 
 compileShader :: Shader -> (GLenum, String)
 compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
