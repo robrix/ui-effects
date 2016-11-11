@@ -28,14 +28,6 @@ main = runWindow "UI" (runSetup . setup)
   `finally`
     exitSuccess
 
-rectVertices :: Num a => Rect a -> [Linear.V4 a]
-rectVertices (Rect (Point x y) (Size w h)) =
-  [ Linear.V4 x        y      0 1
-  , Linear.V4 x       (y + h) 0 1
-  , Linear.V4 (x + w)  y      0 1
-  , Linear.V4 (x + w) (y + h) 0 1
-  ]
-
 rectGeometry :: GLScalar a => Rect a -> Geometry (Linear.V4 a)
 rectGeometry (Rect (Point x y) (Size w h)) = Geometry TriangleStrip
   [ Linear.V4 x        y      0 1
