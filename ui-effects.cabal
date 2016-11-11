@@ -21,6 +21,7 @@ library
                      , GL.Array
                      , GL.Draw
                      , GL.Exception
+                     , GL.Geometry
                      , GL.Program
                      , GL.Scalar
                      , GL.Setup
