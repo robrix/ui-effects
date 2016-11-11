@@ -18,8 +18,6 @@ data DrawF a where
   Clear :: [Buffer] -> DrawF ()
   UseProgram :: GLProgram -> DrawF ()
   SetUniform :: GLProgramUniform v => GLProgram -> Var (Shader v) -> v -> DrawF ()
-  BindVertexArray :: GLArray n -> DrawF ()
-  DrawArrays :: Mode -> Int -> Int -> DrawF ()
   DrawGeometry :: GeometryArray n -> DrawF ()
   RunIO :: IO a -> DrawF a
 
@@ -34,12 +32,6 @@ useProgram = liftF . UseProgram
 
 setUniform :: GLProgramUniform v => GLProgram -> Var (Shader v) -> v -> Draw ()
 setUniform program var value = liftF (SetUniform program var value)
-
-bindVertexArray :: GLArray n -> Draw ()
-bindVertexArray = liftF . BindVertexArray
-
-drawArrays :: Mode -> Int -> Int -> Draw ()
-drawArrays mode from to = liftF (DrawArrays mode from to)
 
 drawGeometry :: GeometryArray n -> Draw ()
 drawGeometry = liftF . DrawGeometry
@@ -58,12 +50,6 @@ runDraw = iterFreerA $ \ rest d -> case d of
     checkingGLError (rest ())
   SetUniform program var value -> do
     setUniformValue program var value
-    checkingGLError (rest ())
-  BindVertexArray array -> do
-    glBindVertexArray (unGLArray array)
-    checkingGLError (rest ())
-  DrawArrays mode from to -> do
-    drawRange $ ArrayRange mode from (to - from)
     checkingGLError (rest ())
   DrawGeometry (GeometryArray ranges array) -> do
     glBindVertexArray (unGLArray array)
