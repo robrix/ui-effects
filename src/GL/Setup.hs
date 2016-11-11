@@ -12,7 +12,6 @@ module GL.Setup
 , setClearColour
 , setDepthFunc
 , setBlendFactors
-, bindArray
 , geometry
 , buildProgram
 , uniform
@@ -63,7 +62,6 @@ data SetupF a where
   SetDepthFunc :: Func -> SetupF ()
   SetBlendFactors :: Factor -> Factor -> SetupF ()
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
-  BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
   Geometry :: (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> SetupF (GeometryArray n)
   BuildProgram :: [Shader] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
@@ -85,9 +83,6 @@ setDepthFunc = liftF . SetDepthFunc
 
 setBlendFactors :: Factor -> Factor -> Setup ()
 setBlendFactors = (liftF .) . SetBlendFactors
-
-bindArray :: (Foldable v, GLScalar n) => [v n] -> Setup (GLArray n)
-bindArray = liftF . BindArray
 
 geometry ::  (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> Setup (GeometryArray n)
 geometry = liftF . Geometry
@@ -126,7 +121,6 @@ runSetupAlgebra run s = case s of
   SetClearColour (Linear.V4 r g b a) -> do
     sendIO (glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a))
     send $ checkingGLError (runSetupEffects (run ()))
-  BindArray vertices -> send $ withVertices vertices (checkingGLError . runSetupEffects . run)
   Geometry geometry -> send $ do
     let vertices = foldr combineGeometry (ArrayVertices [] 0 []) geometry
     withVertices (arrayVertices vertices) (checkingGLError . runSetupEffects . run . GeometryArray (arrayRanges vertices))
