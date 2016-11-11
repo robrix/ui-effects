@@ -13,6 +13,7 @@ module GL.Setup
 , setDepthFunc
 , setBlendFactors
 , bindArray
+, geometry
 , buildProgram
 , uniform
 , runSetup
@@ -87,6 +88,9 @@ setBlendFactors = (liftF .) . SetBlendFactors
 
 bindArray :: (Foldable v, GLScalar n) => [v n] -> Setup (GLArray n)
 bindArray = liftF . BindArray
+
+geometry ::  (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> Setup (GeometryArray n)
+geometry = liftF . Geometry
 
 buildProgram :: [Shader] -> Setup GLProgram
 buildProgram = liftF . BuildProgram
