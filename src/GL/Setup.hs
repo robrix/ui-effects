@@ -1,9 +1,10 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, GADTs, RankNTypes, RecordWildCards, ScopedTypeVariables, TypeOperators #-}
 module GL.Setup
 ( Flag(..)
 , Func(..)
 , Factor(..)
 , Shader(..)
+, GeometryArray(..)
 , SetupF
 , Setup
 , enable
@@ -24,6 +25,7 @@ import Control.Monad.Free.Freer
 import Control.Monad.IO.Class
 import GL.Array
 import GL.Exception
+import qualified GL.Geometry as Geometry
 import GL.Program
 import GL.Scalar
 import qualified GL.Shader as Shader
@@ -52,12 +54,16 @@ data Shader where
   Vertex :: Shader.Shader Shader.Vertex -> Shader
   Fragment :: Shader.GLSLValue a => Shader.Shader a -> Shader
 
+data GeometryArray n = GeometryArray { ranges :: [ArrayRange], array :: GLArray n }
+data ArrayRange = ArrayRange { mode :: Geometry.Mode, firstVertexIndex :: Int, vertexCount :: Int }
+
 data SetupF a where
   Flag :: Flag -> Bool -> SetupF ()
   SetDepthFunc :: Func -> SetupF ()
   SetBlendFactors :: Factor -> Factor -> SetupF ()
   SetClearColour :: Real n => Linear.V4 n -> SetupF ()
   BindArray :: (Foldable v, GLScalar n) => [v n] -> SetupF (GLArray n)
+  Geometry :: (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> SetupF (GeometryArray n)
   BuildProgram :: [Shader] -> SetupF GLProgram
   RunIO :: IO a -> SetupF a
   Uniform :: Shader.GLSLValue a => SetupF (Shader.Var (Shader.Shader a))
@@ -95,6 +101,8 @@ runSetup = runSetupEffects . iterFreerA runSetupAlgebra
 runSetupEffects :: Eff '[State Int, Prelude.IO] a -> Prelude.IO a
 runSetupEffects = runM . fmap fst . flip runState 0
 
+data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [ArrayRange] }
+
 runSetupAlgebra :: forall a x. (x -> Eff '[State Int, Prelude.IO] a) -> SetupF x -> Eff '[State Int, Prelude.IO] a
 runSetupAlgebra run s = case s of
   Flag f b -> do
@@ -115,6 +123,9 @@ runSetupAlgebra run s = case s of
     sendIO (glClearColor (realToFrac r) (realToFrac g) (realToFrac b) (realToFrac a))
     send $ checkingGLError (runSetupEffects (run ()))
   BindArray vertices -> send $ withVertices vertices (checkingGLError . runSetupEffects . run)
+  Geometry geometry -> send $ do
+    let vertices = foldr combineGeometry (ArrayVertices [] 0 []) geometry
+    withVertices (arrayVertices vertices) (checkingGLError . runSetupEffects . run . GeometryArray (arrayRanges vertices))
   BuildProgram shaders -> send $ withBuiltProgram (compileShader <$> shaders) (checkingGLError . runSetupEffects . run)
   RunIO io -> send io >>= run
   Uniform -> do
@@ -135,6 +146,13 @@ runSetupAlgebra run s = case s of
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
         sendIO io = send (io :: Prelude.IO ())
+        combineGeometry :: Geometry.Geometry (v n) -> ArrayVertices (v n) -> ArrayVertices (v n)
+        combineGeometry (Geometry.Geometry mode vertices) ArrayVertices{..} =
+          let count = length vertices
+          in ArrayVertices
+            (vertices ++ arrayVertices)
+            (prevIndex + count)
+            (ArrayRange { mode = mode, firstVertexIndex = prevIndex, vertexCount = count } : arrayRanges)
 
 compileShader :: Shader -> (GLenum, String)
 compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
