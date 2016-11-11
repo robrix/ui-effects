@@ -6,13 +6,13 @@ import Control.Monad.IO.Class
 import Data.Bits
 import GL.Array
 import GL.Exception
+import GL.Geometry
 import GL.Program
 import GL.Shader
 import Graphics.GL.Core41
 import Prelude hiding (IO)
 
 data Buffer = ColourBuffer | DepthBuffer | StencilBuffer
-data Mode = Points | Lines | LineLoop | LineStrip | Triangles | TriangleStrip
 
 data DrawF a where
   Clear :: [Buffer] -> DrawF ()

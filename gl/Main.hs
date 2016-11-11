@@ -8,6 +8,7 @@ import Data.Time.Clock.POSIX
 import GL.Array
 import GL.Draw
 import GL.Exception
+import GL.Geometry
 import GL.Program
 import GL.Shader
 import GL.Setup hiding (Shader)
