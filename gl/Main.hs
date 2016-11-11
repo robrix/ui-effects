@@ -69,8 +69,7 @@ draw matrix time program array = do
   setUniform program time (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
   setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1)
 
-  bindVertexArray (geometryArray array)
-  drawArrays TriangleStrip 0 4
+  drawGeometry array
 
 view :: View
 view = list
