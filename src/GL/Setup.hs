@@ -54,7 +54,7 @@ data Shader where
   Vertex :: Shader.Shader Shader.Vertex -> Shader
   Fragment :: Shader.GLSLValue a => Shader.Shader a -> Shader
 
-data GeometryArray n = GeometryArray { ranges :: [ArrayRange], array :: GLArray n }
+data GeometryArray n = GeometryArray { geometryRanges :: [ArrayRange], geometryArray :: GLArray n }
 data ArrayRange = ArrayRange { mode :: Geometry.Mode, firstVertexIndex :: Int, vertexCount :: Int }
 
 data SetupF a where
