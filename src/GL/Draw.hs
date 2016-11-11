@@ -59,15 +59,16 @@ runDraw = iterFreerA $ \ rest d -> case d of
     glBindVertexArray (unGLArray array)
     checkingGLError (rest ())
   DrawArrays mode from to -> do
-    glDrawArrays (case mode of
-      Points -> GL_POINTS
-      Lines -> GL_LINES
-      LineLoop -> GL_LINE_LOOP
-      LineStrip -> GL_LINE_STRIP
-      Triangles -> GL_TRIANGLES
-      TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral to)
+    drawRange $ ArrayRange mode from (to - from)
     checkingGLError (rest ())
   RunIO io -> io >>= rest
+  where drawRange (ArrayRange mode from count) = checkingGLError $ glDrawArrays (case mode of
+          Points -> GL_POINTS
+          Lines -> GL_LINES
+          LineLoop -> GL_LINE_LOOP
+          LineStrip -> GL_LINE_STRIP
+          Triangles -> GL_TRIANGLES
+          TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral (from + count))
 
 
 -- Instances
