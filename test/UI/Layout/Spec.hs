@@ -1,11 +1,12 @@
 module UI.Layout.Spec where
 
 import Test.Hspec
+import Test.Hspec.LeanCheck
 import UI.Geometry
 import UI.Layout
 
 spec :: Spec
 spec = do
   describe "fitLayout" $ do
-    it "excludes sizes larger than the horizontal maximum" $
-      fitLayout (Size (Just 10) Nothing) (pure (Size 11 11)) `shouldBe` Nothing
+    prop "excludes sizes wider than the horizontal maximum" $
+      \ w -> fitLayout (Size (Just w) Nothing) (pure (Size (w + 1 :: Int) 0)) == Nothing

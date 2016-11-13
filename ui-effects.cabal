@@ -70,6 +70,7 @@ test-suite ui-effects-test
                      , UI.Layout.Spec
   build-depends:       base
                      , hspec
+                     , hspec-core
                      , leancheck
                      , linear
                      , ui-effects
