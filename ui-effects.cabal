@@ -65,6 +65,7 @@ test-suite ui-effects-test
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules:       GL.Shader.Spec
+                     , UI.Layout.Spec
   build-depends:       base
                      , hspec
                      , linear
