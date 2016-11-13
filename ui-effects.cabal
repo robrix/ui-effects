@@ -37,6 +37,7 @@ library
                      , effects
                      , free
                      , gl
+                     , leancheck
                      , linear
                      , recursion-schemes
                      , sdl2
