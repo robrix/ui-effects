@@ -66,9 +66,11 @@ test-suite ui-effects-test
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules:       GL.Shader.Spec
+                     , Test.Hspec.LeanCheck
                      , UI.Layout.Spec
   build-depends:       base
                      , hspec
+                     , leancheck
                      , linear
                      , ui-effects
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
