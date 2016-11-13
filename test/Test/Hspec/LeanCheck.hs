@@ -8,11 +8,9 @@ import Test.LeanCheck.Core
 data Property where
   Property :: Testable prop => prop -> Property
 
-property :: Testable prop => prop -> Property
-property = Property
-
 prop :: (HasCallStack, Testable prop) => String -> prop -> Spec
-prop s = it s . property
+prop s = it s . Property
+
 
 instance Example Property where
   type Arg Property = ()
