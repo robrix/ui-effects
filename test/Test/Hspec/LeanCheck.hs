@@ -16,5 +16,5 @@ instance Example Property where
   type Arg Property = ()
   evaluateExample (Property prop) _ _ _ =
     case counterExample 100 prop of
-      Just [message] -> pure (Fail Nothing message)
+      Just messages -> pure (Fail Nothing (unlines messages))
       _ -> pure Success
