@@ -134,3 +134,6 @@ instance (Eq1 f, Eq a) => Eq (Cofreer f a) where
 
 instance Listable1 f => Listable2 (CofreerF f) where
   liftTiers2 t1 t2 = liftCons2 t1 (liftTiers t2) (`Cofree` id)
+
+instance (Listable a, Listable1 f) => Listable1 (CofreerF f a) where
+  liftTiers = liftTiers2 tiers
