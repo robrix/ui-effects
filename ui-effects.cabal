@@ -65,7 +65,9 @@ test-suite ui-effects-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       GL.Shader.Spec
+  other-modules:       Control.Comonad.Cofree.Cofreer.Spec
+                     , Control.Monad.Free.Freer.Spec
+                     , GL.Shader.Spec
                      , Test.Hspec.LeanCheck
                      , UI.Layout.Spec
   build-depends:       base
