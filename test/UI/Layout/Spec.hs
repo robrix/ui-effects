@@ -25,3 +25,6 @@ spec = do
   describe "stack" $ do
     it "stacks vertically" $
       measureLayout (stack (pure (Size 10 10)) (pure (Size 20 20 :: Size Int))) `shouldBe` Size 20 30
+
+    prop "takes the maximum of its children’s widths" $
+      \ a b -> width (measureLayout (stack (pure (a :: Size Int)) (pure b))) == max (width a) (width b)
