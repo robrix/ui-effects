@@ -23,8 +23,8 @@ spec = do
       \ maxH h i -> isJust (fitLayout (Size Nothing (Just maxH)) (inset (Size 0 i) (pure (Size 0 (h :: Int))))) == (maxH >= h + (2 * i))
 
   describe "stack" $ do
-    it "stacks vertically" $
-      measureLayout (stack (pure (Size 10 10)) (pure (Size 20 20 :: Size Int))) `shouldBe` Size 20 30
+    prop "takes the sum of its children’s heights" $
+      \ a b -> height (measureLayout (stack (pure a) (pure (b :: Size Int)))) == height a + height b
 
     prop "takes the maximum of its children’s widths" $
       \ a b -> width (measureLayout (stack (pure (a :: Size Int)) (pure b))) == max (width a) (width b)
