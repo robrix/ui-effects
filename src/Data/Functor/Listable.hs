@@ -11,6 +11,9 @@ module Data.Functor.Listable
 , tiers1
 , Listable2(..)
 , tiers2
+, liftCons1
+, liftCons2
+, liftCons3
 ) where
 
 import Test.LeanCheck
@@ -27,3 +30,14 @@ class Listable2 l where
 
 tiers2 :: (Listable a, Listable b, Listable2 l) => [[l a b]]
 tiers2 = liftTiers2 tiers tiers
+
+
+liftCons1 :: [[a]] -> (a -> b) -> [[b]]
+liftCons1 tiers f = mapT f tiers `addWeight` 1
+
+liftCons2 :: [[a]] -> [[b]] -> (a -> b -> c) -> [[c]]
+liftCons2 tiers1 tiers2 f = mapT (uncurry f) (productWith (,) tiers1 tiers2) `addWeight` 1
+
+liftCons3 :: [[a]] -> [[b]] -> [[c]] -> (a -> b -> c -> d) -> [[d]]
+liftCons3 tiers1 tiers2 tiers3 f = mapT (uncurry3 f) (productWith (\ x (y, z) -> (x, y, z)) tiers1 (liftCons2 tiers2 tiers3 (,)) ) `addWeight` 1
+  where uncurry3 f (a, b, c) = f a b c
