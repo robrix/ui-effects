@@ -158,3 +158,6 @@ instance Listable1 f => Listable2 (FreerF f) where
 
 instance (Listable a, Listable1 f) => Listable1 (FreerF f a) where
   liftTiers = liftTiers2 tiers
+
+instance (Listable a, Listable b, Listable1 f) => Listable (FreerF f a b) where
+  tiers = liftTiers tiers
