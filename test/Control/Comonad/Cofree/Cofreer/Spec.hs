@@ -1,6 +1,17 @@
 module Control.Comonad.Cofree.Cofreer.Spec where
 
-import Test.Hspec
+import Control.Comonad.Cofree.Cofreer
+import Test.Hspec hiding (shouldBe)
+import Test.Hspec.LeanCheck
 
 spec :: Spec
-spec = pure ()
+spec = do
+  describe "CofreerF" $ do
+    describe "Eq" $ do
+      prop "is reflexive" $
+        \ a -> a `shouldBe` (a :: CofreerF Maybe Int Int)
+
+  describe "Cofreer" $ do
+    describe "Eq" $ do
+      prop "is reflexive" $
+        \ a -> a `shouldBe` (a :: Cofreer Maybe Int)
