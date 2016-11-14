@@ -144,3 +144,6 @@ instance (Listable a, Listable b, Listable1 f) => Listable (CofreerF f a b) wher
 instance Listable1 f => Listable1 (Cofreer f) where
   liftTiers t1 = go
     where go = liftCons1 (liftTiers2 t1 go) Cofreer
+
+instance (Listable a, Listable1 f) => Listable (Cofreer f a) where
+  tiers = liftTiers tiers
