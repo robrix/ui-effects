@@ -21,3 +21,7 @@ spec = do
 
     prop "insets the vertical maximum by twice its margin height" $
       \ maxH h i -> isJust (fitLayout (Size Nothing (Just maxH)) (inset (Size 0 i) (pure (Size 0 (h :: Int))))) == (maxH >= h + (2 * i))
+
+  describe "stack" $ do
+    it "stacks vertically" $
+      measureLayout (stack (pure (Size 10 10)) (pure (Size 20 20 :: Size Int))) `shouldBe` Size 20 30
