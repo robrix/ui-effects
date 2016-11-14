@@ -47,3 +47,9 @@ liftCons3 tiers1 tiers2 tiers3 f = mapT (uncurry3 f) (productWith (\ x (y, z) ->
 
 instance Listable1 Maybe where
   liftTiers tiers = cons0 Nothing \/ liftCons1 tiers Just
+
+instance Listable2 (,) where
+  liftTiers2 = productWith (,)
+
+instance Listable a => Listable1 ((,) a) where
+  liftTiers = liftTiers2 tiers
