@@ -137,3 +137,6 @@ instance Listable1 f => Listable2 (CofreerF f) where
 
 instance (Listable a, Listable1 f) => Listable1 (CofreerF f a) where
   liftTiers = liftTiers2 tiers
+
+instance (Listable a, Listable b, Listable1 f) => Listable (CofreerF f a b) where
+  tiers = liftTiers tiers
