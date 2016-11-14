@@ -7,6 +7,7 @@ module Data.Functor.Listable
 , cons4
 , cons5
 , cons6
+, (\/)
 , Listable1(..)
 , tiers1
 , Listable2(..)
