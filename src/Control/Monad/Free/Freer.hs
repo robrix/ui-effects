@@ -18,6 +18,7 @@ import Control.Monad.Free.Class hiding (liftF)
 import Data.Bifunctor
 import Data.Functor.Classes
 import Data.Functor.Foldable
+import Data.Functor.Listable
 
 data FreerF f a b where
   Pure :: a -> FreerF f a b
@@ -151,3 +152,6 @@ instance Eq1 f => Eq1 (Freer f) where
 
 instance (Eq1 f, Eq a) => Eq (Freer f a) where
   (==) = liftEq (==)
+
+instance Listable1 f => Listable2 (FreerF f) where
+  liftTiers2 t1 t2 = liftCons1 t1 Pure \/ liftCons1 (liftTiers t2) (Free id)
