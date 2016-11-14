@@ -127,6 +127,7 @@ instance Eq2 LayoutF where
   liftEq2 eqA eqF l1 l2 = case (l1, l2) of
     (Inset s1 c1, Inset s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
     (Offset p1 c1, Offset p2 c2) -> liftEq eqA p1 p2 && eqF c1 c2
+    (Stack a1 b1, Stack a2 b2) -> eqF a1 a2 && eqF b1 b2
     (GetMaxSize, GetMaxSize) -> True
     _ -> False
 
