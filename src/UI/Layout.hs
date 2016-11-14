@@ -56,6 +56,9 @@ layoutSizeAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, 
 layoutSizeAlgebra c@(Cofree (origin, _) _ _) = size <$> layoutAlgebra (fmap (Rect origin) <$> c)
 
 
+measureLayout :: Real a => Layout a (Size a) -> Rect a
+measureLayout = fromMaybe (Rect (Point 0 0) (Size 0 0)) . fitLayout (pure Nothing)
+
 fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Rect a)
 fitLayout = fitLayoutWith layoutAlgebra
 
