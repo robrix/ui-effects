@@ -83,6 +83,7 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
     InR layout -> case layout of
       Inset by child -> Free id (InR (Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
       Offset by child -> Free id (InR (Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), runF child)))
+      Stack a b -> Free id (InR (Stack (offset, maxSize, runF a) (offset, maxSize, runF b)))
       GetMaxSize -> Free ((,,) offset maxSize . runF) (InR GetMaxSize)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)

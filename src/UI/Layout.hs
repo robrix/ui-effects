@@ -13,7 +13,9 @@ import UI.Geometry
 data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
+  Stack :: f -> f -> LayoutF a f
   GetMaxSize :: LayoutF a (Size (Maybe a))
+  -- Right :: f -> LayoutF a f
 
 type Layout a = Freer (LayoutF a)
 type ALayout a b = Cofreer (FreerF (LayoutF a) b)
@@ -34,10 +36,8 @@ resizeable = (getMaxSize >>=)
 getMaxSize :: Layout a (Size (Maybe a))
 getMaxSize = liftF GetMaxSize
 
-newtype Stack a b = Stack { unStack :: Layout a b }
-
-stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
-stack = unStack . foldMap Stack
+stack :: Layout a b -> Layout a b -> Layout a b
+stack = (wrap .) . Stack
 
 
 -- Evaluation
@@ -67,6 +67,10 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
   Free runF layout -> case layout of
     Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
     Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
+    Stack a b -> do
+      Rect _ sizeA <- runC (runF a)
+      Rect (Point x y) sizeB <- runC (runF b)
+      pure $ Rect (Point x (y + height sizeA)) (Size (max (width sizeA) (width sizeB)) (height sizeA + height sizeB))
     GetMaxSize -> runC (runF maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
@@ -87,6 +91,7 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
   Free run layout -> case layout of
     Inset by child -> Free id $ Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
     Offset by child -> Free id $ Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
+    Stack a b -> Free id $ Stack (offset, maxSize, run a) (offset, maxSize, run b)
     GetMaxSize -> Free ((,,) offset maxSize . run) GetMaxSize
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
@@ -98,14 +103,8 @@ instance Foldable (LayoutF a) where
   foldMap f layout = case layout of
     Inset _ child -> f child
     Offset _ child -> f child
+    Stack a b -> f a `mappend` f b
     GetMaxSize -> f (pure Nothing)
-
-instance Real a => Monoid (Stack a (Size a)) where
-  mempty = Stack (pure (Size 0 0))
-  mappend a b = Stack $ do
-    Size w1 h1 <- unStack a
-    Size w2 h2 <- unStack b
-    pure (Size (max w1 w2) (h1 + h2))
 
 instance (Show a, Show b) => Show (LayoutF a b) where
   showsPrec = liftShowsPrec showsPrec showList
@@ -114,6 +113,7 @@ instance Show a => Show1 (LayoutF a) where
   liftShowsPrec sp _ d layout = case layout of
     Inset by child -> showsBinaryWith showsPrec sp "Inset" d by child
     Offset by child -> showsBinaryWith showsPrec sp "Offset" d by child
+    Stack a b -> showsBinaryWith sp sp "Stack" d a b
     GetMaxSize -> showString "GetMaxSize"
 
 instance Eq2 LayoutF where
