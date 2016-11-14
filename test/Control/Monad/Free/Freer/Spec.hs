@@ -1,6 +1,23 @@
 module Control.Monad.Free.Freer.Spec where
 
-import Test.Hspec
+import Control.Monad.Free.Freer
+import Test.Hspec hiding (shouldBe)
+import Test.Hspec.LeanCheck
 
 spec :: Spec
-spec = pure ()
+spec = do
+  describe "FreerF" $ do
+    describe "Eq" $ do
+      prop "is reflexive" $
+        \ a -> a `shouldBe` (a :: FreerF Maybe Int Int)
+
+      prop "is commutative" $
+        \ a b -> a == b `shouldBe` b == (a :: FreerF Maybe Int Int)
+
+  describe "Freer" $ do
+    describe "Eq" $ do
+      prop "is reflexive" $
+        \ a -> a `shouldBe` (a :: Freer Maybe Int)
+
+      prop "is commutative" $
+        \ a b -> a == b `shouldBe` b == (a :: Freer Maybe Int)
