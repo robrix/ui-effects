@@ -1,10 +1,10 @@
 module Data.Functor.Listable
-( module LC
+( Listable(..)
 , Listable1(..)
 , tiers1
 ) where
 
-import Test.LeanCheck as LC (Listable(..))
+import Test.LeanCheck
 
 class Listable1 l where
   liftTiers :: [[a]] -> [[l a]]
