@@ -8,6 +8,7 @@ import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
 import Data.Maybe (catMaybes, fromMaybe)
+import Data.Semigroup
 import UI.Geometry
 
 data LayoutF a f where
@@ -98,6 +99,9 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
 
 
 -- Instances
+
+instance Semigroup (Layout a b) where
+  (<>) = stack
 
 instance Foldable (LayoutF a) where
   foldMap f layout = case layout of
