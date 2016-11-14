@@ -155,3 +155,6 @@ instance (Eq1 f, Eq a) => Eq (Freer f a) where
 
 instance Listable1 f => Listable2 (FreerF f) where
   liftTiers2 t1 t2 = liftCons1 t1 Pure \/ liftCons1 (liftTiers t2) (Free id)
+
+instance (Listable a, Listable1 f) => Listable1 (FreerF f a) where
+  liftTiers = liftTiers2 tiers
