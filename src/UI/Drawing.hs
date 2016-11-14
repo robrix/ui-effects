@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances, GADTs #-}
 module UI.Drawing
 ( Shape(..)
 , Colour(..)
@@ -25,6 +25,7 @@ import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.Functor.Sum
 import Data.Maybe (fromMaybe)
+import Data.Semigroup (Semigroup(..))
 import qualified Linear.V2 as Linear
 import UI.Layout as Layout
 import UI.Font
@@ -93,6 +94,9 @@ renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,,) (
 
 
 -- Instances
+
+instance Semigroup (Rendering a b) where
+  (<>) = (wrap .) . (InR .) . Stack
 
 instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
