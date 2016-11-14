@@ -165,3 +165,6 @@ instance (Listable a, Listable b, Listable1 f) => Listable (FreerF f a b) where
 instance Listable1 f => Listable1 (Freer f) where
   liftTiers t1 = go
     where go = liftCons1 (liftTiers2 t1 go) Freer
+
+instance (Listable a, Listable1 f) => Listable (Freer f a) where
+  tiers = liftTiers tiers
