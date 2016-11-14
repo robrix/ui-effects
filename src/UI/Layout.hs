@@ -43,8 +43,8 @@ stack = (wrap .) . Stack
 
 -- Evaluation
 
-measureLayout :: Real a => Layout a (Size a) -> Size a
-measureLayout = fromMaybe (Size 0 0) . fitLayoutSize (pure Nothing)
+measureLayoutSize :: Real a => Layout a (Size a) -> Size a
+measureLayoutSize = fromMaybe (Size 0 0) . fitLayoutSize (pure Nothing)
 
 fitLayoutSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
 fitLayoutSize = fitLayoutWith layoutSizeAlgebra
