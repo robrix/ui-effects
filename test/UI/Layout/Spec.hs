@@ -22,6 +22,9 @@ spec = do
     prop "insets the vertical maximum by twice its margin height" $
       \ maxH h i -> isJust (fitLayout (Size Nothing (Just maxH)) (inset (Size 0 i) (pure (Size 0 (h :: Int))))) `shouldBe` (maxH >= h + (2 * i))
 
+    prop "increases size by its inset" $
+      \ s1 s2 -> measureLayoutSize (inset s1 (pure s2)) `shouldBe` (2 * s1 + s2 :: Size Int)
+
   describe "offset" $ do
     prop "reduces the horizontal maximum by its horizontal magnitude" $
       \ maxW w i -> isJust (fitLayout (Size (Just maxW) Nothing) (offset (Point i 0) (pure (Size (w :: Int) 0)))) `shouldBe` (maxW >= w + i)
