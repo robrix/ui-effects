@@ -180,3 +180,6 @@ instance (Pretty a, Pretty1 f) => Pretty1 (FreerF f a) where
 
 instance (Pretty a, Pretty b, Pretty1 f) => Pretty (FreerF f a b) where
   pretty = liftPretty pretty
+
+instance Pretty1 f => Pretty1 (Freer f) where
+  liftPretty p1 r = text "Freer" </> liftPretty2 p1 (liftPretty p1) (runFreer r)
