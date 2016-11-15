@@ -35,6 +35,12 @@ instance Show a => Show (Rect a) where
 instance Eq1 Rect where
   liftEq eq (Rect o1 s1) (Rect o2 s2) = liftEq eq o1 o2 && liftEq eq s1 s2
 
+instance Listable1 Rect where
+  liftTiers t = liftCons2 (liftTiers t) (liftTiers t) Rect
+
+instance Listable a => Listable (Rect a) where
+  tiers = tiers1
+
 instance Pretty1 Rect where
   liftPrettyPrec p pl d (Rect o s) = prettyParen (d > 10) $ text "Rect" </> liftPrettyPrec p pl 11 o </> liftPrettyPrec p pl 11 s
 
@@ -54,6 +60,12 @@ instance Show a => Show (Point a) where
 
 instance Eq1 Point where
   liftEq eq (Point x1 y1) (Point x2 y2) = eq x1 x2 && eq y1 y2
+
+instance Listable1 Point where
+  liftTiers t = liftCons2 t t Point
+
+instance Listable a => Listable (Point a) where
+  tiers = tiers1
 
 instance Pretty1 Point where
   liftPrettyPrec p _ d (Point x y) = prettyParen (d > 10) $ text "Point" </> p 11 x </> p 11 y
