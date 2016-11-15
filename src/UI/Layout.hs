@@ -7,6 +7,7 @@ import Control.Monad.Free.Freer
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
+import Data.Functor.Pretty
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Semigroup
 import UI.Geometry
@@ -130,3 +131,9 @@ instance Eq a => Eq1 (LayoutF a) where
 
 instance (Eq a, Eq f) => Eq (LayoutF a f) where
   (==) = liftEq (==)
+
+instance Pretty2 LayoutF where
+  liftPretty2 p1 p2 layout = case layout of
+    Inset by child -> text "Inset" </> liftPretty p1 by </> p2 child
+    Offset by child -> text "Offset" </> liftPretty p1 by </> p2 child
+    GetMaxSize -> text "GetMaxSize"
