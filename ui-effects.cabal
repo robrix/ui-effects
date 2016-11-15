@@ -79,6 +79,7 @@ test-suite ui-effects-test
                      , leancheck
                      , linear
                      , ui-effects
+                     , wl-pprint-extras
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
