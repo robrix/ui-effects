@@ -27,8 +27,7 @@ type ALayout a b = Cofreer (FreerF (LayoutF a) b)
 inset :: Size a -> Layout a b -> Layout a b
 inset by = wrap . Inset by
 
-offset :: Real a => Point a -> Layout a b -> Layout a b
-offset (Point 0 0) = id
+offset :: Point a -> Layout a b -> Layout a b
 offset by = wrap . Offset by
 
 resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
