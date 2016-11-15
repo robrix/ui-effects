@@ -2,6 +2,7 @@ module UI.Geometry where
 
 import Control.Applicative (liftA, liftA2)
 import Data.Functor.Classes
+import Data.Functor.Pretty
 import Data.Semigroup
 import Test.LeanCheck
 
@@ -79,3 +80,6 @@ instance Eq1 Size where
 
 instance Listable a => Listable (Size a) where
   tiers = cons2 Size
+
+instance Pretty1 Size where
+  liftPretty p1 (Size w h) = text "Size" </> p1 w </> p1 h
