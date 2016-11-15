@@ -49,6 +49,9 @@ instance Show a => Show (Point a) where
 instance Eq1 Point where
   liftEq eq (Point x1 y1) (Point x2 y2) = eq x1 x2 && eq y1 y2
 
+instance Pretty1 Point where
+  liftPretty p1 (Point x y) = text "Point" </> p1 x </> p1 y
+
 
 instance Applicative Size where
   pure a = Size a a
