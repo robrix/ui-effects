@@ -7,6 +7,7 @@ import Control.Monad.Free.Freer
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
+import Data.Functor.Listable
 import Data.Functor.Pretty
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Semigroup
@@ -141,3 +142,14 @@ instance Pretty a => Pretty1 (LayoutF a) where
 
 instance (Pretty a, Pretty b) => Pretty (LayoutF a b) where
   prettyPrec = prettyPrec1
+
+instance Listable2 LayoutF where
+  liftTiers2 t1 t2
+    =  liftCons2 (liftTiers t1) t2 Inset
+    \/ liftCons2 (liftTiers t1) t2 Offset
+
+instance Listable a => Listable1 (LayoutF a) where
+  liftTiers = liftTiers2 tiers
+
+instance (Listable a, Listable b) => Listable (LayoutF a b) where
+  tiers = tiers1
