@@ -174,3 +174,6 @@ instance Pretty1 f => Pretty2 (FreerF f) where
   liftPretty2 p1 p2 f = case f of
     Pure a -> text "Pure" </> p1 a
     Free t r -> text "Free" </> text "id" </> liftPretty (p2 . t) r
+
+instance (Pretty a, Pretty1 f) => Pretty1 (FreerF f a) where
+  liftPretty = liftPretty2 pretty
