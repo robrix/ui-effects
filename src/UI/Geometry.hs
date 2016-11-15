@@ -2,9 +2,9 @@ module UI.Geometry where
 
 import Control.Applicative (liftA, liftA2)
 import Data.Functor.Classes
+import Data.Functor.Listable
 import Data.Functor.Pretty
 import Data.Semigroup
-import Test.LeanCheck
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
   deriving (Eq, Foldable, Functor, Ord, Traversable)
@@ -89,6 +89,9 @@ instance Show a => Show (Size a) where
 
 instance Eq1 Size where
   liftEq eq (Size w1 h1) (Size w2 h2) = eq w1 w2 && eq h1 h2
+
+instance Listable1 Size where
+  liftTiers t = liftCons2 t t Size
 
 instance Listable a => Listable (Size a) where
   tiers = cons2 Size
