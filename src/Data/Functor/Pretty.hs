@@ -16,6 +16,9 @@ import qualified Text.PrettyPrint.Free as PP
 
 class Pretty a where
   prettyPrec :: Int -> a -> Doc e
+  prettyList :: [a] -> Doc e
+  prettyList = list . fmap (prettyPrec 0)
+
 
 pretty :: Pretty a => a -> Doc e
 pretty = prettyPrec 0
