@@ -20,3 +20,9 @@ class Pretty2 f where
 
 pretty2 :: (Pretty2 f, Pretty a, Pretty b) => f a b -> Doc e
 pretty2 = liftPretty2 pretty pretty
+
+
+-- Instances
+
+instance Pretty1 Maybe where
+  liftPretty p1 = maybe (text "Nothing") ((text "Just" </>) . p1)
