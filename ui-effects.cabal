@@ -43,6 +43,7 @@ library
                      , linear
                      , recursion-schemes
                      , sdl2
+                     , wl-pprint-extras
   default-language:    Haskell2010
   default-extensions:  DeriveFoldable, DeriveFunctor, DeriveGeneric, DeriveTraversable
   ghc-options:         -Wall -fno-warn-name-shadowing
