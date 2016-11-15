@@ -84,7 +84,6 @@ renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ 
     InR layout -> case layout of
       Inset by child -> Free id (InR (Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
       Offset by child -> Free id (InR (Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), runF child)))
-      Stack a b -> Free id (InR (Stack (offset, maxSize, runF a) (offset, maxSize, runF b)))
       GetMaxSize -> Free ((,,) offset maxSize . runF) (InR GetMaxSize)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
@@ -95,8 +94,11 @@ renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,,) (
 
 -- Instances
 
-instance Semigroup (Rendering a b) where
-  (<>) = (wrap .) . (InR .) . Stack
+instance Real a => Semigroup (Rendering a (Size a)) where
+  (<>) top bottom = do
+    Size w1 h1 <- top
+    Size w2 h2 <- wrapR $ Offset (Point 0 h1) bottom
+    pure $ Size (max w1 w2) (h1 + h2)
 
 instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
