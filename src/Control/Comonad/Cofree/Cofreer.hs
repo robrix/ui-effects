@@ -151,3 +151,6 @@ instance (Listable a, Listable1 f) => Listable (Cofreer f a) where
 
 instance Pretty1 f => Pretty2 (CofreerF f) where
   liftPretty2 p1 p2 (Cofree a t r) = text "Cofree" </> p1 a </> text "id" </> liftPretty (p2 . t) r
+
+instance (Pretty a, Pretty1 f) => Pretty1 (CofreerF f a) where
+  liftPretty = liftPretty2 pretty
