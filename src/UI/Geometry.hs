@@ -35,6 +35,9 @@ instance Show a => Show (Rect a) where
 instance Eq1 Rect where
   liftEq eq (Rect o1 s1) (Rect o2 s2) = liftEq eq o1 o2 && liftEq eq s1 s2
 
+instance Pretty1 Rect where
+  liftPretty p1 (Rect o s) = text "Rect" </> liftPretty p1 o </> liftPretty p1 s
+
 
 instance Applicative Point where
   pure a = Point a a
