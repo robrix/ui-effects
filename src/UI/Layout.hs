@@ -137,3 +137,6 @@ instance Pretty2 LayoutF where
     Inset by child -> text "Inset" </> liftPretty p1 by </> p2 child
     Offset by child -> text "Offset" </> liftPretty p1 by </> p2 child
     GetMaxSize -> text "GetMaxSize"
+
+instance Pretty a => Pretty1 (LayoutF a) where
+  liftPretty = liftPretty2 pretty
