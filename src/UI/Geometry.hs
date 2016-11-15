@@ -36,10 +36,10 @@ instance Eq1 Rect where
   liftEq eq (Rect o1 s1) (Rect o2 s2) = liftEq eq o1 o2 && liftEq eq s1 s2
 
 instance Pretty1 Rect where
-  liftPretty p1 (Rect o s) = text "Rect" </> liftPretty p1 o </> liftPretty p1 s
+  liftPrettyPrec p1 d (Rect o s) = prettyParen (d > 10) $ text "Rect" </> liftPrettyPrec p1 11 o </> liftPrettyPrec p1 11 s
 
 instance Pretty a => Pretty (Rect a) where
-  pretty = pretty1
+  prettyPrec = prettyPrec1
 
 
 instance Applicative Point where
@@ -56,10 +56,10 @@ instance Eq1 Point where
   liftEq eq (Point x1 y1) (Point x2 y2) = eq x1 x2 && eq y1 y2
 
 instance Pretty1 Point where
-  liftPretty p1 (Point x y) = text "Point" </> p1 x </> p1 y
+  liftPrettyPrec p1 d (Point x y) = prettyParen (d > 10) $ text "Point" </> p1 11 x </> p1 11 y
 
 instance Pretty a => Pretty (Point a) where
-  pretty = pretty1
+  prettyPrec = prettyPrec1
 
 
 instance Applicative Size where
@@ -94,7 +94,7 @@ instance Listable a => Listable (Size a) where
   tiers = cons2 Size
 
 instance Pretty1 Size where
-  liftPretty p1 (Size w h) = text "Size" </> p1 w </> p1 h
+  liftPrettyPrec p1 d (Size w h) = prettyParen (d > 10) $ text "Size" </> p1 11 w </> p1 11 h
 
 instance Pretty a => Pretty (Size a) where
-  pretty = pretty1
+  prettyPrec = prettyPrec1

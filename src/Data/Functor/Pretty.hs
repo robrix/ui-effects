@@ -1,28 +1,43 @@
 module Data.Functor.Pretty
-( module PP
+( module P
+, Pretty(..)
+, pretty
 , Pretty1(..)
-, pretty1
+, prettyPrec1
 , Pretty2(..)
-, pretty2
+, prettyPrec2
+, prettyParen
 ) where
 
-import Text.PrettyPrint.Free as PP
+import Text.PrettyPrint.Free as P hiding (Pretty(..), pretty)
+
+class Pretty a where
+  prettyPrec :: Int -> a -> Doc e
+
+pretty :: Pretty a => a -> Doc e
+pretty = prettyPrec 0
+
 
 class Pretty1 f where
-  liftPretty :: (a -> Doc e) -> f a -> Doc e
+  liftPrettyPrec :: (Int -> a -> Doc e) -> Int -> f a -> Doc e
 
-pretty1 :: (Pretty1 f, Pretty a) => f a -> Doc e
-pretty1 = liftPretty pretty
+prettyPrec1 :: (Pretty1 f, Pretty a) => Int -> f a -> Doc e
+prettyPrec1 = liftPrettyPrec prettyPrec
 
 
 class Pretty2 f where
-  liftPretty2 :: (a -> Doc e) -> (b -> Doc e) -> f a b -> Doc e
+  liftPrettyPrec2 :: (Int -> a -> Doc e) -> (Int -> b -> Doc e) -> Int -> f a b -> Doc e
 
-pretty2 :: (Pretty2 f, Pretty a, Pretty b) => f a b -> Doc e
-pretty2 = liftPretty2 pretty pretty
+prettyPrec2 :: (Pretty2 f, Pretty a, Pretty b) => Int -> f a b -> Doc e
+prettyPrec2 = liftPrettyPrec2 prettyPrec prettyPrec
+
+
+prettyParen :: Bool -> Doc e -> Doc e
+prettyParen True = parens
+prettyParen False = id
 
 
 -- Instances
 
 instance Pretty1 Maybe where
-  liftPretty p1 = maybe (text "Nothing") ((text "Just" </>) . p1)
+  liftPrettyPrec p1 d = prettyParen (d > 10) . maybe (text "Nothing") ((text "Just" </>) . p1 11)

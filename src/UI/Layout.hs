@@ -133,13 +133,13 @@ instance (Eq a, Eq f) => Eq (LayoutF a f) where
   (==) = liftEq (==)
 
 instance Pretty2 LayoutF where
-  liftPretty2 p1 p2 layout = case layout of
-    Inset by child -> text "Inset" </> liftPretty p1 by </> p2 child
-    Offset by child -> text "Offset" </> liftPretty p1 by </> p2 child
+  liftPrettyPrec2 p1 p2 d layout = case layout of
+    Inset by child -> prettyParen (d > 10) $ text "Inset" </> liftPrettyPrec p1 11 by </> p2 11 child
+    Offset by child -> prettyParen (d > 10) $ text "Offset" </> liftPrettyPrec p1 11 by </> p2 11 child
     GetMaxSize -> text "GetMaxSize"
 
 instance Pretty a => Pretty1 (LayoutF a) where
-  liftPretty = liftPretty2 pretty
+  liftPrettyPrec = liftPrettyPrec2 prettyPrec
 
 instance (Pretty a, Pretty b) => Pretty (LayoutF a b) where
-  pretty = pretty1
+  prettyPrec = prettyPrec1

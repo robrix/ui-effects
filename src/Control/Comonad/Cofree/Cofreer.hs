@@ -150,16 +150,16 @@ instance (Listable a, Listable1 f) => Listable (Cofreer f a) where
   tiers = liftTiers tiers
 
 instance Pretty1 f => Pretty2 (CofreerF f) where
-  liftPretty2 p1 p2 (Cofree a t r) = text "Cofree" </> p1 a </> text "id" </> liftPretty (p2 . t) r
+  liftPrettyPrec2 p1 p2 d (Cofree a t r) = prettyParen (d > 10) $ text "Cofree" </> p1 11 a </> text "id" </> liftPrettyPrec (flip (flip p2 . t)) 11 r
 
 instance (Pretty a, Pretty1 f) => Pretty1 (CofreerF f a) where
-  liftPretty = liftPretty2 pretty
+  liftPrettyPrec = liftPrettyPrec2 prettyPrec
 
 instance (Pretty a, Pretty b, Pretty1 f) => Pretty (CofreerF f a b) where
-  pretty = liftPretty pretty
+  prettyPrec = prettyPrec1
 
 instance Pretty1 f => Pretty1 (Cofreer f) where
-  liftPretty p1 r = text "Cofreer" </> liftPretty2 p1 (liftPretty p1) (runCofreer r)
+  liftPrettyPrec p1 d r = prettyParen (d > 10) $ text "Cofreer" </> liftPrettyPrec2 p1 (liftPrettyPrec p1) 11 (runCofreer r)
 
 instance (Pretty a, Pretty1 f) => Pretty (Cofreer f a) where
-  pretty = liftPretty pretty
+  prettyPrec = liftPrettyPrec prettyPrec

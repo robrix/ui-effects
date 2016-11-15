@@ -171,18 +171,18 @@ instance (Listable a, Listable1 f) => Listable (Freer f a) where
   tiers = liftTiers tiers
 
 instance Pretty1 f => Pretty2 (FreerF f) where
-  liftPretty2 p1 p2 f = case f of
-    Pure a -> text "Pure" </> p1 a
-    Free t r -> text "Free" </> text "id" </> liftPretty (p2 . t) r
+  liftPrettyPrec2 p1 p2 d f = prettyParen (d > 10) $ case f of
+    Pure a -> text "Pure" </> p1 11 a
+    Free t r -> text "Free" </> text "id" </> liftPrettyPrec (flip (flip p2 . t)) 11 r
 
 instance (Pretty a, Pretty1 f) => Pretty1 (FreerF f a) where
-  liftPretty = liftPretty2 pretty
+  liftPrettyPrec = liftPrettyPrec2 prettyPrec
 
 instance (Pretty a, Pretty b, Pretty1 f) => Pretty (FreerF f a b) where
-  pretty = liftPretty pretty
+  prettyPrec = prettyPrec1
 
 instance Pretty1 f => Pretty1 (Freer f) where
-  liftPretty p1 r = text "Freer" </> liftPretty2 p1 (liftPretty p1) (runFreer r)
+  liftPrettyPrec p1 d r = prettyParen (d > 10) $ text "Freer" </> liftPrettyPrec2 p1 (liftPrettyPrec p1) 11 (runFreer r)
 
 instance (Pretty a, Pretty1 f) => Pretty (Freer f a) where
-  pretty = liftPretty pretty
+  prettyPrec = liftPrettyPrec prettyPrec
