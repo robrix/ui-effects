@@ -69,3 +69,4 @@ instance Pretty Bool where
 
 instance Pretty Char where
   prettyPrec = const (squotes . text . ($ "") . showLitChar)
+  prettyList = dquotes . mconcat . fmap (text . ($ "") . showLitChar)
