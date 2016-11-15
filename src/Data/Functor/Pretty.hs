@@ -10,6 +10,7 @@ module Data.Functor.Pretty
 ) where
 
 import Text.PrettyPrint.Free as P hiding (Pretty(..), pretty)
+import qualified Text.PrettyPrint.Free as PP
 
 class Pretty a where
   prettyPrec :: Int -> a -> Doc e
@@ -44,3 +45,9 @@ instance Pretty1 Maybe where
 
 instance Pretty a => Pretty (Maybe a) where
   prettyPrec = prettyPrec1
+
+instance Pretty Int where
+  prettyPrec = const PP.pretty
+
+instance Pretty Bool where
+  prettyPrec = const PP.pretty
