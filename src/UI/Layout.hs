@@ -40,7 +40,7 @@ stack :: Real a => Layout a (Size a) -> Layout a (Size a) -> Layout a (Size a)
 stack top bottom = do
   Size w1 h1 <- top
   Size w2 h2 <- offset (Point 0 h1) bottom
-  pure $ Size (max w1 w2) (h1 + h2)
+  pure $ Size (max w1 w2) h2
 
 
 -- Evaluation
