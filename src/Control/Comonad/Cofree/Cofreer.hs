@@ -22,6 +22,7 @@ import Data.Bifunctor
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
 import Data.Functor.Listable
+import Data.Functor.Pretty
 
 data CofreerF f a b where
   Cofree :: a -> (x -> b) -> f x -> CofreerF f a b
@@ -147,3 +148,6 @@ instance Listable1 f => Listable1 (Cofreer f) where
 
 instance (Listable a, Listable1 f) => Listable (Cofreer f a) where
   tiers = liftTiers tiers
+
+instance Pretty1 f => Pretty2 (CofreerF f) where
+  liftPretty2 p1 p2 (Cofree a t r) = text "Cofree" </> p1 a </> text "id" </> liftPretty (p2 . t) r
