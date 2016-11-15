@@ -154,3 +154,6 @@ instance Pretty1 f => Pretty2 (CofreerF f) where
 
 instance (Pretty a, Pretty1 f) => Pretty1 (CofreerF f a) where
   liftPretty = liftPretty2 pretty
+
+instance (Pretty a, Pretty b, Pretty1 f) => Pretty (CofreerF f a b) where
+  pretty = liftPretty pretty
