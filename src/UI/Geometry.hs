@@ -94,7 +94,7 @@ instance Listable1 Size where
   liftTiers t = liftCons2 t t Size
 
 instance Listable a => Listable (Size a) where
-  tiers = cons2 Size
+  tiers = tiers1
 
 instance Pretty1 Size where
   liftPrettyPrec p _ d (Size w h) = prettyParen (d > 10) $ text "Size" </> p 11 w </> p 11 h
