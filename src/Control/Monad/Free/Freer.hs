@@ -19,6 +19,7 @@ import Data.Bifunctor
 import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.Functor.Listable
+import Data.Functor.Pretty
 
 data FreerF f a b where
   Pure :: a -> FreerF f a b
@@ -168,3 +169,8 @@ instance Listable1 f => Listable1 (Freer f) where
 
 instance (Listable a, Listable1 f) => Listable (Freer f a) where
   tiers = liftTiers tiers
+
+instance Pretty1 f => Pretty2 (FreerF f) where
+  liftPretty2 p1 p2 f = case f of
+    Pure a -> text "Pure" </> p1 a
+    Free t r -> text "Free" </> text "id" </> liftPretty (p2 . t) r
