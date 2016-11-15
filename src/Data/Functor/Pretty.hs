@@ -25,17 +25,20 @@ pretty = prettyPrec 0
 
 
 class Pretty1 f where
-  liftPrettyPrec :: (Int -> a -> Doc e) -> Int -> f a -> Doc e
+  liftPrettyPrec :: (Int -> a -> Doc e) -> ([a] -> Doc e) -> Int -> f a -> Doc e
+  liftPrettyList :: (Int -> a -> Doc e) -> ([a] -> Doc e) ->
+        [f a] -> Doc e
+  liftPrettyList p pl = list . fmap (liftPrettyPrec p pl 0)
 
 prettyPrec1 :: (Pretty1 f, Pretty a) => Int -> f a -> Doc e
-prettyPrec1 = liftPrettyPrec prettyPrec
+prettyPrec1 = liftPrettyPrec prettyPrec prettyList
 
 
 class Pretty2 f where
-  liftPrettyPrec2 :: (Int -> a -> Doc e) -> (Int -> b -> Doc e) -> Int -> f a b -> Doc e
+  liftPrettyPrec2 :: (Int -> a -> Doc e) -> ([a] -> Doc e) -> (Int -> b -> Doc e) -> ([b] -> Doc e) -> Int -> f a b -> Doc e
 
 prettyPrec2 :: (Pretty2 f, Pretty a, Pretty b) => Int -> f a b -> Doc e
-prettyPrec2 = liftPrettyPrec2 prettyPrec prettyPrec
+prettyPrec2 = liftPrettyPrec2 prettyPrec prettyList prettyPrec prettyList
 
 
 prettyParen :: Bool -> Doc e -> Doc e
@@ -50,13 +53,13 @@ prettyParen False = id
 -- Instances
 
 instance Pretty1 Maybe where
-  liftPrettyPrec p1 d = prettyParen (d > 10) . maybe (text "Nothing") ((text "Just" </>) . p1 11)
+  liftPrettyPrec p _ d = prettyParen (d > 10) . maybe (text "Nothing") ((text "Just" </>) . p 11)
 
 instance Pretty a => Pretty (Maybe a) where
   prettyPrec = prettyPrec1
 
 instance Pretty1 [] where
-  liftPrettyPrec p _ = list . fmap (p 0)
+  liftPrettyPrec _ = const
 
 instance Pretty a => Pretty [a] where
   prettyPrec = const prettyList
