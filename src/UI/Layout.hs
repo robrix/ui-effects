@@ -140,3 +140,6 @@ instance Pretty2 LayoutF where
 
 instance Pretty a => Pretty1 (LayoutF a) where
   liftPretty = liftPretty2 pretty
+
+instance (Pretty a, Pretty b) => Pretty (LayoutF a b) where
+  pretty = pretty1
