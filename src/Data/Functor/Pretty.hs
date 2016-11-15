@@ -7,9 +7,10 @@ module Data.Functor.Pretty
 , Pretty2(..)
 , prettyPrec2
 , prettyParen
+, (</>)
 ) where
 
-import Text.PrettyPrint.Free as P hiding (Pretty(..), pretty)
+import Text.PrettyPrint.Free as P hiding (Pretty(..), pretty, (</>))
 import qualified Text.PrettyPrint.Free as PP
 
 class Pretty a where
@@ -36,6 +37,10 @@ prettyPrec2 = liftPrettyPrec2 prettyPrec prettyPrec
 prettyParen :: Bool -> Doc e -> Doc e
 prettyParen True = parens
 prettyParen False = id
+
+
+(</>) :: Doc e -> Doc e -> Doc e
+(</>) = (hang 2 .) . (PP.</>)
 
 
 -- Instances
