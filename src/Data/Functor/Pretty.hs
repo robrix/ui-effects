@@ -41,3 +41,6 @@ prettyParen False = id
 
 instance Pretty1 Maybe where
   liftPrettyPrec p1 d = prettyParen (d > 10) . maybe (text "Nothing") ((text "Just" </>) . p1 11)
+
+instance Pretty a => Pretty (Maybe a) where
+  prettyPrec = prettyPrec1
