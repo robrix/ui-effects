@@ -160,3 +160,6 @@ instance (Pretty a, Pretty b, Pretty1 f) => Pretty (CofreerF f a b) where
 
 instance Pretty1 f => Pretty1 (Cofreer f) where
   liftPretty p1 r = text "Cofreer" </> liftPretty2 p1 (liftPretty p1) (runCofreer r)
+
+instance (Pretty a, Pretty1 f) => Pretty (Cofreer f a) where
+  pretty = liftPretty pretty
