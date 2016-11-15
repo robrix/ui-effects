@@ -16,7 +16,6 @@ data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
   GetMaxSize :: LayoutF a (Size (Maybe a))
-  -- Right :: f -> LayoutF a f
 
 type Layout a = Freer (LayoutF a)
 type ALayout a b = Cofreer (FreerF (LayoutF a) b)
