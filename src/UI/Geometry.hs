@@ -83,3 +83,6 @@ instance Listable a => Listable (Size a) where
 
 instance Pretty1 Size where
   liftPretty p1 (Size w h) = text "Size" </> p1 w </> p1 h
+
+instance Pretty a => Pretty (Size a) where
+  pretty = pretty1
