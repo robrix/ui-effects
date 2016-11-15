@@ -10,6 +10,7 @@ module Data.Functor.Pretty
 , (</>)
 ) where
 
+import Data.Char (showLitChar)
 import Text.PrettyPrint.Free as P hiding (Pretty(..), pretty, (</>))
 import qualified Text.PrettyPrint.Free as PP
 
@@ -62,3 +63,6 @@ instance Pretty Int where
 
 instance Pretty Bool where
   prettyPrec = const PP.pretty
+
+instance Pretty Char where
+  prettyPrec = const (squotes . text . ($ "") . showLitChar)
