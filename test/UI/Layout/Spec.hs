@@ -18,6 +18,13 @@ spec = do
     prop "rejects layouts whose measured size exceeds the maximum" $
       \ maxSize layout -> isJust (fitLayoutSize maxSize layout) `shouldBe` (let measured = measureLayoutSize layout :: Size Int in (fromMaybe <$> measured <*> maxSize) `encloses` measured)
 
+    prop "fills the maximum size" $
+      \ maxSize layout -> fitLayoutSize maxSize layout `shouldBe`
+        let measured = measureLayoutSize layout :: Size Int in
+        if (fromMaybe <$> measured <*> maxSize) `encloses` measured
+          then Just (fromMaybe <$> measured <*> maxSize)
+          else Nothing
+
   describe "inset" $ do
     prop "insets the horizontal maximum by twice its margin width" $
       \ maxW w i -> isJust (fitLayout (Size (Just maxW) Nothing) (inset (Size i 0) (pure (Size (w :: Int) 0)))) `shouldBe` (maxW >= w + (2 * i))
