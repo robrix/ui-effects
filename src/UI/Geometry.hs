@@ -38,6 +38,9 @@ instance Eq1 Rect where
 instance Pretty1 Rect where
   liftPretty p1 (Rect o s) = text "Rect" </> liftPretty p1 o </> liftPretty p1 s
 
+instance Pretty a => Pretty (Rect a) where
+  pretty = pretty1
+
 
 instance Applicative Point where
   pure a = Point a a
