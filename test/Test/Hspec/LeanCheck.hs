@@ -21,7 +21,7 @@ shouldBe = ShouldBe
 
 instance Testable ShouldBe where
   resultiers (ShouldBe actual expected) = fmap prependExpectation <$> resultiers (actual == expected)
-    where prependExpectation (strs, False) = (render (text "expected:" </> pretty expected `above` text " but got:" </> pretty actual) "" : strs, False)
+    where prependExpectation (strs, False) = (render (text "expected:" `above` pretty expected `above` text "but got:" `above` pretty actual) "" : strs, False)
           prependExpectation other = other
           render = displayS . renderSmart 80
 
