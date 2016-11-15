@@ -41,3 +41,9 @@ spec = do
 
     prop "takes the maximum of its children’s widths" $
       \ a b -> width (measureLayoutSize (stack (pure (a :: Size Int)) (pure b))) `shouldBe` max (width a) (width b)
+
+    prop "arranges its second child after its first" $
+      \ a b -> fitLayoutWith layoutRectanglesAlgebra (pure Nothing) (stack (pure a) (pure (b :: Size Int))) `shouldBe`
+      [ Rect (Point 0 0) (Size (max (width a) (width b)) (height a + height b))
+      , Rect (Point 0 (height a)) (Size (max (width a) (width b)) (height b))
+      ]
