@@ -1,6 +1,6 @@
 module UI.Layout.Spec where
 
-import Data.Maybe (isJust)
+import Data.Maybe (fromMaybe, isJust)
 import Test.Hspec hiding (shouldBe)
 import Test.Hspec.LeanCheck
 import UI.Geometry
@@ -14,6 +14,9 @@ spec = do
 
     prop "includes only sizes up to the vertical maximum" $
       \ maxH h -> isJust (fitLayout (Size Nothing (Just maxH)) (pure (Size 0 (h :: Int)))) `shouldBe` (maxH >= h)
+
+    prop "rejects layouts whose measured size exceeds the maximum" $
+      \ maxSize layout -> isJust (fitLayoutSize maxSize layout) `shouldBe` (let measured = measureLayoutSize layout :: Size Int in (fromMaybe <$> measured <*> maxSize) `encloses` measured)
 
   describe "inset" $ do
     prop "insets the horizontal maximum by twice its margin width" $
