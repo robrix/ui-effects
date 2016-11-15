@@ -1,6 +1,12 @@
-module Data.Functor.Pretty where
+module Data.Functor.Pretty
+( module PP
+, Pretty1(..)
+, pretty1
+, Pretty2(..)
+, pretty2
+) where
 
-import Text.PrettyPrint.Free
+import Text.PrettyPrint.Free as PP
 
 class Pretty1 f where
   liftPretty :: (a -> Doc e) -> f a -> Doc e
