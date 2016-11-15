@@ -54,6 +54,9 @@ instance Pretty a => Pretty (Maybe a) where
 instance Pretty1 [] where
   liftPrettyPrec p _ = list . fmap (p 0)
 
+instance Pretty a => Pretty [a] where
+  prettyPrec = prettyPrec1
+
 instance Pretty Int where
   prettyPrec = const PP.pretty
 
