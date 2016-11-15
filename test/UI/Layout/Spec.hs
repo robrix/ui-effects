@@ -29,6 +29,9 @@ spec = do
     prop "reduces the vertical maximum by its vertical magnitude" $
       \ maxH h i -> isJust (fitLayout (Size Nothing (Just maxH)) (offset (Point 0 i) (pure (Size 0 (h :: Int))))) `shouldBe` (maxH >= h + i)
 
+    prop "increases size by its offset" $
+      \ p s -> measureLayoutSize (offset p (pure s)) `shouldBe` (pointSize p + s :: Size Int)
+
   describe "stack" $ do
     prop "takes the sum of its children’s heights" $
       \ a b -> height (measureLayoutSize (stack (pure a) (pure (b :: Size Int)))) `shouldBe` height a + height b
