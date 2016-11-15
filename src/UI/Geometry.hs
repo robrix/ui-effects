@@ -52,6 +52,9 @@ instance Eq1 Point where
 instance Pretty1 Point where
   liftPretty p1 (Point x y) = text "Point" </> p1 x </> p1 y
 
+instance Pretty a => Pretty (Point a) where
+  pretty = pretty1
+
 
 instance Applicative Size where
   pure a = Size a a
