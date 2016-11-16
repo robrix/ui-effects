@@ -57,3 +57,10 @@ spec = do
       [ Rect (Point 0 0) (Size (max (width a) (width b)) (height a + height b))
       , Rect (Point 0 (height a)) (Size (max (width a) (width b)) (height b))
       ]
+
+  describe "alignLeft" $ do
+    prop "minimizes its child’s width" $
+      \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignLeft (pure s))) `shouldBe`
+      [ s + 1
+      , s + Size 0 1
+      ]
