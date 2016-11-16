@@ -8,7 +8,6 @@ import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
 import Data.Functor.Listable
-import Data.Functor.Pretty
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Semigroup
 import UI.Geometry
@@ -143,19 +142,6 @@ instance Eq a => Eq1 (LayoutF a) where
 instance (Eq a, Eq f) => Eq (LayoutF a f) where
   (==) = liftEq (==)
 
-instance Pretty2 LayoutF where
-  liftPrettyPrec2 p1 pl1 p2 _ d layout = case layout of
-    Inset by child -> prettyParen (d > 10) $ text "Inset" </> liftPrettyPrec p1 pl1 11 by </> p2 11 child
-    Offset by child -> prettyParen (d > 10) $ text "Offset" </> liftPrettyPrec p1 pl1 11 by </> p2 11 child
-    GetMaxSize -> text "GetMaxSize"
-    Align alignment child -> prettyParen (d > 10) $ text "Align" </> pretty alignment </> p2 11 child
-
-instance Pretty a => Pretty1 (LayoutF a) where
-  liftPrettyPrec = liftPrettyPrec2 prettyPrec prettyList
-
-instance (Pretty a, Pretty b) => Pretty (LayoutF a b) where
-  prettyPrec = prettyPrec1
-
 instance Listable2 LayoutF where
   liftTiers2 t1 t2
     =  liftCons2 (liftTiers t1) t2 Inset
@@ -170,6 +156,3 @@ instance (Listable a, Listable b) => Listable (LayoutF a b) where
 
 instance Listable Alignment where
   tiers = cons0 Leading
-
-instance Pretty Alignment where
-  prettyPrec d a = text (showsPrec d a "")

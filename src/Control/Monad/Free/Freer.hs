@@ -19,7 +19,6 @@ import Data.Bifunctor
 import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.Functor.Listable
-import Data.Functor.Pretty
 
 data FreerF f a b where
   Pure :: a -> FreerF f a b
@@ -169,20 +168,3 @@ instance Listable1 f => Listable1 (Freer f) where
 
 instance (Listable a, Listable1 f) => Listable (Freer f a) where
   tiers = liftTiers tiers
-
-instance Pretty1 f => Pretty2 (FreerF f) where
-  liftPrettyPrec2 p1 _ p2 pl2 d f = prettyParen (d > 10) $ case f of
-    Pure a -> text "Pure" </> p1 11 a
-    Free t r -> text "Free" </> text "id" </> liftPrettyPrec (flip (flip p2 . t)) (pl2 . fmap t) 11 r
-
-instance (Pretty a, Pretty1 f) => Pretty1 (FreerF f a) where
-  liftPrettyPrec = liftPrettyPrec2 prettyPrec prettyList
-
-instance (Pretty a, Pretty b, Pretty1 f) => Pretty (FreerF f a b) where
-  prettyPrec = prettyPrec1
-
-instance Pretty1 f => Pretty1 (Freer f) where
-  liftPrettyPrec p pl d r = prettyParen (d > 10) $ text "Freer" </> liftPrettyPrec2 p pl (liftPrettyPrec p pl) (liftPrettyList p pl) 11 (runFreer r)
-
-instance (Pretty a, Pretty1 f) => Pretty (Freer f a) where
-  prettyPrec = prettyPrec1

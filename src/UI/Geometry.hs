@@ -3,7 +3,6 @@ module UI.Geometry where
 import Control.Applicative (liftA, liftA2)
 import Data.Functor.Classes
 import Data.Functor.Listable
-import Data.Functor.Pretty
 import Data.Semigroup
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
@@ -41,12 +40,6 @@ instance Listable1 Rect where
 instance Listable a => Listable (Rect a) where
   tiers = tiers1
 
-instance Pretty1 Rect where
-  liftPrettyPrec p pl d (Rect o s) = prettyParen (d > 10) $ text "Rect" </> liftPrettyPrec p pl 11 o </> liftPrettyPrec p pl 11 s
-
-instance Pretty a => Pretty (Rect a) where
-  prettyPrec = prettyPrec1
-
 
 instance Applicative Point where
   pure a = Point a a
@@ -66,12 +59,6 @@ instance Listable1 Point where
 
 instance Listable a => Listable (Point a) where
   tiers = tiers1
-
-instance Pretty1 Point where
-  liftPrettyPrec p _ d (Point x y) = prettyParen (d > 10) $ text "Point" </> p 11 x </> p 11 y
-
-instance Pretty a => Pretty (Point a) where
-  prettyPrec = prettyPrec1
 
 
 instance Applicative Size where
@@ -107,9 +94,3 @@ instance Listable1 Size where
 
 instance Listable a => Listable (Size a) where
   tiers = tiers1
-
-instance Pretty1 Size where
-  liftPrettyPrec p _ d (Size w h) = prettyParen (d > 10) $ text "Size" </> p 11 w </> p 11 h
-
-instance Pretty a => Pretty (Size a) where
-  prettyPrec = prettyPrec1
