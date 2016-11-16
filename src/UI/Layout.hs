@@ -172,3 +172,6 @@ instance (Listable a, Listable b) => Listable (LayoutF a b) where
 
 instance Listable Alignment where
   tiers = cons0 Leading
+
+instance Pretty Alignment where
+  prettyPrec d a = text (showsPrec d a "")
