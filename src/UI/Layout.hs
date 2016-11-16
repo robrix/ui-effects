@@ -99,7 +99,7 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
     Inset by child -> Free id $ Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
     Offset by child -> Free id $ Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
     GetMaxSize -> Free ((,,) offset maxSize . run) GetMaxSize
-    AlignLeft child -> Free id $ AlignLeft (offset, maxSize, run child)
+    AlignLeft child -> Free id $ AlignLeft (offset, Size Nothing (height maxSize), run child)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point = liftA2 (+) point . sizeExtent
 
