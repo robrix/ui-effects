@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs #-}
+{-# LANGUAGE FlexibleInstances, GADTs, StandaloneDeriving #-}
 module UI.Layout where
 
 import Control.Applicative
@@ -117,12 +117,7 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
 instance Real a => Semigroup (Layout a (Size a)) where
   (<>) = stack
 
-instance Foldable (LayoutF a) where
-  foldMap f layout = case layout of
-    Inset _ child -> f child
-    Offset _ child -> f child
-    GetMaxSize -> f (pure Nothing)
-    Align _ child -> f child
+deriving instance Foldable (LayoutF a)
 
 instance (Show a, Show b) => Show (LayoutF a b) where
   showsPrec = liftShowsPrec showsPrec showList
