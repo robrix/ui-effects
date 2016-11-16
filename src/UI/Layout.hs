@@ -17,6 +17,7 @@ data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
   GetMaxSize :: LayoutF a (Size (Maybe a))
+  AlignLeft :: f -> LayoutF a f
 
 type Layout a = Freer (LayoutF a)
 type ALayout a b = Cofreer (FreerF (LayoutF a) b)
@@ -41,6 +42,9 @@ stack top bottom = do
   Size w1 h1 <- top
   Size w2 h2 <- offset (Point 0 h1) bottom
   pure $ Size (max w1 w2) h2
+
+alignLeft :: Layout a b -> Layout a b
+alignLeft = wrap . AlignLeft
 
 
 -- Evaluation
@@ -74,6 +78,7 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
     Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
     Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
     GetMaxSize -> runC (runF maxSize)
+    AlignLeft child -> runC (runF child)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
@@ -94,6 +99,7 @@ fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case 
     Inset by child -> Free id $ Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
     Offset by child -> Free id $ Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
     GetMaxSize -> Free ((,,) offset maxSize . run) GetMaxSize
+    AlignLeft child -> Free id $ AlignLeft (offset, maxSize, run child)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point = liftA2 (+) point . sizeExtent
 
@@ -108,6 +114,7 @@ instance Foldable (LayoutF a) where
     Inset _ child -> f child
     Offset _ child -> f child
     GetMaxSize -> f (pure Nothing)
+    AlignLeft child -> f child
 
 instance (Show a, Show b) => Show (LayoutF a b) where
   showsPrec = liftShowsPrec showsPrec showList
@@ -117,12 +124,14 @@ instance Show a => Show1 (LayoutF a) where
     Inset by child -> showsBinaryWith showsPrec sp "Inset" d by child
     Offset by child -> showsBinaryWith showsPrec sp "Offset" d by child
     GetMaxSize -> showString "GetMaxSize"
+    AlignLeft child -> showsUnaryWith sp "AlignLeft" d child
 
 instance Eq2 LayoutF where
   liftEq2 eqA eqF l1 l2 = case (l1, l2) of
     (Inset s1 c1, Inset s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
     (Offset p1 c1, Offset p2 c2) -> liftEq eqA p1 p2 && eqF c1 c2
     (GetMaxSize, GetMaxSize) -> True
+    (AlignLeft c1, AlignLeft c2) -> eqF c1 c2
     _ -> False
 
 instance Eq a => Eq1 (LayoutF a) where
@@ -136,6 +145,7 @@ instance Pretty2 LayoutF where
     Inset by child -> prettyParen (d > 10) $ text "Inset" </> liftPrettyPrec p1 pl1 11 by </> p2 11 child
     Offset by child -> prettyParen (d > 10) $ text "Offset" </> liftPrettyPrec p1 pl1 11 by </> p2 11 child
     GetMaxSize -> text "GetMaxSize"
+    AlignLeft child -> prettyParen (d > 10) $ text "AlignLeft" </> p2 11 child
 
 instance Pretty a => Pretty1 (LayoutF a) where
   liftPrettyPrec = liftPrettyPrec2 prettyPrec prettyList
@@ -147,6 +157,7 @@ instance Listable2 LayoutF where
   liftTiers2 t1 t2
     =  liftCons2 (liftTiers t1) t2 Inset
     \/ liftCons2 (liftTiers t1) t2 Offset
+    \/ liftCons1 t2 AlignLeft
 
 instance Listable a => Listable1 (LayoutF a) where
   liftTiers = liftTiers2 tiers
