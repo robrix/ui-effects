@@ -78,7 +78,9 @@ layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
     Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
     Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
     GetMaxSize -> runC (runF maxSize)
-    AlignLeft child -> runC (runF child)
+    AlignLeft child -> do
+      Rect _ size <- runC (runF child)
+      pure $ Rect offset (fromMaybe <$> size <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
