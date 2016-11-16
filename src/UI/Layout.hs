@@ -49,6 +49,9 @@ stack top bottom = do
 alignLeft :: Layout a b -> Layout a b
 alignLeft = wrap . Align Leading
 
+alignRight :: Layout a b -> Layout a b
+alignRight = wrap . Align Trailing
+
 
 -- Evaluation
 
