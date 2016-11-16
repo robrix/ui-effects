@@ -169,3 +169,6 @@ instance Listable a => Listable1 (LayoutF a) where
 
 instance (Listable a, Listable b) => Listable (LayoutF a b) where
   tiers = tiers1
+
+instance Listable Alignment where
+  tiers = cons0 Leading
