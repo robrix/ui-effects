@@ -13,6 +13,9 @@ import Data.Maybe (catMaybes, fromMaybe)
 import Data.Semigroup
 import UI.Geometry
 
+data Alignment = Leading
+  deriving (Eq, Ord, Show)
+
 data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
