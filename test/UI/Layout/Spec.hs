@@ -75,3 +75,7 @@ spec = do
       [ s + 1
       , s + Size 0 1
       ]
+
+    prop "occupies the full available space" $
+      \ s -> fitLayoutSize (Just <$> (s + 1 :: Size Int)) (alignRight (pure s)) `shouldBe`
+        Just (s + 1)
