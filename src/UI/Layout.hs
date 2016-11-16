@@ -13,7 +13,7 @@ import Data.Maybe (catMaybes, fromMaybe)
 import Data.Semigroup
 import UI.Geometry
 
-data Alignment = Leading
+data Alignment = Leading | Trailing
   deriving (Eq, Ord, Show)
 
 data LayoutF a f where
