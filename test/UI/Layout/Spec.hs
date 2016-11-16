@@ -82,6 +82,12 @@ spec = do
       , s + Size 0 1
       ]
 
+    prop "anchors to the right edge" $
+      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignRight (pure s))) `shouldBe`
+      [ Point 0 0
+      , Point 0 1
+      ]
+
     prop "occupies the full available space" $
       \ s -> fitLayoutSize (Just <$> (s + 1 :: Size Int)) (alignRight (pure s)) `shouldBe`
         Just (s + 1)
