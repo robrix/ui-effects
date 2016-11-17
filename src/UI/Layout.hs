@@ -74,8 +74,9 @@ layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
 layoutAlgebra (Cofree (alignment, offset, maxSize) runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
     Leading -> Rect offset (fromMaybe <$> size <*> maxSize)
-    Trailing -> Rect offset (fromMaybe <$> size <*> maxSize)
+    Trailing -> Rect (Point (x offset + maybe 0 (width size +) (width maxSize)) (y offset)) minSize
     Full -> Rect offset (fromMaybe <$> size <*> maxSize)
+    where minSize = Size (width size) (fromMaybe (height size) (height maxSize))
   Free runF layout -> case layout of
     Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
     Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
