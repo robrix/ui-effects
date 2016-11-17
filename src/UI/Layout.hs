@@ -73,7 +73,7 @@ fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
 layoutAlgebra (Cofree (alignment, offset, maxSize) runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
-    Leading -> Rect offset (fromMaybe <$> size <*> maxSize)
+    Leading -> Rect offset minSize
     Trailing -> Rect (Point (x offset + maybe 0 (width size +) (width maxSize)) (y offset)) minSize
     Full -> Rect offset (fromMaybe <$> size <*> maxSize)
     where minSize = Size (width size) (fromMaybe (height size) (height maxSize))
