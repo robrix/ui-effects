@@ -85,7 +85,7 @@ spec = do
     prop "anchors to the right edge" $
       \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignRight (pure s))) `shouldBe`
       [ Point 0 0
-      , Point 0 1
+      , Point 1 0
       ]
 
     prop "occupies the full available space" $
