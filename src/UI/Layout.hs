@@ -55,10 +55,10 @@ alignRight = wrap . Align Trailing
 -- Evaluation
 
 measureLayoutSize :: Real a => Layout a (Size a) -> Size a
-measureLayoutSize = fromMaybe (Size 0 0) . fitLayoutSize (pure Nothing)
+measureLayoutSize = maybe (Size 0 0) size . fitLayout (pure Nothing)
 
 fitLayoutSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
-fitLayoutSize = fitLayoutWith layoutSizeAlgebra
+fitLayoutSize = (fmap size .) . fitLayout
 
 fitLayoutAndAnnotateSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
 fitLayoutAndAnnotateSize = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
