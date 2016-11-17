@@ -60,9 +60,6 @@ measureLayoutSize = maybe (Size 0 0) size . fitLayout (pure Nothing)
 fitLayoutSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
 fitLayoutSize = (fmap size .) . fitLayout
 
-fitLayoutAndAnnotateSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
-fitLayoutAndAnnotateSize = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
-
 layoutSizeAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Alignment, Point a, Size (Maybe a)) (Maybe (Size a)) -> Maybe (Size a)
 layoutSizeAlgebra c@(Cofree (_, origin, _) _ _) = size <$> layoutAlgebra (fmap (Rect origin) <$> c)
 
