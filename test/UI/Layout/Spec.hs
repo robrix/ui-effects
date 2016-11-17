@@ -59,13 +59,12 @@ spec = do
 
   describe "alignLeft" $ do
     prop "minimizes its child’s width" $
-      \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignLeft (pure s))) `shouldBe`
-      [ s + 1
-      , s + Size 0 1
-      ]
+      \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignLeft (pure s))) `shouldBe`
+      [ s + 2
+      , s + Size 0 2 ]
 
     prop "anchors to the left edge" $
-      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignLeft (pure s))) `shouldBe`
+      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignLeft (pure s))) `shouldBe`
       [ Point 0 0
       , Point 0 0 ]
 
@@ -75,30 +74,30 @@ spec = do
 
   describe "alignRight" $ do
     prop "minimizes its child’s width" $
-      \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignRight (pure s))) `shouldBe`
-      [ s + 1
-      , s + Size 0 1 ]
+      \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignRight (pure s))) `shouldBe`
+      [ s + 2
+      , s + Size 0 2 ]
 
     prop "anchors to the right edge" $
-      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignRight (pure s))) `shouldBe`
+      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignRight (pure s))) `shouldBe`
       [ Point 0 0
-      , Point 1 0 ]
+      , Point 2 0 ]
 
     prop "occupies the full available space" $
-      \ s -> fitLayoutSize (Just <$> (s + 1 :: Size Int)) (alignRight (pure s)) `shouldBe`
-        Just (s + 1)
+      \ s -> fitLayoutSize (Just <$> (s + 2 :: Size Int)) (alignRight (pure s)) `shouldBe`
+        Just (s + 2)
 
   describe "alignFull" $ do
     prop "maximizes its child’s width" $
-      \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignFull (pure s))) `shouldBe`
-      [ s + 1
-      , s + 1 ]
+      \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignFull (pure s))) `shouldBe`
+      [ s + 2
+      , s + 2 ]
 
     prop "anchors to the left edge" $
-      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignFull (pure s))) `shouldBe`
+      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignFull (pure s))) `shouldBe`
       [ Point 0 0
       , Point 0 0 ]
 
     prop "occupies the full available space" $
-      \ s -> fitLayoutSize (Just <$> (s + 1 :: Size Int)) (alignFull (pure s)) `shouldBe`
-        Just (s + 1)
+      \ s -> fitLayoutSize (Just <$> (s + 2 :: Size Int)) (alignFull (pure s)) `shouldBe`
+        Just (s + 2)
