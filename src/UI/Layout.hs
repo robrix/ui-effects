@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances, GADTs, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
 module UI.Layout where
 
 import Control.Applicative
@@ -10,6 +10,7 @@ import Data.Functor.Foldable hiding (unfold)
 import Data.Functor.Listable
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Semigroup
+import Data.Typeable
 import UI.Geometry
 
 data Alignment = Leading | Trailing | Full
@@ -153,8 +154,10 @@ instance Listable2 LayoutF where
 instance Listable a => Listable1 (LayoutF a) where
   liftTiers = liftTiers2 tiers
 
-instance (Listable a, Listable b) => Listable (LayoutF a b) where
-  tiers = tiers1
+instance (Typeable a, Typeable b, Listable a, Listable b) => Listable (LayoutF a b) where
+  tiers = case eqT :: Maybe (b :~: Size (Maybe a)) of
+    Just Refl -> tiers1 \/ cons0 GetMaxSize
+    Nothing   -> tiers1
 
 instance Listable Alignment where
   tiers
