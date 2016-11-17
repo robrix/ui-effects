@@ -66,7 +66,7 @@ spec = do
       ]
 
     prop "anchors to the left edge" $
-      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignRight (pure s))) `shouldBe`
+      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 1 :: Size Int)) (alignLeft (pure s))) `shouldBe`
       [ Point 0 0
       , Point 0 0
       ]
