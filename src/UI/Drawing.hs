@@ -85,7 +85,7 @@ renderingCoalgebra (alignment, offset, maxSize, rendering) = Cofree (alignment, 
       Inset by child -> Free id (InR (Inset by (alignment, addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
       Offset by child -> Free id (InR (Offset by (alignment, liftA2 (+) offset by, subtractSize maxSize (pointSize by), runF child)))
       GetMaxSize -> Free ((,,,) alignment offset maxSize . runF) (InR GetMaxSize)
-      Align alignment child -> Free id (InR (Align alignment (alignment, offset, Size Nothing (height maxSize), runF child)))
+      Align alignment child -> Free id (InR (Align alignment (alignment, offset, maxSize, runF child)))
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
