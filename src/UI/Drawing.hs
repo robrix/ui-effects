@@ -85,7 +85,7 @@ renderingCoalgebra (state@FittingState{..}, rendering) = Cofree state id $ case 
       Inset by child -> Free id (InR (Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), runF child)))
       Offset by child -> Free id (InR (Offset by (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by)), runF child)))
       GetMaxSize -> Free ((,) state . runF) (InR GetMaxSize)
-      Align alignment child -> Free id (InR (Align alignment (state, runF child)))
+      Align alignment child -> Free id (InR (Align alignment (state { alignment = alignment }, runF child)))
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
