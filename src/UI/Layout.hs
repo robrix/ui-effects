@@ -109,16 +109,16 @@ data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point 
   deriving (Eq, Show)
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Full, Point 0 0, maxSize, layout)
+fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (FittingState Full (Point 0 0) maxSize, layout)
 
-fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Alignment, Point a, Size (Maybe a), Layout a (Size a))
-fittingCoalgebra (alignment, offset, maxSize, layout) = Cofree (FittingState alignment offset maxSize) id $ case runFreer layout of
+fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (FittingState a, Layout a (Size a))
+fittingCoalgebra (state@FittingState{..}, layout) = Cofree state id $ case runFreer layout of
   Pure size -> Pure size
   Free run layout -> case layout of
-    Inset by child -> Free id $ Inset by (alignment, addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
-    Offset by child -> Free id $ Offset by (alignment, liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
-    GetMaxSize -> Free ((,,,) alignment offset maxSize . run) GetMaxSize
-    Align alignment child -> Free id $ Align alignment (alignment, offset, maxSize, run child)
+    Inset by child -> Free id $ Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), run child)
+    Offset by child -> Free id $ Offset by (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by)), run child)
+    GetMaxSize -> Free ((,) state . run) GetMaxSize
+    Align alignment child -> Free id $ Align alignment (state, run child)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point = liftA2 (+) point . sizeExtent
 
