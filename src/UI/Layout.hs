@@ -47,6 +47,12 @@ stack top bottom = do
   Size w2 h2 <- offset (Point 0 h1) bottom
   pure $ Size (max w1 w2) h2
 
+adjacent :: Real a => Layout a (Size a) -> Layout a (Size a) -> Layout a (Size a)
+adjacent left right = do
+  Size w1 h1 <- left
+  Size w2 h2 <- offset (Point w1 0) right
+  pure $ Size w2 (max h1 h2)
+
 alignLeft :: Layout a b -> Layout a b
 alignLeft = wrap . Align Leading
 
