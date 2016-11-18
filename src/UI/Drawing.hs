@@ -87,7 +87,7 @@ renderingCoalgebra (state@FittingState{..}, rendering) = Cofree state id $ case 
       GetMaxSize -> Free ((,) state . runF) (InR GetMaxSize)
       Align alignment child -> Free id (InR (Align alignment (state { alignment = alignment }, runF child)))
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
-        addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
+        addSizeToPoint point = liftA2 (+) point . sizeExtent
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,) (FittingState Full (pure 0) (pure Nothing))
