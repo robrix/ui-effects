@@ -1,19 +1,27 @@
-{-# LANGUAGE FlexibleInstances, GADTs #-}
+{-# LANGUAGE FlexibleInstances, GADTs, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
 module UI.Layout where
 
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Fixed
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
+import Data.Functor.Listable
 import Data.Maybe (catMaybes, fromMaybe)
+import Data.Semigroup
+import Data.Typeable
 import UI.Geometry
+
+data Alignment = Leading | Trailing | Centre | Full
+  deriving (Eq, Ord, Show)
 
 data LayoutF a f where
   Inset :: Size a -> f -> LayoutF a f
   Offset :: Point a -> f -> LayoutF a f
   GetMaxSize :: LayoutF a (Size (Maybe a))
+  Align :: Alignment -> f -> LayoutF a f
 
 type Layout a = Freer (LayoutF a)
 type ALayout a b = Cofreer (FreerF (LayoutF a) b)
@@ -24,8 +32,7 @@ type ALayout a b = Cofreer (FreerF (LayoutF a) b)
 inset :: Size a -> Layout a b -> Layout a b
 inset by = wrap . Inset by
 
-offset :: Real a => Point a -> Layout a b -> Layout a b
-offset (Point 0 0) = id
+offset :: Point a -> Layout a b -> Layout a b
 offset by = wrap . Offset by
 
 resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
@@ -34,26 +41,36 @@ resizeable = (getMaxSize >>=)
 getMaxSize :: Layout a (Size (Maybe a))
 getMaxSize = liftF GetMaxSize
 
-newtype Stack a b = Stack { unStack :: Layout a b }
+stack :: Real a => Layout a (Size a) -> Layout a (Size a) -> Layout a (Size a)
+stack top bottom = do
+  Size w1 h1 <- top
+  Size w2 h2 <- offset (Point 0 h1) bottom
+  pure $ Size (max w1 w2) h2
 
-stack :: (Real a, Foldable t) => t (Layout a (Size a)) -> Layout a (Size a)
-stack = unStack . foldMap Stack
+alignLeft :: Layout a b -> Layout a b
+alignLeft = wrap . Align Leading
+
+alignRight :: Layout a b -> Layout a b
+alignRight = wrap . Align Trailing
+
+alignCentre :: Layout a b -> Layout a b
+alignCentre = wrap . Align Centre
+
+alignFull :: Layout a b -> Layout a b
+alignFull = wrap . Align Full
 
 
 -- Evaluation
 
-measureLayout :: Real a => Layout a (Size a) -> Size a
-measureLayout = fromMaybe (Size 0 0) . fitLayoutSize (pure Nothing)
+measureLayoutSize :: Real a => Layout a (Size a) -> Size a
+measureLayoutSize = maybe (Size 0 0) size . fitLayout (pure Nothing)
 
 fitLayoutSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Size a)
-fitLayoutSize = fitLayoutWith layoutSizeAlgebra
+fitLayoutSize = (fmap size .) . fitLayout
 
-fitLayoutAndAnnotateSize :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Size a))
-fitLayoutAndAnnotateSize = fitLayoutWith (annotatingBidi layoutSizeAlgebra)
 
-layoutSizeAlgebra :: Real a => CofreerF (FreerF (LayoutF a) (Size a)) (Point a, Size (Maybe a)) (Maybe (Size a)) -> Maybe (Size a)
-layoutSizeAlgebra c@(Cofree (origin, _) _ _) = size <$> layoutAlgebra (fmap (Rect origin) <$> c)
-
+measureLayout :: Real a => Layout a (Size a) -> Rect a
+measureLayout = fromMaybe (Rect (Point 0 0) (Size 0 0)) . fitLayout (pure Nothing)
 
 fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Rect a)
 fitLayout = fitLayoutWith layoutAlgebra
@@ -62,12 +79,22 @@ fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout
 fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
 
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
-layoutAlgebra (Cofree (offset, maxSize) runC layout) = case layout of
-  Pure size | maxSize `encloses` size -> Just (Rect offset (fromMaybe <$> size <*> maxSize))
+layoutAlgebra (Cofree (alignment, offset, maxSize) runC layout) = case layout of
+  Pure size | maxSize `encloses` size -> Just $ case alignment of
+    Leading -> Rect offset minSize
+    Trailing -> Rect offset { x = x offset + widthDiff} minSize
+    Centre -> Rect offset { x = x offset + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
+    Full -> Rect offset fullSize
+    where minSize = fullSize { width = width size }
+          fullSize = fromMaybe <$> size <*> maxSize
+          widthDiff = maybe 0 (+ negate (width size)) (width maxSize)
   Free runF layout -> case layout of
     Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
     Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
     GetMaxSize -> runC (runF maxSize)
+    Align _ child -> do
+      Rect _ size <- runC (runF child)
+      pure $ Rect offset (fromMaybe <$> size <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
@@ -76,36 +103,29 @@ layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
-type Fitting f a = Bidi f (Size a) (Point a, Size (Maybe a))
+type Fitting f a = Bidi f (Size a) (Alignment, Point a, Size (Maybe a))
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Point 0 0, maxSize, layout)
+fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Full, Point 0 0, maxSize, layout)
 
-fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Point a, Size (Maybe a), Layout a (Size a))
-fittingCoalgebra (offset, maxSize, layout) = Cofree (offset, maxSize) id $ case runFreer layout of
+fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Alignment, Point a, Size (Maybe a), Layout a (Size a))
+fittingCoalgebra (alignment, offset, maxSize, layout) = Cofree (alignment, offset, maxSize) id $ case runFreer layout of
   Pure size -> Pure size
   Free run layout -> case layout of
-    Inset by child -> Free id $ Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
-    Offset by child -> Free id $ Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
-    GetMaxSize -> Free ((,,) offset maxSize . run) GetMaxSize
+    Inset by child -> Free id $ Inset by (alignment, addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
+    Offset by child -> Free id $ Offset by (alignment, liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
+    GetMaxSize -> Free ((,,,) alignment offset maxSize . run) GetMaxSize
+    Align alignment child -> Free id $ Align alignment (alignment, offset, maxSize, run child)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
-        addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
+        addSizeToPoint point = liftA2 (+) point . sizeExtent
 
 
 -- Instances
 
-instance Foldable (LayoutF a) where
-  foldMap f layout = case layout of
-    Inset _ child -> f child
-    Offset _ child -> f child
-    GetMaxSize -> f (pure Nothing)
+instance Real a => Semigroup (Layout a (Size a)) where
+  (<>) = stack
 
-instance Real a => Monoid (Stack a (Size a)) where
-  mempty = Stack (pure (Size 0 0))
-  mappend a b = Stack $ do
-    Size w1 h1 <- unStack a
-    Size w2 h2 <- unStack b
-    pure (Size (max w1 w2) (h1 + h2))
+deriving instance Foldable (LayoutF a)
 
 instance (Show a, Show b) => Show (LayoutF a b) where
   showsPrec = liftShowsPrec showsPrec showList
@@ -115,12 +135,14 @@ instance Show a => Show1 (LayoutF a) where
     Inset by child -> showsBinaryWith showsPrec sp "Inset" d by child
     Offset by child -> showsBinaryWith showsPrec sp "Offset" d by child
     GetMaxSize -> showString "GetMaxSize"
+    Align alignment child -> showsBinaryWith showsPrec sp "AlignLeft" d alignment child
 
 instance Eq2 LayoutF where
   liftEq2 eqA eqF l1 l2 = case (l1, l2) of
     (Inset s1 c1, Inset s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
     (Offset p1 c1, Offset p2 c2) -> liftEq eqA p1 p2 && eqF c1 c2
     (GetMaxSize, GetMaxSize) -> True
+    (Align a1 c1, Align a2 c2) -> a1 == a2 && eqF c1 c2
     _ -> False
 
 instance Eq a => Eq1 (LayoutF a) where
@@ -128,3 +150,24 @@ instance Eq a => Eq1 (LayoutF a) where
 
 instance (Eq a, Eq f) => Eq (LayoutF a f) where
   (==) = liftEq (==)
+
+instance Listable2 LayoutF where
+  liftTiers2 t1 t2
+    =  liftCons2 (liftTiers t1) t2 Inset
+    \/ liftCons2 (liftTiers t1) t2 Offset
+    \/ liftCons2 tiers t2 Align
+
+instance Listable a => Listable1 (LayoutF a) where
+  liftTiers = liftTiers2 tiers
+
+instance (Typeable a, Typeable b, Listable a, Listable b) => Listable (LayoutF a b) where
+  tiers = case eqT :: Maybe (b :~: Size (Maybe a)) of
+    Just Refl -> tiers1 \/ cons0 GetMaxSize
+    Nothing   -> tiers1
+
+instance Listable Alignment where
+  tiers
+    =  cons0 Leading
+    \/ cons0 Trailing
+    \/ cons0 Centre
+    \/ cons0 Full

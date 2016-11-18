@@ -41,6 +41,10 @@ packages:
     git: https://github.com/joshvera/effects.git
     commit: de7961dd6884565dfc9e45309a0c56539a00af17
   extra-dep: true
+- location:
+    git: https://github.com/robrix/leancheck.git
+    commit: 2581ec98f55b640188163170b812a1d600827888
+  extra-dep: true
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:

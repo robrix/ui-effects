@@ -21,6 +21,7 @@ import Control.Comonad.Cofree.Class
 import Data.Bifunctor
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
+import Data.Functor.Listable
 
 data CofreerF f a b where
   Cofree :: a -> (x -> b) -> f x -> CofreerF f a b
@@ -130,3 +131,19 @@ instance Eq1 f => Eq1 (Cofreer f) where
 
 instance (Eq1 f, Eq a) => Eq (Cofreer f a) where
   (==) = liftEq (==)
+
+instance Listable1 f => Listable2 (CofreerF f) where
+  liftTiers2 t1 t2 = liftCons2 t1 (liftTiers t2) (`Cofree` id)
+
+instance (Listable a, Listable1 f) => Listable1 (CofreerF f a) where
+  liftTiers = liftTiers2 tiers
+
+instance (Listable a, Listable b, Listable1 f) => Listable (CofreerF f a b) where
+  tiers = liftTiers tiers
+
+instance Listable1 f => Listable1 (Cofreer f) where
+  liftTiers t1 = go
+    where go = liftCons1 (liftTiers2 t1 go) Cofreer
+
+instance (Listable a, Listable1 f) => Listable (Cofreer f a) where
+  tiers = liftTiers tiers

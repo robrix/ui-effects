@@ -5,7 +5,9 @@ import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.List (intersperse)
+import Data.List.NonEmpty (nonEmpty)
 import Data.Maybe (fromMaybe)
+import Data.Semigroup (sconcat)
 import UI.Drawing hiding (Text)
 import qualified UI.Drawing as Draw
 import UI.Geometry
@@ -31,7 +33,7 @@ renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
     maxSize <- liftFR GetMaxSize
     liftFL (Draw.Text maxSize s)
   Label s -> liftFL (Draw.Text (pure Nothing) s)
-  List children -> fromMaybe (pure 0) (foldr stack Nothing (intersperse spacer children))
+  List children -> maybe (pure 0) sconcat (nonEmpty (intersperse spacer children))
   Scroll axis child -> do
     Size maxW maxH <- liftFR GetMaxSize
     Size w h <- child
@@ -39,11 +41,7 @@ renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
       Just Horizontal -> Size w (fromMaybe h maxH)
       Just Vertical -> Size (fromMaybe w maxW) h
       Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)
-  where stack each (Just rest) = Just $ do
-          Size _ h <- each
-          wrapR (Offset (Point 0 h) rest)
-        stack each Nothing = Just each
-        spacer = pure (Size 0 3)
+  where spacer = pure (Size 0 3)
 
 
 -- Smart constructors

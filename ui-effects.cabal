@@ -18,6 +18,7 @@ library
   exposed-modules:     Control.Comonad.Cofree.Cofreer
                      , Control.Monad.Free.Freer
                      , Data.Functor.Algebraic
+                     , Data.Functor.Listable
                      , GL.Array
                      , GL.Draw
                      , GL.Exception
@@ -37,6 +38,7 @@ library
                      , effects
                      , free
                      , gl
+                     , leancheck
                      , linear
                      , recursion-schemes
                      , sdl2
@@ -64,9 +66,15 @@ test-suite ui-effects-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       GL.Shader.Spec
+  other-modules:       Control.Comonad.Cofree.Cofreer.Spec
+                     , Control.Monad.Free.Freer.Spec
+                     , GL.Shader.Spec
+                     , Test.Hspec.LeanCheck
+                     , UI.Layout.Spec
   build-depends:       base
                      , hspec
+                     , hspec-core
+                     , leancheck
                      , linear
                      , ui-effects
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N

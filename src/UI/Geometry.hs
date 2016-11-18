@@ -2,6 +2,7 @@ module UI.Geometry where
 
 import Control.Applicative (liftA, liftA2)
 import Data.Functor.Classes
+import Data.Functor.Listable
 import Data.Semigroup
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
@@ -33,6 +34,12 @@ instance Show a => Show (Rect a) where
 instance Eq1 Rect where
   liftEq eq (Rect o1 s1) (Rect o2 s2) = liftEq eq o1 o2 && liftEq eq s1 s2
 
+instance Listable1 Rect where
+  liftTiers t = liftCons2 (liftTiers t) (liftTiers t) Rect
+
+instance Listable a => Listable (Rect a) where
+  tiers = tiers1
+
 
 instance Applicative Point where
   pure a = Point a a
@@ -46,6 +53,12 @@ instance Show a => Show (Point a) where
 
 instance Eq1 Point where
   liftEq eq (Point x1 y1) (Point x2 y2) = eq x1 x2 && eq y1 y2
+
+instance Listable1 Point where
+  liftTiers t = liftCons2 t t Point
+
+instance Listable a => Listable (Point a) where
+  tiers = tiers1
 
 
 instance Applicative Size where
@@ -75,3 +88,9 @@ instance Show a => Show (Size a) where
 
 instance Eq1 Size where
   liftEq eq (Size w1 h1) (Size w2 h2) = eq w1 w2 && eq h1 h2
+
+instance Listable1 Size where
+  liftTiers t = liftCons2 t t Size
+
+instance Listable a => Listable (Size a) where
+  tiers = tiers1

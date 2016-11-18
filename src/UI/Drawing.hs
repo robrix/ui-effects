@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances, GADTs #-}
 module UI.Drawing
 ( Shape(..)
 , Colour(..)
@@ -25,6 +25,7 @@ import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.Functor.Sum
 import Data.Maybe (fromMaybe)
+import Data.Semigroup (Semigroup(..))
 import qualified Linear.V2 as Linear
 import UI.Layout as Layout
 import UI.Font
@@ -50,7 +51,7 @@ clip size = wrap . Clip size
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
-drawingRectAlgebra (Cofree (origin, _) runC r) = Rect origin $ case r of
+drawingRectAlgebra (Cofree (_, origin, _) runC r) = Rect origin $ case r of
   Pure size -> size
   Free runF drawing -> case drawing of
     Text maxSize s -> size (runC (runF (measureText (width maxSize) s)))
@@ -60,38 +61,45 @@ drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
 drawingRectanglesAlgebra = collect drawingRectAlgebra
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
-renderingRectAlgebra (Cofree a@(origin, _) runC r) = case runC <$> r of
+renderingRectAlgebra (Cofree a@(_, origin, _) runC r) = case runC <$> r of
   Pure size -> Rect origin size
   Free runF sum -> case sum of
     InL drawing -> drawingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
 
-drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Point a, Size (Maybe a), Drawing a (Size a))
-drawingCoalgebra (offset, maxSize, drawing) = Cofree (offset, maxSize) id $ case runFreer drawing of
+drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Alignment, Point a, Size (Maybe a), Drawing a (Size a))
+drawingCoalgebra (alignment, offset, maxSize, drawing) = Cofree (alignment, offset, maxSize) id $ case runFreer drawing of
   Pure size -> Pure size
   Free runF drawing -> case drawing of
-    Text size string -> Free ((,,) offset maxSize . runF) (Text size string)
-    Clip size child -> Free id (Clip size (offset, maxSize, runF child))
+    Text size string -> Free ((,,,) alignment offset maxSize . runF) (Text size string)
+    Clip size child -> Free id (Clip size (alignment, offset, maxSize, runF child))
 
-renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Point a, Size (Maybe a), Rendering a (Size a))
-renderingCoalgebra (offset, maxSize, rendering) = Cofree (offset, maxSize) id $ case runFreer rendering of
+renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Alignment, Point a, Size (Maybe a), Rendering a (Size a))
+renderingCoalgebra (alignment, offset, maxSize, rendering) = Cofree (alignment, offset, maxSize) id $ case runFreer rendering of
   Pure size -> Pure size
   Free runF rendering -> case rendering of
     InL drawing -> case drawing of
-      Text size string -> Free ((,,) offset maxSize . runF) (InL (Text size string))
-      Clip size child -> Free id (InL (Clip size (offset, maxSize, runF child)))
+      Text size string -> Free ((,,,) alignment offset maxSize . runF) (InL (Text size string))
+      Clip size child -> Free id (InL (Clip size (alignment, offset, maxSize, runF child)))
     InR layout -> case layout of
-      Inset by child -> Free id (InR (Inset by (addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
-      Offset by child -> Free id (InR (Offset by (liftA2 (+) offset by, subtractSize maxSize (pointSize by), runF child)))
-      GetMaxSize -> Free ((,,) offset maxSize . runF) (InR GetMaxSize)
+      Inset by child -> Free id (InR (Inset by (alignment, addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
+      Offset by child -> Free id (InR (Offset by (alignment, liftA2 (+) offset by, subtractSize maxSize (pointSize by), runF child)))
+      GetMaxSize -> Free ((,,,) alignment offset maxSize . runF) (InR GetMaxSize)
+      Align alignment child -> Free id (InR (Align alignment (alignment, offset, maxSize, runF child)))
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,,) (pure 0) (pure Nothing)
+renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,,,) Full (pure 0) (pure Nothing)
 
 
 -- Instances
+
+instance Real a => Semigroup (Rendering a (Size a)) where
+  (<>) top bottom = do
+    Size w1 h1 <- top
+    Size w2 h2 <- wrapR $ Offset (Point 0 h1) bottom
+    pure $ Size (max w1 w2) (h1 + h2)
 
 instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
