@@ -4,7 +4,7 @@ import Data.Maybe (fromMaybe, isJust)
 import Test.Hspec hiding (shouldBe)
 import Test.Hspec.LeanCheck
 import UI.Geometry
-import UI.Layout
+import UI.Layout hiding (FittingState(..))
 
 spec :: Spec
 spec = do
