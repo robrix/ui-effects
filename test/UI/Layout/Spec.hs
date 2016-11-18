@@ -61,6 +61,9 @@ spec = do
     prop "takes the sum of its children’s widths" $
       \ a b -> width (measureLayoutSize (adjacent (pure a) (pure (b :: Size Int)))) `shouldBe` width a + width b
 
+    prop "takes the maximum of its children’s heights" $
+      \ a b -> height (measureLayoutSize (adjacent (pure (a :: Size Int)) (pure b))) `shouldBe` max (height a) (height b)
+
   describe "alignLeft" $ do
     prop "minimizes its child’s width" $
       \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignLeft (pure s))) `shouldBe`
