@@ -87,6 +87,11 @@ spec = do
       \ s -> fitLayoutSize (Just <$> (s + 2 :: Size Int)) (alignRight (pure s)) `shouldBe`
         Just (s + 2)
 
+  describe "alignCentre" $ do
+    prop "occupies the full available space" $
+      \ s -> fitLayoutSize (Just <$> (s + 2 :: Size Int)) (alignCentre (pure s)) `shouldBe`
+        Just (s + 2)
+
   describe "alignFull" $ do
     prop "maximizes its child’s width" $
       \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignFull (pure s))) `shouldBe`
