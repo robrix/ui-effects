@@ -93,6 +93,11 @@ spec = do
       [ s + 2
       , s + Size 0 2 ]
 
+    prop "floats its child within the max size" $
+      \ s -> (origin <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignCentre (pure s))) `shouldBe`
+      [ Point 0 0
+      , Point 1 0 ]
+
     prop "occupies the full available space" $
       \ s -> fitLayoutSize (Just <$> (s + 2 :: Size Int)) (alignCentre (pure s)) `shouldBe`
         Just (s + 2)
