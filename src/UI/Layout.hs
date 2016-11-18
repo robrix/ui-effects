@@ -53,6 +53,9 @@ alignLeft = wrap . Align Leading
 alignRight :: Layout a b -> Layout a b
 alignRight = wrap . Align Trailing
 
+alignCentre :: Layout a b -> Layout a b
+alignCentre = wrap . Align Centre
+
 alignFull :: Layout a b -> Layout a b
 alignFull = wrap . Align Full
 
