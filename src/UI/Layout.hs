@@ -4,6 +4,7 @@ module UI.Layout where
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
+import Data.Fixed
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
@@ -13,7 +14,7 @@ import Data.Semigroup
 import Data.Typeable
 import UI.Geometry
 
-data Alignment = Leading | Trailing | Full
+data Alignment = Leading | Trailing | Centre | Full
   deriving (Eq, Ord, Show)
 
 data LayoutF a f where
@@ -79,6 +80,7 @@ layoutAlgebra (Cofree (alignment, offset, maxSize) runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
     Leading -> Rect offset minSize
     Trailing -> Rect offset { x = x offset + widthDiff} minSize
+    Centre -> Rect offset { x = x offset + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
     Full -> Rect offset fullSize
     where minSize = fullSize { width = width size }
           fullSize = fromMaybe <$> size <*> maxSize
@@ -164,4 +166,5 @@ instance Listable Alignment where
   tiers
     =  cons0 Leading
     \/ cons0 Trailing
+    \/ cons0 Centre
     \/ cons0 Full
