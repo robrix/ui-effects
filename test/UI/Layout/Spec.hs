@@ -69,6 +69,9 @@ spec = do
       [ Rect (Point 0 0) (Size (width a + width b) (max (height a) (height b)))
       , Rect (Point (width a) 0) (Size (width b) (max (height a) (height b))) ]
 
+    prop "alignment distributes over adjacency" $
+      \ a b c maxSize -> fitLayout (maxSize :: Size (Maybe Int)) (align a b `adjacent` align a c) `shouldBe` fitLayout maxSize (align a (b `adjacent` c))
+
   describe "alignLeft" $ do
     prop "minimizes its child’s width" $
       \ s -> (size <$> fitLayoutWith layoutRectanglesAlgebra (Just <$> (s + 2 :: Size Int)) (alignLeft (pure s))) `shouldBe`
