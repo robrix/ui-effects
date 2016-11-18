@@ -105,6 +105,9 @@ layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgeb
 
 type Fitting f a = Bidi f (Size a) (Alignment, Point a, Size (Maybe a))
 
+data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point a), maxSize :: !(Size (Maybe a)) }
+  deriving (Eq, Show)
+
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
 fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Full, Point 0 0, maxSize, layout)
 
