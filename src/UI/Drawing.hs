@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs #-}
+{-# LANGUAGE FlexibleInstances, GADTs, RecordWildCards #-}
 module UI.Drawing
 ( Shape(..)
 , Colour(..)
@@ -74,23 +74,23 @@ drawingCoalgebra (state, drawing) = Cofree state id $ case runFreer drawing of
     Text size string -> Free ((,) state . runF) (Text size string)
     Clip size child -> Free id (Clip size (state, runF child))
 
-renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Alignment, Point a, Size (Maybe a), Rendering a (Size a))
-renderingCoalgebra (alignment, offset, maxSize, rendering) = Cofree (FittingState alignment offset maxSize) id $ case runFreer rendering of
+renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (FittingState a, Rendering a (Size a))
+renderingCoalgebra (state@FittingState{..}, rendering) = Cofree state id $ case runFreer rendering of
   Pure size -> Pure size
   Free runF rendering -> case rendering of
     InL drawing -> case drawing of
-      Text size string -> Free ((,,,) alignment offset maxSize . runF) (InL (Text size string))
-      Clip size child -> Free id (InL (Clip size (alignment, offset, maxSize, runF child)))
+      Text size string -> Free ((,) state . runF) (InL (Text size string))
+      Clip size child -> Free id (InL (Clip size (state, runF child)))
     InR layout -> case layout of
-      Inset by child -> Free id (InR (Inset by (alignment, addSizeToPoint offset by, subtractSize maxSize (2 * by), runF child)))
-      Offset by child -> Free id (InR (Offset by (alignment, liftA2 (+) offset by, subtractSize maxSize (pointSize by), runF child)))
-      GetMaxSize -> Free ((,,,) alignment offset maxSize . runF) (InR GetMaxSize)
-      Align alignment child -> Free id (InR (Align alignment (alignment, offset, maxSize, runF child)))
+      Inset by child -> Free id (InR (Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), runF child)))
+      Offset by child -> Free id (InR (Offset by (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by)), runF child)))
+      GetMaxSize -> Free ((,) state . runF) (InR GetMaxSize)
+      Align alignment child -> Free id (InR (Align alignment (state, runF child)))
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point (Size w h) = liftA2 (+) point (Point w h)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,,,) Full (pure 0) (pure Nothing)
+renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . (,) (FittingState Full (pure 0) (pure Nothing))
 
 
 -- Instances
