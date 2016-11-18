@@ -67,12 +67,12 @@ renderingRectAlgebra (Cofree a@(FittingState _ origin _) runC r) = case runC <$>
     InL drawing -> drawingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
 
-drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Alignment, Point a, Size (Maybe a), Drawing a (Size a))
-drawingCoalgebra (alignment, offset, maxSize, drawing) = Cofree (FittingState alignment offset maxSize) id $ case runFreer drawing of
+drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (FittingState a, Drawing a (Size a))
+drawingCoalgebra (state, drawing) = Cofree state id $ case runFreer drawing of
   Pure size -> Pure size
   Free runF drawing -> case drawing of
-    Text size string -> Free ((,,,) alignment offset maxSize . runF) (Text size string)
-    Clip size child -> Free id (Clip size (alignment, offset, maxSize, runF child))
+    Text size string -> Free ((,) state . runF) (Text size string)
+    Clip size child -> Free id (Clip size (state, runF child))
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Alignment, Point a, Size (Maybe a), Rendering a (Size a))
 renderingCoalgebra (alignment, offset, maxSize, rendering) = Cofree (FittingState alignment offset maxSize) id $ case runFreer rendering of
