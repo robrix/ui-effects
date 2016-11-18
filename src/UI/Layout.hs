@@ -59,6 +59,9 @@ alignCentre = wrap . Align Centre
 alignFull :: Layout a b -> Layout a b
 alignFull = wrap . Align Full
 
+align :: Alignment -> Layout a b -> Layout a b
+align = (wrap .) . Align
+
 
 -- Evaluation
 
