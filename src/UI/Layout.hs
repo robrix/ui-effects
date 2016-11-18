@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
+{-# LANGUAGE FlexibleInstances, GADTs, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
 module UI.Layout where
 
 import Control.Applicative
@@ -79,22 +79,22 @@ fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout
 fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
 
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
-layoutAlgebra (Cofree (alignment, offset, maxSize) runC layout) = case layout of
+layoutAlgebra (Cofree FittingState{..} runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
-    Leading -> Rect offset minSize
-    Trailing -> Rect offset { x = x offset + widthDiff} minSize
-    Centre -> Rect offset { x = x offset + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
-    Full -> Rect offset fullSize
+    Leading -> Rect origin minSize
+    Trailing -> Rect origin { x = x origin + widthDiff} minSize
+    Centre -> Rect origin { x = x origin + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
+    Full -> Rect origin fullSize
     where minSize = fullSize { width = width size }
           fullSize = fromMaybe <$> size <*> maxSize
           widthDiff = maybe 0 (+ negate (width size)) (width maxSize)
   Free runF layout -> case layout of
-    Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
-    Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
+    Inset by child -> Rect origin . (2 * by +) . size <$> runC (runF child)
+    Offset by child -> Rect origin . (pointSize by +) . size <$> runC (runF child)
     GetMaxSize -> runC (runF maxSize)
     Align _ child -> do
       Rect _ size <- runC (runF child)
-      pure $ Rect offset (fromMaybe <$> size <*> maxSize)
+      pure $ Rect origin (fromMaybe <$> size <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
@@ -103,7 +103,7 @@ layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
-type Fitting f a = Bidi f (Size a) (Alignment, Point a, Size (Maybe a))
+type Fitting f a = Bidi f (Size a) (FittingState a)
 
 data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point a), maxSize :: !(Size (Maybe a)) }
   deriving (Eq, Show)
@@ -112,7 +112,7 @@ fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -
 fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Full, Point 0 0, maxSize, layout)
 
 fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Alignment, Point a, Size (Maybe a), Layout a (Size a))
-fittingCoalgebra (alignment, offset, maxSize, layout) = Cofree (alignment, offset, maxSize) id $ case runFreer layout of
+fittingCoalgebra (alignment, offset, maxSize, layout) = Cofree (FittingState alignment offset maxSize) id $ case runFreer layout of
   Pure size -> Pure size
   Free run layout -> case layout of
     Inset by child -> Free id $ Inset by (alignment, addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)

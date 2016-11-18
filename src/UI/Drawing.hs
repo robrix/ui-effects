@@ -51,7 +51,7 @@ clip size = wrap . Clip size
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
-drawingRectAlgebra (Cofree (_, origin, _) runC r) = Rect origin $ case r of
+drawingRectAlgebra (Cofree (FittingState _ origin _) runC r) = Rect origin $ case r of
   Pure size -> size
   Free runF drawing -> case drawing of
     Text maxSize s -> size (runC (runF (measureText (width maxSize) s)))
@@ -61,21 +61,21 @@ drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
 drawingRectanglesAlgebra = collect drawingRectAlgebra
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
-renderingRectAlgebra (Cofree a@(_, origin, _) runC r) = case runC <$> r of
+renderingRectAlgebra (Cofree a@(FittingState _ origin _) runC r) = case runC <$> r of
   Pure size -> Rect origin size
   Free runF sum -> case sum of
     InL drawing -> drawingRectAlgebra (Cofree a id (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Alignment, Point a, Size (Maybe a), Drawing a (Size a))
-drawingCoalgebra (alignment, offset, maxSize, drawing) = Cofree (alignment, offset, maxSize) id $ case runFreer drawing of
+drawingCoalgebra (alignment, offset, maxSize, drawing) = Cofree (FittingState alignment offset maxSize) id $ case runFreer drawing of
   Pure size -> Pure size
   Free runF drawing -> case drawing of
     Text size string -> Free ((,,,) alignment offset maxSize . runF) (Text size string)
     Clip size child -> Free id (Clip size (alignment, offset, maxSize, runF child))
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Alignment, Point a, Size (Maybe a), Rendering a (Size a))
-renderingCoalgebra (alignment, offset, maxSize, rendering) = Cofree (alignment, offset, maxSize) id $ case runFreer rendering of
+renderingCoalgebra (alignment, offset, maxSize, rendering) = Cofree (FittingState alignment offset maxSize) id $ case runFreer rendering of
   Pure size -> Pure size
   Free runF rendering -> case rendering of
     InL drawing -> case drawing of
