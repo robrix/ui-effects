@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
+{-# LANGUAGE FlexibleInstances, GADTs, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
 module UI.Layout where
 
 import Control.Applicative
@@ -47,6 +47,12 @@ stack top bottom = do
   Size w2 h2 <- offset (Point 0 h1) bottom
   pure $ Size (max w1 w2) h2
 
+adjacent :: Real a => Layout a (Size a) -> Layout a (Size a) -> Layout a (Size a)
+adjacent left right = do
+  Size w1 h1 <- left
+  Size w2 h2 <- offset (Point w1 0) right
+  pure $ Size w2 (max h1 h2)
+
 alignLeft :: Layout a b -> Layout a b
 alignLeft = wrap . Align Leading
 
@@ -58,6 +64,9 @@ alignCentre = wrap . Align Centre
 
 alignFull :: Layout a b -> Layout a b
 alignFull = wrap . Align Full
+
+align :: Alignment -> Layout a b -> Layout a b
+align = (wrap .) . Align
 
 
 -- Evaluation
@@ -79,22 +88,22 @@ fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout
 fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
 
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
-layoutAlgebra (Cofree (alignment, offset, maxSize) runC layout) = case layout of
+layoutAlgebra (Cofree FittingState{..} runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
-    Leading -> Rect offset minSize
-    Trailing -> Rect offset { x = x offset + widthDiff} minSize
-    Centre -> Rect offset { x = x offset + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
-    Full -> Rect offset fullSize
+    Leading -> Rect origin minSize
+    Trailing -> Rect origin { x = x origin + widthDiff} minSize
+    Centre -> Rect origin { x = x origin + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
+    Full -> Rect origin fullSize
     where minSize = fullSize { width = width size }
           fullSize = fromMaybe <$> size <*> maxSize
           widthDiff = maybe 0 (+ negate (width size)) (width maxSize)
   Free runF layout -> case layout of
-    Inset by child -> Rect offset . (2 * by +) . size <$> runC (runF child)
-    Offset by child -> Rect offset . (pointSize by +) . size <$> runC (runF child)
+    Inset by child -> Rect origin . (2 * by +) . size <$> runC (runF child)
+    Offset by child -> Rect origin . (pointSize by +) . size <$> runC (runF child)
     GetMaxSize -> runC (runF maxSize)
     Align _ child -> do
       Rect _ size <- runC (runF child)
-      pure $ Rect offset (fromMaybe <$> size <*> maxSize)
+      pure $ Rect origin (fromMaybe <$> size <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
@@ -103,19 +112,22 @@ layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
-type Fitting f a = Bidi f (Size a) (Alignment, Point a, Size (Maybe a))
+type Fitting f a = Bidi f (Size a) (FittingState a)
+
+data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point a), maxSize :: !(Size (Maybe a)) }
+  deriving (Eq, Show)
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (Full, Point 0 0, maxSize, layout)
+fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (FittingState Full (Point 0 0) maxSize, layout)
 
-fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Alignment, Point a, Size (Maybe a), Layout a (Size a))
-fittingCoalgebra (alignment, offset, maxSize, layout) = Cofree (alignment, offset, maxSize) id $ case runFreer layout of
+fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (FittingState a, Layout a (Size a))
+fittingCoalgebra (state@FittingState{..}, layout) = Cofree state id $ case runFreer layout of
   Pure size -> Pure size
   Free run layout -> case layout of
-    Inset by child -> Free id $ Inset by (alignment, addSizeToPoint offset by, subtractSize maxSize (2 * by), run child)
-    Offset by child -> Free id $ Offset by (alignment, liftA2 (+) offset by, subtractSize maxSize (pointSize by), run child)
-    GetMaxSize -> Free ((,,,) alignment offset maxSize . run) GetMaxSize
-    Align alignment child -> Free id $ Align alignment (alignment, offset, maxSize, run child)
+    Inset by child -> Free id $ Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), run child)
+    Offset by child -> Free id $ Offset by (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by)), run child)
+    GetMaxSize -> Free ((,) state . run) GetMaxSize
+    Align alignment child -> Free id $ Align alignment (state { alignment = alignment }, run child)
   where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point = liftA2 (+) point . sizeExtent
 

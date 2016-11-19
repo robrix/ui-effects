@@ -4,7 +4,7 @@ import Data.Maybe (fromMaybe, isJust)
 import Test.Hspec hiding (shouldBe)
 import Test.Hspec.LeanCheck
 import UI.Geometry
-import UI.Layout
+import UI.Layout hiding (FittingState(..))
 
 spec :: Spec
 spec = do
@@ -56,6 +56,30 @@ spec = do
       \ a b -> fitLayoutWith layoutRectanglesAlgebra (pure Nothing) (stack (pure a) (pure (b :: Size Int))) `shouldBe`
       [ Rect (Point 0 0) (Size (max (width a) (width b)) (height a + height b))
       , Rect (Point 0 (height a)) (Size (max (width a) (width b)) (height b)) ]
+
+  describe "adjacent" $ do
+    prop "takes the sum of its children’s widths" $
+      \ a b -> width (measureLayoutSize (adjacent (pure a) (pure (b :: Size Int)))) `shouldBe` width a + width b
+
+    prop "takes the maximum of its children’s heights" $
+      \ a b -> height (measureLayoutSize (adjacent (pure (a :: Size Int)) (pure b))) `shouldBe` max (height a) (height b)
+
+    prop "arranges its second child after its first" $
+      \ a b -> fitLayoutWith layoutRectanglesAlgebra (pure Nothing) (adjacent (pure a) (pure (b :: Size Int))) `shouldBe`
+      [ Rect (Point 0 0) (Size (width a + width b) (max (height a) (height b)))
+      , Rect (Point (width a) 0) (Size (width b) (max (height a) (height b))) ]
+
+    prop "arranges aligned layouts" $
+      \ a b -> let maxHeight = max (height a) (height b)
+                   sumWidths = width (a + b) in
+        fitLayoutWith layoutRectanglesAlgebra (Size (Just sumWidths) (Just maxHeight) :: Size (Maybe Int)) (alignLeft (pure a) `adjacent` alignRight (pure b)) `shouldBe`
+        [ Rect (Point 0 0) (Size sumWidths maxHeight)
+        , Rect (Point 0 0) (Size sumWidths maxHeight)
+        , Rect (Point (width a) 0) (Size (width b) maxHeight)
+        , Rect (Point (width a) 0) (Size (width b) maxHeight) ]
+
+    prop "alignment distributes over adjacency" $
+      \ a b c maxSize -> fitLayout (maxSize :: Size (Maybe Int)) (align a b `adjacent` align a c) `shouldBe` fitLayout maxSize (align a (b `adjacent` c))
 
   describe "alignLeft" $ do
     prop "minimizes its child’s width" $
