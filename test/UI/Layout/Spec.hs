@@ -69,6 +69,15 @@ spec = do
       [ Rect (Point 0 0) (Size (width a + width b) (max (height a) (height b)))
       , Rect (Point (width a) 0) (Size (width b) (max (height a) (height b))) ]
 
+    prop "arranges aligned layouts" $
+      \ a b -> let maxHeight = max (height a) (height b)
+                   sumWidths = width (a + b) in
+        fitLayoutWith layoutRectanglesAlgebra (Size (Just sumWidths) (Just maxHeight) :: Size (Maybe Int)) (alignLeft (pure a) `adjacent` alignRight (pure b)) `shouldBe`
+        [ Rect (Point 0 0) (Size sumWidths maxHeight)
+        , Rect (Point 0 0) (Size sumWidths maxHeight)
+        , Rect (Point (width a) 0) (Size (width b) maxHeight)
+        , Rect (Point (width a) 0) (Size (width b) maxHeight) ]
+
     prop "alignment distributes over adjacency" $
       \ a b c maxSize -> fitLayout (maxSize :: Size (Maybe Int)) (align a b `adjacent` align a c) `shouldBe` fitLayout maxSize (align a (b `adjacent` c))
 
