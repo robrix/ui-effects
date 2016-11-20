@@ -15,6 +15,7 @@ import GL.Setup hiding (Shader)
 import qualified Linear.Matrix as Linear
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
+import SDL.Event
 import System.Exit
 import UI.Drawing
 import UI.Geometry
@@ -48,7 +49,10 @@ setup swap = do
   let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
-  liftIO (forever (runDraw (draw matrix time program array) >> swap))
+  liftIO (forever $ do
+    event <- waitEventTimeout 16
+    _ <- runDraw (draw matrix time program array)
+    swap)
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GeometryArray Float -> Draw ()
 draw matrix time program array = do
