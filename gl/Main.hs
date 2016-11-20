@@ -33,8 +33,7 @@ rectGeometry (Rect (Point x y) (Size w h)) = Geometry TriangleStrip
   [ Linear.V4 x        y      0 1
   , Linear.V4 x       (y + h) 0 1
   , Linear.V4 (x + w)  y      0 1
-  , Linear.V4 (x + w) (y + h) 0 1
-  ]
+  , Linear.V4 (x + w) (y + h) 0 1 ]
 
 setup :: IO () -> Setup a
 setup swap = do
@@ -66,8 +65,7 @@ draw matrix time program array = do
 view :: View
 view = list
   [ label "hello, world"
-  , label "what’s up?"
-  ]
+  , label "what’s up?" ]
 
 orthographic :: Fractional a => a -> a -> a -> a -> a -> a -> Linear.M44 a
 orthographic left right bottom top near far = Linear.V4
