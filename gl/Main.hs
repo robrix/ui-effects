@@ -21,6 +21,7 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 import qualified Prelude
 import SDL.Event
+import SDL.Init
 import System.Exit
 import UI.Drawing
 import UI.Geometry
@@ -54,16 +55,21 @@ setup swap = do
   let fragmentShader = get xy + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
-  liftIO (forever . runIOState (Linear.P (Linear.V2 0 0) :: Linear.Point Linear.V2 Float) $ do
+  liftIO (forever . runIOState (Linear.P (Linear.V2 512 384) :: Linear.Point Linear.V2 Float) $ do
     event <- send (waitEvent :: Prelude.IO Event)
-    pos <- case eventPayload event of
+    case eventPayload event of
       MouseMotionEvent m -> do
         let p = fromIntegral <$> mouseMotionEventPos m
         State.put p
-        pure p
-      _ -> State.get
-    sendVoid $ runDraw (draw matrix xy pos program array)
-    sendVoid swap)
+        sendVoid $ runDraw (draw matrix xy p program array)
+        sendVoid swap
+      QuitEvent -> do
+        sendVoid quit
+        sendVoid exitSuccess
+      _ -> do
+        p <- State.get
+        sendVoid $ runDraw (draw matrix xy p program array)
+        sendVoid swap)
   where sendVoid io = send (io :: Prelude.IO ())
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.Point Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
