@@ -57,19 +57,18 @@ setup swap = do
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
   liftIO (forever . runIOState (Linear.P (Linear.V2 512 384) :: Linear.Point Linear.V2 Float) $ do
     event <- send (waitEvent :: Prelude.IO Event)
-    case eventPayload event of
+    pos <- case eventPayload event of
       MouseMotionEvent m -> do
         let p = fromIntegral <$> mouseMotionEventPos m
         State.put p
-        sendVoid $ runDraw (draw matrix xy p program array)
-        sendVoid swap
+        pure p
       QuitEvent -> do
         sendVoid quit
         sendVoid exitSuccess
-      _ -> do
-        p <- State.get
-        sendVoid $ runDraw (draw matrix xy p program array)
-        sendVoid swap)
+        State.get
+      _ -> State.get
+    sendVoid $ runDraw (draw matrix xy pos program array)
+    sendVoid swap)
   where sendVoid io = send (io :: Prelude.IO ())
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.Point Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
