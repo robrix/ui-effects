@@ -38,8 +38,8 @@ resolver: nightly-2016-09-10
 packages:
 - '.'
 - location:
-    git: https://github.com/joshvera/effects.git
-    commit: de7961dd6884565dfc9e45309a0c56539a00af17
+    git: https://github.com/robrix/effects.git
+    commit: cbc1b4198cce13aa62ea8882ef67b3ee94de0aa9
   extra-dep: true
 - location:
     git: https://github.com/robrix/leancheck.git
