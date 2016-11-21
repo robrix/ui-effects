@@ -52,7 +52,7 @@ setup swap = do
   matrix <- uniform
   xy <- uniform
   let vertexShader = toShader (\ p -> pure (vertex { position = get matrix !* get p }) :: Shader Vertex)
-  let fragmentShader = get xy + v4 0 0 1 (0.5 :: Float)
+  let fragmentShader = get xy
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
   liftIO (forever . runIOState (Linear.V2 512 384 :: Linear.V2 Float) $ do
@@ -77,7 +77,7 @@ draw matrix xy (Linear.V2 x y) program array = do
 
   useProgram program
 
-  setUniform program xy (Linear.V4 ((x - 512) / 512) ((y - 384) / 384) 0 0)
+  setUniform program xy (Linear.V4 ((x - 512) / 512) ((y - 384) / 384) 1 0.5)
   setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1)
 
   drawGeometry array
