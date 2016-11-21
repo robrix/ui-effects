@@ -4,7 +4,6 @@ module Main where
 import Control.Exception
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.Time.Clock.POSIX
 import GL.Draw
 import GL.Exception
 import GL.Geometry
@@ -12,7 +11,9 @@ import GL.Program
 import GL.Scalar
 import GL.Shader
 import GL.Setup hiding (Shader)
+import qualified Linear.Affine as Linear
 import qualified Linear.Matrix as Linear
+import qualified Linear.V2 as Linear
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 import SDL.Event
@@ -44,24 +45,26 @@ setup swap = do
   setBlendFactors SourceAlpha OneMinusSourceAlpha
   setClearColour (Linear.V4 0 0 0 (1 :: Float))
   matrix <- uniform
-  time <- uniform
+  xy <- uniform
   let vertexShader = toShader (\ p -> pure (vertex { position = get matrix !* get p }) :: Shader Vertex)
-  let fragmentShader = get time + v4 0 0 1 (0.5 :: Float)
+  let fragmentShader = get xy + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
   liftIO (forever $ do
-    event <- waitEventTimeout 16
-    runDraw (draw matrix time program array)
+    event <- waitEvent
+    let rel = case eventPayload event of
+                MouseMotionEvent m -> fromIntegral <$> mouseMotionEventPos m
+                _ -> Linear.P (Linear.V2 0 0)
+    runDraw (draw matrix xy rel program array)
     swap)
 
-draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GeometryArray Float -> Draw ()
-draw matrix time program array = do
+draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.Point Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
+draw matrix xy (Linear.P (Linear.V2 x y)) program array = do
   clear [ ColourBuffer, DepthBuffer ]
 
   useProgram program
 
-  t <- liftIO (realToFrac . snd . (properFraction :: POSIXTime -> (Integer, POSIXTime)) <$> getPOSIXTime)
-  setUniform program time (Linear.V4 (sin (t * 2 * pi)) (cos (t * negate 2 * pi)) 0 0)
+  setUniform program xy (Linear.V4 ((x - 512) / 512) ((y - 384) / 384) 0 0)
   setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1)
 
   drawGeometry array
