@@ -51,7 +51,7 @@ setup swap = do
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
   liftIO (forever $ do
     event <- waitEventTimeout 16
-    _ <- runDraw (draw matrix time program array)
+    runDraw (draw matrix time program array)
     swap)
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> GLProgram -> GeometryArray Float -> Draw ()
