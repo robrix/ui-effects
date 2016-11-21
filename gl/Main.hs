@@ -69,9 +69,6 @@ setup swap = do
     sendVoid $ runDraw (draw matrix xy pos program array)
     sendVoid swap)
   where sendVoid io = send (io :: Prelude.IO ())
-        -- Eff’s *> and >> are semantically distinct; *> (used in Control.Monad.forever) throws and exits with <<loop>>, but >> does not.
-        forever :: Monad m => m a -> m b
-        forever a = let a' = a >> a' in a'
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
 draw matrix xy (Linear.V2 x y) program array = do
