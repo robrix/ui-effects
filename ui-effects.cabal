@@ -30,6 +30,7 @@ library
                      , UI.Drawing
                      , UI.Font
                      , UI.Geometry
+                     , UI.Interaction
                      , UI.Layout
                      , UI.View
                      , UI.Window
