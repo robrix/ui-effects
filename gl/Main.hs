@@ -55,11 +55,11 @@ setup swap = do
   let fragmentShader = get xy + v4 0 0 1 (0.5 :: Float)
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
-  liftIO (forever . runIOState (Linear.P (Linear.V2 512 384) :: Linear.Point Linear.V2 Float) $ do
+  liftIO (forever . runIOState (Linear.V2 512 384 :: Linear.V2 Float) $ do
     event <- send (waitEvent :: Prelude.IO Event)
     pos <- case eventPayload event of
       MouseMotionEvent m -> do
-        let p = fromIntegral <$> mouseMotionEventPos m
+        let Linear.P p = fromIntegral <$> mouseMotionEventPos m
         State.put p
         pure p
       QuitEvent -> do
@@ -71,8 +71,8 @@ setup swap = do
     sendVoid swap)
   where sendVoid io = send (io :: Prelude.IO ())
 
-draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.Point Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
-draw matrix xy (Linear.P (Linear.V2 x y)) program array = do
+draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
+draw matrix xy (Linear.V2 x y) program array = do
   clear [ ColourBuffer, DepthBuffer ]
 
   useProgram program
