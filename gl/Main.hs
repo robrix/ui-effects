@@ -77,7 +77,7 @@ draw matrix xy (Linear.V2 x y) program array = do
 
   useProgram program
 
-  setUniform program xy (Linear.V4 ((x - 512) / 512) ((y - 384) / 384) 1 0.5)
+  setUniform program xy (Linear.V4 (x / 1024) (y / 768) 1 0.5)
   setUniform program matrix (orthographic 0 1024 0 768 (negate 1) 1)
 
   drawGeometry array
