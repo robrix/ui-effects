@@ -3,6 +3,7 @@ module Data.Functor.Algebraic where
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Foldable (fold)
+import Data.Functor.Product
 import Data.Functor.Sum
 
 type Algebra functor result = functor result -> result
@@ -14,6 +15,9 @@ sumAlgebra :: Algebra l a -> Algebra r a -> Algebra (Sum l r) a
 sumAlgebra lAlgebra rAlgebra sum = case sum of
   InL l -> lAlgebra l
   InR r -> rAlgebra r
+
+productCoalgebra :: Coalgebra l a -> Coalgebra r a -> Coalgebra (Product l r) a
+productCoalgebra cl cr seed = Pair (cl seed) (cr seed)
 
 liftL :: Functor l => Freer l a -> Freer (Sum l r) a
 liftL (Freer f) = case f of
