@@ -2,6 +2,7 @@
 module UI.Interaction where
 
 import Control.Monad.Free.Freer
+import SDL.Event
 import UI.Geometry
 
 data InteractionF a f where
@@ -14,9 +15,9 @@ clickable :: Rect a -> Interaction a b -> Interaction a b
 clickable = (wrap .) . Clickable
 
 
-runInteraction :: Interaction a b -> IO b
-runInteraction = iterFreerA interactionAlgebra
+runInteraction :: Event -> Interaction a b -> IO b
+runInteraction event = iterFreerA (interactionAlgebra event)
 
-interactionAlgebra :: (x -> IO b) -> InteractionF a x -> IO b
-interactionAlgebra run i = case i of
+interactionAlgebra :: Event -> (x -> IO b) -> InteractionF a x -> IO b
+interactionAlgebra _ run i = case i of
   Clickable _ c -> run c
