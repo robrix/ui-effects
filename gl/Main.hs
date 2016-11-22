@@ -89,7 +89,7 @@ view = list
   , label "what’s up?" ]
 
 orthographic :: Fractional a => a -> a -> a -> a -> a -> a -> Linear.M44 a
-orthographic left right bottom top near far = Linear.V4
+orthographic left right top bottom near far = Linear.V4
   (Linear.V4 (2 / (right - left))  0                    0                         tx)
   (Linear.V4  0                   (2 / (top - bottom))  0                         ty)
   (Linear.V4  0                    0                   (negate 2 / (far - near))  tz)
