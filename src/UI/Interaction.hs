@@ -32,4 +32,4 @@ interactionAlgebra event run i = case i of
             else "up"
       _ -> pure ()
     run c
-    where toPoint (Linear.P (Linear.V2 x y)) = Point (fromIntegral x) (fromIntegral y)
+  where toPoint (Linear.P (Linear.V2 x y)) = Point (fromIntegral x) (fromIntegral y)
