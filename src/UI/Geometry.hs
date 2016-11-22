@@ -7,11 +7,20 @@ import Data.Semigroup
 
 data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
   deriving (Eq, Foldable, Functor, Ord, Traversable)
+
+containsPoint :: Real a => Rect a -> Point a -> Bool
+containsPoint r p = and (liftA2 (<=) (origin r) p) && and (liftA2 (<=) p (rectExtent r))
+
+rectExtent :: Num a => Rect a -> Point a
+rectExtent r = liftA2 (+) (origin r) (sizeExtent (size r))
+
+
 data Point a = Point { x :: !a, y :: !a }
   deriving (Eq, Foldable, Functor, Ord, Traversable)
 
 pointSize :: Point a -> Size a
 pointSize (Point x y) = Size x y
+
 
 data Size a = Size { width :: !a, height :: !a }
   deriving (Eq, Foldable, Functor, Ord, Traversable)

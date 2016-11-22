@@ -30,6 +30,7 @@ library
                      , UI.Drawing
                      , UI.Font
                      , UI.Geometry
+                     , UI.Interaction
                      , UI.Layout
                      , UI.View
                      , UI.Window
@@ -51,6 +52,7 @@ executable ui-effects
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
+                     , effects
                      , gl
                      , linear
                      , mtl

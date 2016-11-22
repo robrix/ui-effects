@@ -8,6 +8,7 @@ import Control.Concurrent
 import Control.Exception
 import Control.Monad
 import Data.Bits
+import Data.Foldable
 import Data.Typeable
 import Data.Word
 import Foreign.C.String
@@ -30,6 +31,11 @@ runWindow name draw = runInBoundThread $ withCString name $ \ name -> do
 
   SDL.SDL_GL_DOUBLEBUFFER `set` fromEnum True
 
+  ignoreEventsOfTypes
+    [ SDL.SDL_FINGERMOTION
+    , SDL.SDL_FINGERUP
+    , SDL.SDL_FINGERDOWN ]
+
   withWindow name flags (\ window ->
     withContext window (const (draw (SDL.glSwapWindow window) >> pure ())))
   `finally`
@@ -38,9 +44,10 @@ runWindow name draw = runInBoundThread $ withCString name $ \ name -> do
           [ SDL.SDL_WINDOW_OPENGL
           , SDL.SDL_WINDOW_SHOWN
           , SDL.SDL_WINDOW_RESIZABLE
-          , SDL.SDL_WINDOW_ALLOW_HIGHDPI
-          ]
+          , SDL.SDL_WINDOW_ALLOW_HIGHDPI ]
 
+ignoreEventsOfTypes :: [Word32] -> IO ()
+ignoreEventsOfTypes = traverse_ (\ t -> SDL.eventState t 0 >>= checkWhen (/= 0))
 
 withWindow :: CString -> Word32 -> (SDL.Window -> IO a) -> IO a
 withWindow name flags = bracket
