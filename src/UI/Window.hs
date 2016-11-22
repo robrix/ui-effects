@@ -31,6 +31,11 @@ runWindow name draw = runInBoundThread $ withCString name $ \ name -> do
 
   SDL.SDL_GL_DOUBLEBUFFER `set` fromEnum True
 
+  ignoreEventsOfTypes
+    [ SDL.SDL_FINGERMOTION
+    , SDL.SDL_FINGERUP
+    , SDL.SDL_FINGERDOWN ]
+
   withWindow name flags (\ window ->
     withContext window (const (draw (SDL.glSwapWindow window) >> pure ())))
   `finally`
