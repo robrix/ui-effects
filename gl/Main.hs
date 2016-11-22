@@ -66,7 +66,7 @@ setup swap = do
         sendVoid quit
         sendVoid exitSuccess
       _ -> pure ()
-    sendVoid $ runInteraction event (clickable (Rect (Point 0 0) (Size 100 100)) (pure ()))
+    sendVoid $ runInteraction event (clickable (Rect (Point 0 0) (Size 100 100) :: Rect Int) (pure ()))
     pos <- State.get
     sendVoid $ runDraw (draw matrix xy pos program array)
     sendVoid swap)
