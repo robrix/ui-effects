@@ -1,7 +1,10 @@
 {-# LANGUAGE GADTs #-}
 module UI.Interaction where
 
+import Control.Monad
 import Control.Monad.Free.Freer
+import qualified Linear.Affine as Linear
+import qualified Linear.V2 as Linear
 import SDL.Event
 import UI.Geometry
 
@@ -15,9 +18,15 @@ clickable :: Rect a -> Interaction a b -> Interaction a b
 clickable = (wrap .) . Clickable
 
 
-runInteraction :: Event -> Interaction a b -> IO b
+runInteraction :: Real a => Event -> Interaction a b -> IO b
 runInteraction event = iterFreerA (interactionAlgebra event)
 
-interactionAlgebra :: Event -> (x -> IO b) -> InteractionF a x -> IO b
-interactionAlgebra _ run i = case i of
-  Clickable _ c -> run c
+interactionAlgebra :: Real a => Event -> (x -> IO b) -> InteractionF a x -> IO b
+interactionAlgebra event run i = case i of
+  Clickable rect c -> do
+    case eventPayload event of
+      MouseButtonEvent m ->
+        when (rect `containsPoint` toPoint (mouseButtonEventPos m)) (putStrLn "click")
+      _ -> pure ()
+    run c
+    where toPoint (Linear.P (Linear.V2 x y)) = Point (fromIntegral x) (fromIntegral y)
