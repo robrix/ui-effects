@@ -26,7 +26,10 @@ interactionAlgebra event run i = case i of
   Clickable rect c -> do
     case eventPayload event of
       MouseButtonEvent m ->
-        when (rect `containsPoint` toPoint (mouseButtonEventPos m)) (putStrLn "click")
+        when (rect `containsPoint` toPoint (mouseButtonEventPos m)) $
+          putStrLn $ if mouseButtonEventMotion m == Pressed
+            then "down"
+            else "up"
       _ -> pure ()
     run c
     where toPoint (Linear.P (Linear.V2 x y)) = Point (fromIntegral x) (fromIntegral y)
