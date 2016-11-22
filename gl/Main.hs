@@ -25,6 +25,7 @@ import SDL.Init
 import System.Exit
 import UI.Drawing
 import UI.Geometry
+import UI.Interaction
 import UI.View
 import UI.Window
 
@@ -65,6 +66,7 @@ setup swap = do
         sendVoid quit
         sendVoid exitSuccess
       _ -> pure ()
+    sendVoid $ runInteraction event (clickable (Rect (Point 0 0) (Size 100 100)) (pure ()))
     pos <- State.get
     sendVoid $ runDraw (draw matrix xy pos program array)
     sendVoid swap)
