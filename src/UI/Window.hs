@@ -39,8 +39,7 @@ runWindow name draw = runInBoundThread $ withCString name $ \ name -> do
           [ SDL.SDL_WINDOW_OPENGL
           , SDL.SDL_WINDOW_SHOWN
           , SDL.SDL_WINDOW_RESIZABLE
-          , SDL.SDL_WINDOW_ALLOW_HIGHDPI
-          ]
+          , SDL.SDL_WINDOW_ALLOW_HIGHDPI ]
 
 ignoreEventsOfTypes :: [Word32] -> IO ()
 ignoreEventsOfTypes = traverse_ (\ t -> SDL.eventState t 0 >>= checkWhen (/= 0))
