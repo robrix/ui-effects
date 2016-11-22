@@ -9,7 +9,7 @@ data Rect a = Rect { origin :: !(Point a), size :: !(Size a) }
   deriving (Eq, Foldable, Functor, Ord, Traversable)
 
 containsPoint :: Real a => Rect a -> Point a -> Bool
-containsPoint (Rect (Point ox oy) (Size sx sy)) (Point x y) = ox <= x && x <= ox + sx && oy <= y && y <= oy + sy
+containsPoint r p = and (liftA2 (<=) (origin r) p) && and (liftA2 (<=) p (rectExtent r))
 
 rectExtent :: Num a => Rect a -> Point a
 rectExtent r = liftA2 (+) (origin r) (sizeExtent (size r))
