@@ -12,3 +12,11 @@ type Interaction a = Freer (InteractionF a)
 
 clickable :: Rect a -> Interaction a b -> Interaction a b
 clickable = (wrap .) . Clickable
+
+
+runInteraction :: Interaction a b -> IO b
+runInteraction = iterFreerA interactionAlgebra
+
+interactionAlgebra :: (x -> IO b) -> InteractionF a x -> IO b
+interactionAlgebra run i = case i of
+  Clickable _ c -> run c
