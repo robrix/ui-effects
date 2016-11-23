@@ -50,7 +50,7 @@ clip size = wrap . Clip size
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
-drawingRectAlgebra (Fitting (FittingState _ origin _) r) = Rect origin $ case r of
+drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin $ case r of
   Pure size -> size
   Free runF drawing -> case drawing of
     Text maxSize s -> size (runF (measureText (width maxSize) s))
@@ -60,24 +60,24 @@ drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
 drawingRectanglesAlgebra = collect drawingRectAlgebra
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
-renderingRectAlgebra (Fitting a@(FittingState _ origin _) r) = case r of
+renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
   Pure size -> Rect origin size
   Free runF sum -> case sum of
-    InL drawing -> drawingRectAlgebra (Fitting a (Free runF drawing))
-    InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Fitting a (Free (Just . runF) layout)))
+    InL drawing -> drawingRectAlgebra (Bidi a (Free runF drawing))
+    InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Bidi a (Free (Just . runF) layout)))
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
-drawingCoalgebra (Fitting state drawing) = Fitting state $ case drawing of
+drawingCoalgebra (Bidi state drawing) = Bidi state $ case drawing of
   Pure size -> Pure size
-  Free runF drawingF -> Free (Fitting state . runFreer . runF) $ case drawingF of
+  Free runF drawingF -> Free (Bidi state . runFreer . runF) $ case drawingF of
     Text size string -> Text size string
     Clip size child -> Clip size child
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
-renderingCoalgebra (Fitting state@FittingState{..} rendering) = Fitting state $ case rendering of
+renderingCoalgebra (Bidi state@FittingState{..} rendering) = Bidi state $ case rendering of
   Pure size -> Pure size
   Free runF renderingF -> case renderingF of
-    InL drawingF -> Free (Fitting state . runFreer . runF) . InL $ case drawingF of
+    InL drawingF -> Free (Bidi state . runFreer . runF) . InL $ case drawingF of
       Text size string -> Text size string
       Clip size child -> Clip size child
     InR layoutF -> case layoutF of
@@ -85,12 +85,12 @@ renderingCoalgebra (Fitting state@FittingState{..} rendering) = Fitting state $ 
       Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
       GetMaxSize -> wrapState state GetMaxSize
       Align alignment child -> wrapState (state { alignment = alignment }) $ Align alignment child
-      where wrapState state = Free (Fitting state . runFreer . runF) . InR
+      where wrapState state = Free (Bidi state . runFreer . runF) . InR
             subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
             addSizeToPoint point = liftA2 (+) point . sizeExtent
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . Fitting (FittingState Full (pure 0) (pure Nothing)) . runFreer
+renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
 
 
 -- Instances
