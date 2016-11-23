@@ -16,6 +16,13 @@ type FAlgebra functor result = forall x. (x -> result) -> functor x -> result
 -- | A coalgebra taking a function to apply to values inside the functor.
 type FCoalgebra functor seed = forall x. (seed -> x) -> seed -> functor x
 
+-- | A datatype for use as the interim structure in bidirectional computations represented as hylomorphisms.
+data Bidi f a b c = Bidi
+  { bidiState :: a
+  , bidiF :: FreerF f b c }
+  deriving (Eq, Foldable, Functor, Show)
+
+
 sumAlgebra :: Algebra l a -> Algebra r a -> Algebra (Sum l r) a
 sumAlgebra lAlgebra rAlgebra sum = case sum of
   InL l -> lAlgebra l
