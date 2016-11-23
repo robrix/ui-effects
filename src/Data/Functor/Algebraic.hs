@@ -44,6 +44,12 @@ distSumFreerF s = case s of
     Pure a -> Pure a
     Free run f -> Free run (InR f)
 
+-- | Distributive law for Sum over CofreerF.
+distSumCofreerF :: Sum (CofreerF f a) (CofreerF g a) c -> CofreerF (Sum f g) a c
+distSumCofreerF s = case s of
+  InL (Cofree a t r) -> Cofree a t (InL r)
+  InR (Cofree a t r) -> Cofree a t (InR r)
+
 
 productCoalgebra :: Coalgebra l a -> Coalgebra r a -> Coalgebra (Product l r) a
 productCoalgebra cl cr seed = Pair (cl seed) (cr seed)
