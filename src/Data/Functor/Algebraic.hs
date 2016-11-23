@@ -105,5 +105,5 @@ coannotating coalgebra seed = case runFreer seed of
 annotatingF :: FAlgebra f a -> FAlgebra f (Cofreer f a)
 annotatingF algebra f base = Cofreer (Cofree (algebra (extract . f) base) f base)
 
-annotatingBidi :: Functor f => Algebra (CofreerF f b) a -> Algebra (CofreerF f b) (Cofreer f a)
-annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (tailF base))
+annotatingBidi :: Algebra (Bidi f b c) a -> Algebra (Bidi f b c) (Cofreer (FreerF f c) a)
+annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (bidiF base))
