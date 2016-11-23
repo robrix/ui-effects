@@ -34,6 +34,17 @@ sumFCoalgebra cl cr seed = case seed of
   Right r -> InR (cr Right r)
 
 
+-- | Distributive law for Sum over FreerF.
+distSumFreerF :: Sum (FreerF f a) (FreerF g a) c -> FreerF (Sum f g) a c
+distSumFreerF s = case s of
+  InL l -> case l of
+    Pure a -> Pure a
+    Free run f -> Free run (InL f)
+  InR r -> case r of
+    Pure a -> Pure a
+    Free run f -> Free run (InR f)
+
+
 productCoalgebra :: Coalgebra l a -> Coalgebra r a -> Coalgebra (Product l r) a
 productCoalgebra cl cr seed = Pair (cl seed) (cr seed)
 
