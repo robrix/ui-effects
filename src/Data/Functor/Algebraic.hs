@@ -23,8 +23,25 @@ sumAlgebra lAlgebra rAlgebra sum = case sum of
   InL l -> lAlgebra l
   InR r -> rAlgebra r
 
+sumCoalgebra :: (Functor l, Functor r) => Coalgebra l a -> Coalgebra r b -> Coalgebra (Sum l r) (Either a b)
+sumCoalgebra cl cr seed = case seed of
+  Left l -> Left <$> InL (cl l)
+  Right r -> Right <$> InR (cr r)
+
+sumFCoalgebra :: FCoalgebra l a -> FCoalgebra r b -> Coalgebra (Sum l r) (Either a b)
+sumFCoalgebra cl cr seed = case seed of
+  Left l -> InL (cl Left l)
+  Right r -> InR (cr Right r)
+
+
 productCoalgebra :: Coalgebra l a -> Coalgebra r a -> Coalgebra (Product l r) a
 productCoalgebra cl cr seed = Pair (cl seed) (cr seed)
+
+productAlgebra :: (Functor l, Functor r) => Algebra l a -> Algebra r b -> Algebra (Product l r) (a, b)
+productAlgebra al ar (Pair l r) = (al $ fst <$> l, ar $ snd <$> r)
+
+productFAlgebra :: FAlgebra l a -> FAlgebra r b -> Algebra (Product l r) (a, b)
+productFAlgebra al ar (Pair l r) = (al fst l, ar snd r)
 
 liftL :: Functor l => Freer l a -> Freer (Sum l r) a
 liftL (Freer f) = case f of
