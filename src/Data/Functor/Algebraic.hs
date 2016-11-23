@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Data.Functor.Algebraic where
 
 import Control.Comonad.Cofree.Cofreer
@@ -8,6 +9,12 @@ import Data.Functor.Sum
 
 type Algebra functor result = functor result -> result
 type Coalgebra functor seed = seed -> functor seed
+
+-- | An algebra taking a function to apply to values inside the functor.
+type FAlgebra functor result = forall x. (x -> result) -> functor x -> result
+
+-- | A coalgebra taking a function to apply to values inside the functor.
+type FCoalgebra functor seed = forall x. (seed -> x) -> seed -> functor x
 
 type Bidi functor pure state = CofreerF (FreerF functor pure) state
 
