@@ -16,8 +16,6 @@ type FAlgebra functor result = forall x. (x -> result) -> functor x -> result
 -- | A coalgebra taking a function to apply to values inside the functor.
 type FCoalgebra functor seed = forall x. (seed -> x) -> seed -> functor x
 
-type Bidi functor pure = CofreerF (FreerF functor pure)
-
 sumAlgebra :: Algebra l a -> Algebra r a -> Algebra (Sum l r) a
 sumAlgebra lAlgebra rAlgebra sum = case sum of
   InL l -> lAlgebra l

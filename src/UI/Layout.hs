@@ -112,7 +112,7 @@ layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
-type Fitting f a = Bidi f (Size a) (FittingState a)
+type Fitting f a = CofreerF (FreerF f (Size a)) (FittingState a)
 
 data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point a), maxSize :: !(Size (Maybe a)) }
   deriving (Eq, Show)
