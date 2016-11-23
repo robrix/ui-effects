@@ -18,7 +18,6 @@ module UI.Drawing
 ) where
 
 import Control.Applicative
-import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Functor.Algebraic
 import Data.Functor.Classes
@@ -51,31 +50,31 @@ clip size = wrap . Clip size
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
-drawingRectAlgebra (Cofree (FittingState _ origin _) runC r) = Rect origin $ case r of
+drawingRectAlgebra (Fitting (FittingState _ origin _) r) = Rect origin $ case r of
   Pure size -> size
   Free runF drawing -> case drawing of
-    Text maxSize s -> size (runC (runF (measureText (width maxSize) s)))
+    Text maxSize s -> size (runF (measureText (width maxSize) s))
     Clip size _ -> size
 
 drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
 drawingRectanglesAlgebra = collect drawingRectAlgebra
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
-renderingRectAlgebra (Cofree a@(FittingState _ origin _) runC r) = case runC <$> r of
+renderingRectAlgebra (Fitting a@(FittingState _ origin _) r) = case r of
   Pure size -> Rect origin size
   Free runF sum -> case sum of
-    InL drawing -> drawingRectAlgebra (Cofree a id (Free runF drawing))
-    InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Just <$> Cofree a id (Free runF layout)))
+    InL drawing -> drawingRectAlgebra (Fitting a (Free runF drawing))
+    InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Fitting a (Free (Just . runF) layout)))
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (FittingState a, Drawing a (Size a))
-drawingCoalgebra (state, drawing) = Cofree state id $ case runFreer drawing of
+drawingCoalgebra (state, drawing) = Fitting state $ case runFreer drawing of
   Pure size -> Pure size
   Free runF drawing -> case drawing of
     Text size string -> Free ((,) state . runF) (Text size string)
     Clip size child -> Free id (Clip size (state, runF child))
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (FittingState a, Rendering a (Size a))
-renderingCoalgebra (state@FittingState{..}, rendering) = Cofree state id $ case runFreer rendering of
+renderingCoalgebra (state@FittingState{..}, rendering) = Fitting state $ case runFreer rendering of
   Pure size -> Pure size
   Free runF rendering -> case rendering of
     InL drawing -> case drawing of

@@ -85,7 +85,7 @@ fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Rect a)
 fitLayout = fitLayoutWith layoutAlgebra
 
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
-layoutAlgebra (Cofree FittingState{..} runC layout) = case layout of
+layoutAlgebra (Fitting FittingState{..} layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
     Leading -> Rect origin minSize
     Trailing -> Rect origin { x = x origin + widthDiff} minSize
@@ -95,11 +95,11 @@ layoutAlgebra (Cofree FittingState{..} runC layout) = case layout of
           fullSize = fromMaybe <$> size <*> maxSize
           widthDiff = maybe 0 (+ negate (width size)) (width maxSize)
   Free runF layout -> case layout of
-    Inset by child -> Rect origin . (2 * by +) . size <$> runC (runF child)
-    Offset by child -> Rect origin . (pointSize by +) . size <$> runC (runF child)
-    GetMaxSize -> runC (runF maxSize)
+    Inset by child -> Rect origin . (2 * by +) . size <$> runF child
+    Offset by child -> Rect origin . (pointSize by +) . size <$> runF child
+    GetMaxSize -> runF maxSize
     Align _ child -> do
-      Rect _ size <- runC (runF child)
+      Rect _ size <- runF child
       pure $ Rect origin (fromMaybe <$> size <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
@@ -109,7 +109,8 @@ layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
-type Fitting f a = CofreerF (FreerF f (Size a)) (FittingState a)
+data Fitting f a b = Fitting (FittingState a) (FreerF f (Size a) b)
+  deriving (Foldable, Functor)
 
 data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point a), maxSize :: !(Size (Maybe a)) }
   deriving (Eq, Show)
@@ -118,7 +119,7 @@ fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -
 fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (FittingState Full (Point 0 0) maxSize, layout)
 
 layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (FittingState a, Layout a (Size a))
-layoutCoalgebra (state@FittingState{..}, layout) = Cofree state id $ case runFreer layout of
+layoutCoalgebra (state@FittingState{..}, layout) = Fitting state $ case runFreer layout of
   Pure size -> Pure size
   Free run layout -> case layout of
     Inset by child -> Free id $ Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), run child)
