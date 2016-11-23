@@ -85,3 +85,10 @@ collect algebra c = wrapAlgebra ((++ fold c) . pure) head algebra c
 
 wrapAlgebra :: Functor f => (a -> b) -> (b -> a) -> Algebra f a -> Algebra f b
 wrapAlgebra into outOf algebra = into . algebra . fmap outOf
+
+
+annotating :: Functor f => (f a -> a) -> f (Cofreer f a) -> Cofreer f a
+annotating algebra base = Cofreer (Cofree (algebra (extract <$> base)) id base)
+
+annotatingBidi :: Functor f => (CofreerF f b a -> a) -> CofreerF f b (Cofreer f a) -> Cofreer f a
+annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (tailF base))
