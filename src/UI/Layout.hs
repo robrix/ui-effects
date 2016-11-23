@@ -118,10 +118,10 @@ data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point 
   deriving (Eq, Show)
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (FittingState Full (Point 0 0) maxSize, layout)
+fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (FittingState Full (Point 0 0) maxSize, layout)
 
-fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (FittingState a, Layout a (Size a))
-fittingCoalgebra (state@FittingState{..}, layout) = Cofree state id $ case runFreer layout of
+layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (FittingState a, Layout a (Size a))
+layoutCoalgebra (state@FittingState{..}, layout) = Cofree state id $ case runFreer layout of
   Pure size -> Pure size
   Free run layout -> case layout of
     Inset by child -> Free id $ Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), run child)
