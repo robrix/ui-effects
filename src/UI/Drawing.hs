@@ -66,12 +66,12 @@ renderingRectAlgebra (Fitting a@(FittingState _ origin _) r) = case r of
     InL drawing -> drawingRectAlgebra (Fitting a (Free runF drawing))
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Fitting a (Free (Just . runF) layout)))
 
-drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (FittingState a, Drawing a (Size a))
-drawingCoalgebra (state, drawing) = Fitting state $ case runFreer drawing of
+drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Size a))
+drawingCoalgebra (Fitting state drawing) = Fitting state $ case drawing of
   Pure size -> Pure size
-  Free runF drawing -> case drawing of
-    Text size string -> Free ((,) state . runF) (Text size string)
-    Clip size child -> Free id (Clip size (state, runF child))
+  Free runF drawingF -> Free (Fitting state . Pure . runF) $ case drawingF of
+    Text size string -> Text size string
+    Clip size child -> Clip size child
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (FittingState a, Rendering a (Size a))
 renderingCoalgebra (state@FittingState{..}, rendering) = Fitting state $ case runFreer rendering of
