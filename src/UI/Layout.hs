@@ -116,18 +116,19 @@ data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point 
   deriving (Eq, Show)
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (FittingState Full (Point 0 0) maxSize, layout)
+fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Fitting (FittingState Full (Point 0 0) maxSize) (runFreer layout))
 
-layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (FittingState a, Layout a (Size a))
-layoutCoalgebra (state@FittingState{..}, layout) = Fitting state $ case runFreer layout of
+layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Fitting (LayoutF a) a (Layout a (Size a)))
+layoutCoalgebra (Fitting state@FittingState{..} layout) = Fitting state $ case layout of
   Pure size -> Pure size
-  Free run layout -> case layout of
-    Inset by child -> Free id $ Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), run child)
-    Offset by child -> Free id $ Offset by (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by)), run child)
-    GetMaxSize -> Free ((,) state . run) GetMaxSize
-    Align alignment child -> Free id $ Align alignment (state { alignment = alignment }, run child)
-  where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
-        addSizeToPoint point = liftA2 (+) point . sizeExtent
+  Free runF layoutF -> case layoutF of
+    Inset by child -> wrapState (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by))) $ Inset by child
+    Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
+    GetMaxSize -> wrapState state GetMaxSize
+    Align alignment child -> wrapState (state { alignment = alignment }) $ Align alignment child
+    where wrapState state = Free (Fitting state . runFreer . runF)
+          subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+          addSizeToPoint point = liftA2 (+) point . sizeExtent
 
 
 -- Instances
