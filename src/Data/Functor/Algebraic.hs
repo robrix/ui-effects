@@ -90,5 +90,8 @@ wrapAlgebra into outOf algebra = into . algebra . fmap outOf
 annotating :: Functor f => Algebra f a -> Algebra f (Cofreer f a)
 annotating algebra base = Cofreer (Cofree (algebra (extract <$> base)) id base)
 
+annotatingF :: FAlgebra f a -> FAlgebra f (Cofreer f a)
+annotatingF algebra f base = Cofreer (Cofree (algebra (extract . f) base) f base)
+
 annotatingBidi :: Functor f => Algebra (CofreerF f b) a -> Algebra (CofreerF f b) (Cofreer f a)
 annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (tailF base))
