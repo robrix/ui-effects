@@ -84,9 +84,6 @@ measureLayout = fromMaybe (Rect (Point 0 0) (Size 0 0)) . fitLayout (pure Nothin
 fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Rect a)
 fitLayout = fitLayoutWith layoutAlgebra
 
-fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Rect a))
-fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
-
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
 layoutAlgebra (Cofree FittingState{..} runC layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
