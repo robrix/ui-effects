@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, RecordWildCards #-}
+{-# LANGUAGE FlexibleInstances, GADTs #-}
 module UI.Drawing
 ( Shape(..)
 , Colour(..)
@@ -69,11 +69,11 @@ drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (
 drawingCoalgebra bidi = setBidiF bidi . runFreer <$> bidi
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
-renderingCoalgebra (Bidi state@FittingState{..} rendering) = Bidi state $ case rendering of
+renderingCoalgebra bidi = setBidiF bidi $ case bidiF bidi of
   Pure size -> Pure size
   Free runF renderingF -> case renderingF of
-    InL _ -> Bidi state . runFreer <$> rendering
-    InR layoutF -> hoistFreerF InR $ layoutFCoalgebra state (\ state -> Bidi state . runFreer . runF) layoutF
+    InL _ -> setBidiF bidi . runFreer <$> bidiF bidi
+    InR layoutF -> hoistFreerF InR $ layoutFCoalgebra (bidiState bidi) (\ state -> Bidi state . runFreer . runF) layoutF
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
