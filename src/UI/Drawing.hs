@@ -69,17 +69,13 @@ renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra (Bidi state drawing) = Bidi state $ case drawing of
   Pure size -> Pure size
-  Free runF drawingF -> Free (Bidi state . runFreer . runF) $ case drawingF of
-    Text size string -> Text size string
-    Clip size child -> Clip size child
+  Free runF drawingF -> Free (Bidi state . runFreer . runF) drawingF
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
 renderingCoalgebra (Bidi state@FittingState{..} rendering) = Bidi state $ case rendering of
   Pure size -> Pure size
   Free runF renderingF -> case renderingF of
-    InL drawingF -> Free (Bidi state . runFreer . runF) . InL $ case drawingF of
-      Text size string -> Text size string
-      Clip size child -> Clip size child
+    InL drawingF -> Free (Bidi state . runFreer . runF) (InL drawingF)
     InR layoutF -> case layoutF of
       Inset by child -> wrapState (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by))) $ Inset by child
       Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
