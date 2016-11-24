@@ -47,19 +47,19 @@ clip :: Size a -> Drawing a b -> Drawing a b
 clip size = wrap . Clip size
 
 
-drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Rect a)
-drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin $ case r of
-  Pure size -> size
+drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
+drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r of
+  Pure size -> Just size
   Free runF drawing -> case drawing of
-    Text maxSize s -> size (runF (measureText (width maxSize) s))
-    Clip size _ -> size
+    Text maxSize s -> size <$> runF (measureText (width maxSize) s)
+    Clip size _ -> Just size
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
   Pure size -> Rect origin size
-  Free runF sum -> case sum of
-    InL drawing -> drawingRectAlgebra (Bidi a (Free runF drawing))
-    InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Bidi a (Free (Just . runF) layout)))
+  Free runF sum -> fromMaybe (Rect (pure 0) (pure 0)) $ case sum of
+    InL drawing -> drawingRectAlgebra (Bidi a (Free (Just . runF) drawing))
+    InR layout -> layoutAlgebra (Bidi a (Free (Just . runF) layout))
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra = liftBidiCoalgebra drawingFCoalgebra
