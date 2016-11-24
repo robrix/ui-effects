@@ -88,8 +88,8 @@ layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
 layoutAlgebra (Bidi FittingState{..} layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
     Leading -> Rect origin minSize
-    Trailing -> Rect origin { x = x origin + widthDiff} minSize
-    Centre -> Rect origin { x = x origin + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
+    Trailing -> Rect origin { x = x origin + widthDiff } minSize
+    Centre -> Rect origin { x = x origin + fromIntegral (widthDiff `div'` 2 :: Int) } minSize
     Full -> Rect origin fullSize
     where minSize = fullSize { width = width size }
           fullSize = fromMaybe <$> size <*> maxSize
