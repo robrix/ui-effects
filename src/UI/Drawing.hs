@@ -72,12 +72,7 @@ drawingFCoalgebra :: FittingState a -> (FittingState a -> x -> b) -> DrawingF a 
 drawingFCoalgebra state run = Free (run state)
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
-renderingCoalgebra bidi = setBidiF bidi $ case bidiF bidi of
-  Pure size -> Pure size
-  Free runF renderingF -> case renderingF of
-    InL drawingF -> hoistFreerF InL $ drawingFCoalgebra (bidiState bidi) run drawingF
-    InR layoutF -> hoistFreerF InR $ layoutFCoalgebra (bidiState bidi) run layoutF
-    where run state = Bidi state . runFreer . runF
+renderingCoalgebra = liftBidiCoalgebra renderingFCoalgebra
 
 renderingFCoalgebra :: Real a => FittingState a -> (FittingState a -> x -> b) -> RenderingF a x -> FreerF (RenderingF a) (Size a) b
 renderingFCoalgebra state run renderingF = case renderingF of
