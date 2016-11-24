@@ -15,9 +15,6 @@ data Bidi f a b = Bidi
   , bidiF :: f b }
   deriving (Eq, Foldable, Functor, Show)
 
-setBidiF :: Bidi f a b -> f c -> Bidi f a c
-setBidiF bidi a = bidi { bidiF = a }
-
 
 sumAlgebra :: Algebra l a -> Algebra r a -> Algebra (Sum l r) a
 sumAlgebra lAlgebra rAlgebra sum = case sum of
@@ -69,9 +66,9 @@ annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (b
 type CoalgebraFragment functor seed pure = (forall b x. seed -> (seed -> x -> b) -> functor x -> FreerF functor pure b)
 
 liftBidiCoalgebra :: CoalgebraFragment f seed a -> Coalgebra (Bidi (FreerF f a) seed) (Bidi (FreerF f a) seed (Freer f a))
-liftBidiCoalgebra fragment bidi = setBidiF bidi $ case bidiF bidi of
+liftBidiCoalgebra fragment (Bidi state f) = Bidi state $ case f of
   Pure a -> Pure a
-  Free runF functor -> fragment (bidiState bidi) (\ state -> Bidi state . runFreer . runF) functor
+  Free runF functor -> fragment state (\ state -> Bidi state . runFreer . runF) functor
 
 liftSumCoalgebra :: CoalgebraFragment l seed pure -> CoalgebraFragment r seed pure -> CoalgebraFragment (Sum l r) seed pure
 liftSumCoalgebra lf rf state run sum = case sum of
