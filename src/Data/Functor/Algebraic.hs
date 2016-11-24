@@ -4,17 +4,10 @@ module Data.Functor.Algebraic where
 import Control.Comonad.Cofree.Cofreer
 import Control.Monad.Free.Freer
 import Data.Foldable (fold)
-import Data.Functor.Product
 import Data.Functor.Sum
 
 type Algebra functor result = functor result -> result
 type Coalgebra functor seed = seed -> functor seed
-
--- | An algebra taking a function to apply to values inside the functor.
-type FAlgebra functor result = forall x. (x -> result) -> functor x -> result
-
--- | A coalgebra taking a function to apply to values inside the functor.
-type FCoalgebra functor seed = forall x. (seed -> x) -> seed -> functor x
 
 -- | A datatype for use as the interim structure in bidirectional computations represented as hylomorphisms.
 data Bidi f a b = Bidi
@@ -31,42 +24,6 @@ sumAlgebra lAlgebra rAlgebra sum = case sum of
   InL l -> lAlgebra l
   InR r -> rAlgebra r
 
-sumCoalgebra :: (Functor l, Functor r) => Coalgebra l a -> Coalgebra r b -> Coalgebra (Sum l r) (Either a b)
-sumCoalgebra cl cr seed = case seed of
-  Left l -> Left <$> InL (cl l)
-  Right r -> Right <$> InR (cr r)
-
-sumFCoalgebra :: FCoalgebra l a -> FCoalgebra r b -> Coalgebra (Sum l r) (Either a b)
-sumFCoalgebra cl cr seed = case seed of
-  Left l -> InL (cl Left l)
-  Right r -> InR (cr Right r)
-
-
--- | Distributive law for Sum over FreerF.
-distSumFreerF :: Sum (FreerF f a) (FreerF g a) c -> FreerF (Sum f g) a c
-distSumFreerF s = case s of
-  InL l -> case l of
-    Pure a -> Pure a
-    Free run f -> Free run (InL f)
-  InR r -> case r of
-    Pure a -> Pure a
-    Free run f -> Free run (InR f)
-
--- | Distributive law for Sum over CofreerF.
-distSumCofreerF :: Sum (CofreerF f a) (CofreerF g a) c -> CofreerF (Sum f g) a c
-distSumCofreerF s = case s of
-  InL (Cofree a t r) -> Cofree a t (InL r)
-  InR (Cofree a t r) -> Cofree a t (InR r)
-
-
-productCoalgebra :: Coalgebra l a -> Coalgebra r a -> Coalgebra (Product l r) a
-productCoalgebra cl cr seed = Pair (cl seed) (cr seed)
-
-productAlgebra :: (Functor l, Functor r) => Algebra l a -> Algebra r b -> Algebra (Product l r) (a, b)
-productAlgebra al ar (Pair l r) = (al $ fst <$> l, ar $ snd <$> r)
-
-productFAlgebra :: FAlgebra l a -> FAlgebra r b -> Algebra (Product l r) (a, b)
-productFAlgebra al ar (Pair l r) = (al fst l, ar snd r)
 
 liftL :: Functor l => Freer l a -> Freer (Sum l r) a
 liftL (Freer f) = case f of
@@ -104,9 +61,6 @@ coannotating :: Functor f => Coalgebra f a -> Coalgebra f (Freer f a)
 coannotating coalgebra seed = case runFreer seed of
   Pure a -> pure <$> coalgebra a
   Free run f -> run <$> f
-
-annotatingF :: FAlgebra f a -> FAlgebra f (Cofreer f a)
-annotatingF algebra f base = Cofreer (Cofree (algebra (extract . f) base) f base)
 
 annotatingBidi :: Algebra (Bidi (FreerF f c) b) a -> Algebra (Bidi (FreerF f c) b) (Cofreer (FreerF f c) a)
 annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (bidiF base))
