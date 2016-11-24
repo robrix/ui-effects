@@ -22,6 +22,9 @@ data Bidi f a b c = Bidi
   , bidiF :: FreerF f b c }
   deriving (Eq, Foldable, Functor, Show)
 
+setBidiF :: Bidi f a b c -> FreerF f b c -> Bidi f a b c
+setBidiF bidi a = bidi { bidiF = a }
+
 
 sumAlgebra :: Algebra l a -> Algebra r a -> Algebra (Sum l r) a
 sumAlgebra lAlgebra rAlgebra sum = case sum of
