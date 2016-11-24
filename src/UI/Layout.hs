@@ -120,7 +120,7 @@ fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Bidi (Fitti
 layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Fitting (LayoutF a) a (Layout a (Size a)))
 layoutCoalgebra = liftBidiCoalgebra layoutFCoalgebra
 
-layoutFCoalgebra :: Real a => FittingState a -> (FittingState a -> x -> b) -> LayoutF a x -> FreerF (LayoutF a) (Size a) b
+layoutFCoalgebra :: Real a => CoalgebraFragment (LayoutF a) (FittingState a) (Size a)
 layoutFCoalgebra state@FittingState{..} run layoutF = case layoutF of
   Inset by child -> wrapState (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by))) $ Inset by child
   Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
