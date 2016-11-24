@@ -22,7 +22,7 @@ data Bidi f a b c = Bidi
   , bidiF :: FreerF f b c }
   deriving (Eq, Foldable, Functor, Show)
 
-setBidiF :: Bidi f a b c -> FreerF f b c -> Bidi f a b c
+setBidiF :: Bidi f a b c -> FreerF f b d -> Bidi f a b d
 setBidiF bidi a = bidi { bidiF = a }
 
 
