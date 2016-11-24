@@ -68,6 +68,9 @@ renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra bidi = setBidiF bidi . runFreer <$> bidi
 
+drawingFCoalgebra :: FittingState a -> (FittingState a -> x -> b) -> DrawingF a x -> FreerF (DrawingF a) (Size a) b
+drawingFCoalgebra state run = Free (run state)
+
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
 renderingCoalgebra bidi = setBidiF bidi $ case bidiF bidi of
   Pure size -> Pure size
