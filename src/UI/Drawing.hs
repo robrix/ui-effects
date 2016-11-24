@@ -75,8 +75,9 @@ renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (R
 renderingCoalgebra bidi = setBidiF bidi $ case bidiF bidi of
   Pure size -> Pure size
   Free runF renderingF -> case renderingF of
-    InL drawingF -> hoistFreerF InL $ drawingFCoalgebra (bidiState bidi) (\ state -> Bidi state . runFreer . runF) drawingF
-    InR layoutF -> hoistFreerF InR $ layoutFCoalgebra (bidiState bidi) (\ state -> Bidi state . runFreer . runF) layoutF
+    InL drawingF -> hoistFreerF InL $ drawingFCoalgebra (bidiState bidi) run drawingF
+    InR layoutF -> hoistFreerF InR $ layoutFCoalgebra (bidiState bidi) run layoutF
+    where run state = Bidi state . runFreer . runF
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
