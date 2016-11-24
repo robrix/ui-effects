@@ -9,7 +9,6 @@ module UI.Drawing
 , text
 , clip
 , drawingRectAlgebra
-, drawingRectanglesAlgebra
 , renderingRectAlgebra
 , drawingCoalgebra
 , renderingCoalgebra
@@ -54,9 +53,6 @@ drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin $ case r of
   Free runF drawing -> case drawing of
     Text maxSize s -> size (runF (measureText (width maxSize) s))
     Clip size _ -> size
-
-drawingRectanglesAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) [Rect a]
-drawingRectanglesAlgebra = collect drawingRectAlgebra
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
