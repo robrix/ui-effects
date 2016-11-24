@@ -40,10 +40,10 @@ type Rendering a = Freer (RenderingF a)
 type RenderingF a = Sum (DrawingF a) (LayoutF a)
 
 text :: Size (Maybe a) -> String -> Drawing a (Size a)
-text maxSize = Freer . Free pure . Text maxSize
+text = (liftF .) . Text
 
 clip :: Size a -> Drawing a b -> Drawing a b
-clip size = wrap . Clip size
+clip = (wrap .) . Clip
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
