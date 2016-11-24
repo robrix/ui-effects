@@ -21,6 +21,11 @@ sumAlgebra lAlgebra rAlgebra sum = case sum of
   InL l -> lAlgebra l
   InR r -> rAlgebra r
 
+hoistSum :: (l a -> l' b) -> (r a -> r' b) -> Sum l r a -> Sum l' r' b
+hoistSum ifl ifr sum = case sum of
+  InL l -> InL (ifl l)
+  InR r -> InR (ifr r)
+
 
 liftL :: Functor l => Freer l a -> Freer (Sum l r) a
 liftL (Freer f) = case f of
