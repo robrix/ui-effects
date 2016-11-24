@@ -8,6 +8,7 @@ module UI.Drawing
 , text
 , clip
 , fill
+, rgba
 , drawingRectAlgebra
 , renderingRectAlgebra
 , drawingCoalgebra
@@ -49,6 +50,8 @@ clip = (wrap .) . Clip
 fill :: Linear.V4 a -> Rect a -> Drawing a ()
 fill = (liftF .) . Fill
 
+rgba :: a -> a -> a -> a -> Linear.V4 a
+rgba = Linear.V4
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
 drawingRectAlgebra (Bidi (FittingState _ origin _) r) = case r of
