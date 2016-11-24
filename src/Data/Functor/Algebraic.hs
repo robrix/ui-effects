@@ -27,16 +27,6 @@ hoistSum ifl ifr sum = case sum of
   InR r -> InR (ifr r)
 
 
-liftL :: Functor l => Freer l a -> Freer (Sum l r) a
-liftL (Freer f) = case f of
-  Free t r -> wrapL (liftL . t <$> r)
-  Pure a -> pure a
-
-liftR :: Functor r => Freer r a -> Freer (Sum l r) a
-liftR  (Freer f) = case f of
-  Free t r -> wrapR (liftR . t <$> r)
-  Pure a -> pure a
-
 wrapL :: l (Freer (Sum l r) a) -> Freer (Sum l r) a
 wrapL = wrap . InL
 
