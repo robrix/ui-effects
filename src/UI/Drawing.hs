@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances, GADTs #-}
 module UI.Drawing
 ( Shape(..)
-, Colour(..)
 , DrawingF(..)
 , Drawing
 , Rendering
@@ -29,8 +28,6 @@ import UI.Font
 import UI.Geometry
 
 data Shape a = Rectangle (Linear.V2 a) (Linear.V2 a)
-
-data Colour a = RGBA !a !a !a !a
 
 data DrawingF a f where
   Text :: Size (Maybe a) -> String -> DrawingF a (Size a)
