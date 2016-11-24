@@ -17,12 +17,12 @@ type FAlgebra functor result = forall x. (x -> result) -> functor x -> result
 type FCoalgebra functor seed = forall x. (seed -> x) -> seed -> functor x
 
 -- | A datatype for use as the interim structure in bidirectional computations represented as hylomorphisms.
-data Bidi f a b c = Bidi
+data Bidi f a b = Bidi
   { bidiState :: a
-  , bidiF :: FreerF f b c }
+  , bidiF :: f b }
   deriving (Eq, Foldable, Functor, Show)
 
-setBidiF :: Bidi f a b c -> FreerF f b d -> Bidi f a b d
+setBidiF :: Bidi f a b -> f c -> Bidi f a c
 setBidiF bidi a = bidi { bidiF = a }
 
 
@@ -108,5 +108,5 @@ coannotating coalgebra seed = case runFreer seed of
 annotatingF :: FAlgebra f a -> FAlgebra f (Cofreer f a)
 annotatingF algebra f base = Cofreer (Cofree (algebra (extract . f) base) f base)
 
-annotatingBidi :: Algebra (Bidi f b c) a -> Algebra (Bidi f b c) (Cofreer (FreerF f c) a)
+annotatingBidi :: Algebra (Bidi (FreerF f c) b) a -> Algebra (Bidi (FreerF f c) b) (Cofreer (FreerF f c) a)
 annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (bidiF base))

@@ -109,7 +109,7 @@ layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
-type Fitting f a = Bidi f (FittingState a) (Size a)
+type Fitting f a = Bidi (FreerF f (Size a)) (FittingState a)
 
 data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point a), maxSize :: !(Size (Maybe a)) }
   deriving (Eq, Show)
@@ -118,16 +118,19 @@ fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -
 fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Bidi (FittingState Full (Point 0 0) maxSize) (runFreer layout))
 
 layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Fitting (LayoutF a) a (Layout a (Size a)))
-layoutCoalgebra (Bidi state@FittingState{..} layout) = Bidi state $ case layout of
+layoutCoalgebra bidi = setBidiF bidi $ case bidiF bidi of
   Pure size -> Pure size
-  Free runF layoutF -> case layoutF of
-    Inset by child -> wrapState (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by))) $ Inset by child
-    Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
-    GetMaxSize -> wrapState state GetMaxSize
-    Align alignment child -> wrapState (state { alignment = alignment }) $ Align alignment child
-    where wrapState state = Free (Bidi state . runFreer . runF)
-          subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
-          addSizeToPoint point = liftA2 (+) point . sizeExtent
+  Free runF layoutF -> layoutFCoalgebra (bidiState bidi) (\ state -> Bidi state . runFreer . runF) layoutF
+
+layoutFCoalgebra :: Real a => FittingState a -> (FittingState a -> x -> b) -> LayoutF a x -> FreerF (LayoutF a) (Size a) b
+layoutFCoalgebra state@FittingState{..} run layoutF = case layoutF of
+  Inset by child -> wrapState (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by))) $ Inset by child
+  Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
+  GetMaxSize -> wrapState state GetMaxSize
+  Align alignment child -> wrapState (state { alignment = alignment }) $ Align alignment child
+  where wrapState state = Free (run state)
+        subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+        addSizeToPoint point = liftA2 (+) point . sizeExtent
 
 
 -- Instances

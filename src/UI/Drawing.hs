@@ -17,7 +17,6 @@ module UI.Drawing
 , module Layout
 ) where
 
-import Control.Applicative
 import Control.Monad.Free.Freer
 import Data.Functor.Algebraic
 import Data.Functor.Classes
@@ -74,14 +73,7 @@ renderingCoalgebra (Bidi state@FittingState{..} rendering) = Bidi state $ case r
   Pure size -> Pure size
   Free runF renderingF -> case renderingF of
     InL _ -> Bidi state . runFreer <$> rendering
-    InR layoutF -> case layoutF of
-      Inset by child -> wrapState (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by))) $ Inset by child
-      Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
-      GetMaxSize -> wrapState state GetMaxSize
-      Align alignment child -> wrapState (state { alignment = alignment }) $ Align alignment child
-      where wrapState state = Free (Bidi state . runFreer . runF) . InR
-            subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
-            addSizeToPoint point = liftA2 (+) point . sizeExtent
+    InR layoutF -> hoistFreerF InR $ layoutFCoalgebra state (\ state -> Bidi state . runFreer . runF) layoutF
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
