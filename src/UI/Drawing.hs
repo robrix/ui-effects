@@ -66,7 +66,7 @@ renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
     InR layout -> fromMaybe (Rect (pure 0) (pure 0)) (layoutAlgebra (Bidi a (Free (Just . runF) layout)))
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
-drawingCoalgebra bidi = setBidiF bidi . runFreer <$> bidi
+drawingCoalgebra = liftBidiCoalgebra drawingFCoalgebra
 
 drawingFCoalgebra :: FittingState a -> (FittingState a -> x -> b) -> DrawingF a x -> FreerF (DrawingF a) (Size a) b
 drawingFCoalgebra state run = Free (run state)
