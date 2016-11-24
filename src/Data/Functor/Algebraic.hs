@@ -110,3 +110,9 @@ annotatingF algebra f base = Cofreer (Cofree (algebra (extract . f) base) f base
 
 annotatingBidi :: Algebra (Bidi (FreerF f c) b) a -> Algebra (Bidi (FreerF f c) b) (Cofreer (FreerF f c) a)
 annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (bidiF base))
+
+
+liftBidiCoalgebra :: (forall b x. seed -> (seed -> x -> b) -> f x -> FreerF f a b) -> Coalgebra (Bidi (FreerF f a) seed) (Bidi (FreerF f a) seed (Freer f a))
+liftBidiCoalgebra fragment bidi = setBidiF bidi $ case bidiF bidi of
+  Pure a -> Pure a
+  Free runF functor -> fragment (bidiState bidi) (\ state -> Bidi state . runFreer . runF) functor
