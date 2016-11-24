@@ -57,9 +57,7 @@ drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r o
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
   Pure size -> Just (Rect origin size)
-  Free runF sum -> case sum of
-    InL drawing -> drawingRectAlgebra (Bidi a (Free runF drawing))
-    InR layout -> layoutAlgebra (Bidi a (Free runF layout))
+  Free runF sum -> sumAlgebra drawingRectAlgebra layoutAlgebra $ hoistSum (Bidi a . Free runF) (Bidi a . Free runF) sum
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra = liftBidiCoalgebra drawingFCoalgebra
