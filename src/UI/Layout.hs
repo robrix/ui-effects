@@ -84,11 +84,8 @@ measureLayout = fromMaybe (Rect (Point 0 0) (Size 0 0)) . fitLayout (pure Nothin
 fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Rect a)
 fitLayout = fitLayoutWith layoutAlgebra
 
-fitLayoutAndAnnotate :: Real a => Size (Maybe a) -> Layout a (Size a) -> ALayout a (Size a) (Maybe (Rect a))
-fitLayoutAndAnnotate = fitLayoutWith (annotatingBidi layoutAlgebra)
-
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
-layoutAlgebra (Cofree FittingState{..} runC layout) = case layout of
+layoutAlgebra (Bidi FittingState{..} layout) = case layout of
   Pure size | maxSize `encloses` size -> Just $ case alignment of
     Leading -> Rect origin minSize
     Trailing -> Rect origin { x = x origin + widthDiff} minSize
@@ -98,11 +95,11 @@ layoutAlgebra (Cofree FittingState{..} runC layout) = case layout of
           fullSize = fromMaybe <$> size <*> maxSize
           widthDiff = maybe 0 (+ negate (width size)) (width maxSize)
   Free runF layout -> case layout of
-    Inset by child -> Rect origin . (2 * by +) . size <$> runC (runF child)
-    Offset by child -> Rect origin . (pointSize by +) . size <$> runC (runF child)
-    GetMaxSize -> runC (runF maxSize)
+    Inset by child -> Rect origin . (2 * by +) . size <$> runF child
+    Offset by child -> Rect origin . (pointSize by +) . size <$> runF child
+    GetMaxSize -> runF maxSize
     Align _ child -> do
-      Rect _ size <- runC (runF child)
+      Rect _ size <- runF child
       pure $ Rect origin (fromMaybe <$> size <*> maxSize)
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
@@ -112,23 +109,25 @@ layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
 
 
-type Fitting f a = Bidi f (Size a) (FittingState a)
+type Fitting f a = Bidi (FreerF f (Size a)) (FittingState a)
 
 data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point a), maxSize :: !(Size (Maybe a)) }
   deriving (Eq, Show)
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra fittingCoalgebra (FittingState Full (Point 0 0) maxSize, layout)
+fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Bidi (FittingState Full (Point 0 0) maxSize) (runFreer layout))
 
-fittingCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (FittingState a, Layout a (Size a))
-fittingCoalgebra (state@FittingState{..}, layout) = Cofree state id $ case runFreer layout of
-  Pure size -> Pure size
-  Free run layout -> case layout of
-    Inset by child -> Free id $ Inset by (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by)), run child)
-    Offset by child -> Free id $ Offset by (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by)), run child)
-    GetMaxSize -> Free ((,) state . run) GetMaxSize
-    Align alignment child -> Free id $ Align alignment (state { alignment = alignment }, run child)
-  where subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
+layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Fitting (LayoutF a) a (Layout a (Size a)))
+layoutCoalgebra = liftBidiCoalgebra layoutFCoalgebra
+
+layoutFCoalgebra :: Real a => CoalgebraFragment (LayoutF a) (FittingState a) (Size a)
+layoutFCoalgebra state@FittingState{..} run layoutF = case layoutF of
+  Inset by child -> wrapState (FittingState alignment (addSizeToPoint origin by) (subtractSize maxSize (2 * by))) $ Inset by child
+  Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
+  GetMaxSize -> wrapState state GetMaxSize
+  Align alignment child -> wrapState (state { alignment = alignment }) $ Align alignment child
+  where wrapState state = Free (run state)
+        subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point = liftA2 (+) point . sizeExtent
 
 

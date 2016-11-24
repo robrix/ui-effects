@@ -9,8 +9,6 @@ module Control.Comonad.Cofree.Cofreer
 , unfold
 , hoistCofreer
 , hoistCofreerF
-, annotating
-, annotatingBidi
 , extract
 , unwrap
 ) where
@@ -52,13 +50,6 @@ hoistCofreer f = go
 
 hoistCofreerF :: (forall a. f a -> g a) -> CofreerF f b c -> CofreerF g b c
 hoistCofreerF f (Cofree a t r) = Cofree a t (f r)
-
-
-annotating :: Functor f => (f a -> a) -> f (Cofreer f a) -> Cofreer f a
-annotating algebra base = Cofreer (Cofree (algebra (extract <$> base)) id base)
-
-annotatingBidi :: Functor f => (CofreerF f b a -> a) -> CofreerF f b (Cofreer f a) -> Cofreer f a
-annotatingBidi algebra base = Cofreer (Cofree (algebra (extract <$> base)) id (tailF base))
 
 
 -- Instances
