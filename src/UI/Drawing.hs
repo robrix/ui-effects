@@ -7,6 +7,7 @@ module UI.Drawing
 , RenderingF
 , text
 , clip
+, fill
 , drawingRectAlgebra
 , renderingRectAlgebra
 , drawingCoalgebra
@@ -44,6 +45,9 @@ text = (liftF .) . Text
 
 clip :: Size a -> Drawing a b -> Drawing a b
 clip = (wrap .) . Clip
+
+fill :: Linear.V4 a -> Rect a -> Drawing a ()
+fill = (liftF .) . Fill
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
