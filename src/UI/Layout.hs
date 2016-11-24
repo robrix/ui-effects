@@ -118,9 +118,7 @@ fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -
 fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Bidi (FittingState Full (Point 0 0) maxSize) (runFreer layout))
 
 layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Fitting (LayoutF a) a (Layout a (Size a)))
-layoutCoalgebra bidi = setBidiF bidi $ case bidiF bidi of
-  Pure size -> Pure size
-  Free runF layoutF -> layoutFCoalgebra (bidiState bidi) (\ state -> Bidi state . runFreer . runF) layoutF
+layoutCoalgebra = liftBidiCoalgebra layoutFCoalgebra
 
 layoutFCoalgebra :: Real a => FittingState a -> (FittingState a -> x -> b) -> LayoutF a x -> FreerF (LayoutF a) (Size a) b
 layoutFCoalgebra state@FittingState{..} run layoutF = case layoutF of
