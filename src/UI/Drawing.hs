@@ -47,12 +47,12 @@ clip = (wrap .) . Clip
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
-drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r of
-  Pure size -> Just size
+drawingRectAlgebra (Bidi (FittingState _ origin _) r) = case r of
+  Pure size -> Just (Rect origin size)
   Free runF drawing -> case drawing of
-    Text maxSize s -> size <$> runF (measureText (width maxSize) s)
-    Clip size _ -> Just size
-    Fill _ (Rect _ size) -> Just size
+    Text maxSize s -> Rect origin . size <$> runF (measureText (width maxSize) s)
+    Clip size _ -> Just (Rect origin size)
+    Fill _ rect -> Just rect
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
