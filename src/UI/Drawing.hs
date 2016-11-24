@@ -23,6 +23,7 @@ import Data.Functor.Sum
 import Data.Maybe (catMaybes)
 import Data.Semigroup (Semigroup(..))
 import qualified Linear.V2 as Linear
+import qualified Linear.V4 as Linear
 import UI.Layout as Layout
 import UI.Font
 import UI.Geometry
@@ -32,6 +33,7 @@ data Shape a = Rectangle (Linear.V2 a) (Linear.V2 a)
 data DrawingF a f where
   Text :: Size (Maybe a) -> String -> DrawingF a (Size a)
   Clip :: Size a -> f -> DrawingF a f
+  Fill :: Linear.V4 a -> Rect a -> DrawingF a ()
 
 type Drawing a = Freer (DrawingF a)
 type Rendering a = Freer (RenderingF a)
@@ -50,6 +52,7 @@ drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r o
   Free runF drawing -> case drawing of
     Text maxSize s -> size <$> runF (measureText (width maxSize) s)
     Clip size _ -> Just size
+    Fill _ (Rect _ size) -> Just size
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
@@ -81,6 +84,7 @@ instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
     Text size string -> showsBinaryWith showsPrec showsPrec "Text" d size string
     Clip size f -> showsBinaryWith showsPrec sp "Clip" d size f
+    Fill colour rect -> showsBinaryWith showsPrec showsPrec "Fill" d colour rect
 
 instance (Show a, Show b) => Show (DrawingF a b) where
   showsPrec = liftShowsPrec showsPrec showList
@@ -89,11 +93,13 @@ instance Real a => Foldable (DrawingF a) where
   foldMap f drawing = case drawing of
     Text (Size w _) s -> f (measureText w s)
     Clip _ child -> f child
+    Fill _ _ -> mempty
 
 instance Eq2 DrawingF where
   liftEq2 eqA eqF d1 d2 = case (d1, d2) of
     (Text m1 s1, Text m2 s2) -> liftEq (liftEq eqA) m1 m2 && s1 == s2
     (Clip s1 c1, Clip s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
+    (Fill c1 r1, Fill c2 r2) -> liftEq eqA c1 c2 && liftEq eqA r1 r2
     _ -> False
 
 instance Eq a => Eq1 (DrawingF a) where
