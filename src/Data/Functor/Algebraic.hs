@@ -118,3 +118,8 @@ liftBidiCoalgebra :: CoalgebraFragment f seed a -> Coalgebra (Bidi (FreerF f a) 
 liftBidiCoalgebra fragment bidi = setBidiF bidi $ case bidiF bidi of
   Pure a -> Pure a
   Free runF functor -> fragment (bidiState bidi) (\ state -> Bidi state . runFreer . runF) functor
+
+liftSumCoalgebra :: CoalgebraFragment l seed pure -> CoalgebraFragment r seed pure -> CoalgebraFragment (Sum l r) seed pure
+liftSumCoalgebra lf rf state run sum = case sum of
+  InL l -> hoistFreerF InL $ lf state run l
+  InR r -> hoistFreerF InR $ rf state run r
