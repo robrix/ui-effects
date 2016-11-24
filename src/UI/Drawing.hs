@@ -21,7 +21,7 @@ import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
 import Data.Functor.Sum
-import Data.Maybe (fromMaybe)
+import Data.Maybe (catMaybes)
 import Data.Semigroup (Semigroup(..))
 import qualified Linear.V2 as Linear
 import UI.Layout as Layout
@@ -54,12 +54,12 @@ drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r o
     Text maxSize s -> size <$> runF (measureText (width maxSize) s)
     Clip size _ -> Just size
 
-renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Rect a)
+renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
-  Pure size -> Rect origin size
-  Free runF sum -> fromMaybe (Rect (pure 0) (pure 0)) $ case sum of
-    InL drawing -> drawingRectAlgebra (Bidi a (Free (Just . runF) drawing))
-    InR layout -> layoutAlgebra (Bidi a (Free (Just . runF) layout))
+  Pure size -> Just (Rect origin size)
+  Free runF sum -> case sum of
+    InL drawing -> drawingRectAlgebra (Bidi a (Free runF drawing))
+    InR layout -> layoutAlgebra (Bidi a (Free runF layout))
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra = liftBidiCoalgebra drawingFCoalgebra
@@ -71,7 +71,7 @@ renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (R
 renderingCoalgebra = liftBidiCoalgebra (liftSumCoalgebra drawingFCoalgebra layoutFCoalgebra)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
+renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
 
 
 -- Instances
