@@ -72,12 +72,7 @@ drawingFCoalgebra :: CoalgebraFragment (DrawingF a) (FittingState a) (Size a)
 drawingFCoalgebra state run = Free (run state)
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
-renderingCoalgebra = liftBidiCoalgebra renderingFCoalgebra
-
-renderingFCoalgebra :: Real a => CoalgebraFragment (RenderingF a) (FittingState a) (Size a)
-renderingFCoalgebra state run renderingF = case renderingF of
-  InL drawingF -> hoistFreerF InL $ drawingFCoalgebra state run drawingF
-  InR layoutF -> hoistFreerF InR $ layoutFCoalgebra state run layoutF
+renderingCoalgebra = liftBidiCoalgebra (liftSumCoalgebra drawingFCoalgebra layoutFCoalgebra)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (collect renderingRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
