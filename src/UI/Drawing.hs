@@ -7,7 +7,7 @@ module UI.Drawing
 , RenderingF
 , text
 , clip
-, fill
+, background
 , rgba
 , drawingRectAlgebra
 , renderingRectAlgebra
@@ -35,7 +35,7 @@ data Shape a = Rectangle (Linear.V2 a) (Linear.V2 a)
 data DrawingF a f where
   Text :: Size (Maybe a) -> String -> DrawingF a (Size a)
   Clip :: Size a -> f -> DrawingF a f
-  Fill :: Linear.V4 a -> Rect a -> DrawingF a ()
+  Background :: Linear.V4 a -> f -> DrawingF a f
 
 type Drawing a = Freer (DrawingF a)
 type Rendering a = Freer (RenderingF a)
@@ -47,8 +47,8 @@ text = (liftF .) . Text
 clip :: Size a -> Drawing a b -> Drawing a b
 clip = (wrap .) . Clip
 
-fill :: Linear.V4 a -> Rect a -> Drawing a ()
-fill = (liftF .) . Fill
+background :: Linear.V4 a -> Drawing a b -> Drawing a b
+background = (wrap .) . Background
 
 rgba :: a -> a -> a -> a -> Linear.V4 a
 rgba = Linear.V4
@@ -59,7 +59,7 @@ drawingRectAlgebra (Bidi (FittingState _ origin _) r) = case r of
   Free runF drawing -> case drawing of
     Text maxSize s -> Rect origin . size <$> runF (measureText (width maxSize) s)
     Clip size _ -> Just (Rect origin size)
-    Fill _ rect -> Just rect
+    Background _ child -> runF child
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
@@ -91,7 +91,7 @@ instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
     Text size string -> showsBinaryWith showsPrec showsPrec "Text" d size string
     Clip size f -> showsBinaryWith showsPrec sp "Clip" d size f
-    Fill colour rect -> showsBinaryWith showsPrec showsPrec "Fill" d colour rect
+    Background colour f -> showsBinaryWith showsPrec sp "Fill" d colour f
 
 instance (Show a, Show b) => Show (DrawingF a b) where
   showsPrec = liftShowsPrec showsPrec showList
@@ -100,13 +100,13 @@ instance Real a => Foldable (DrawingF a) where
   foldMap f drawing = case drawing of
     Text (Size w _) s -> f (measureText w s)
     Clip _ child -> f child
-    Fill _ _ -> mempty
+    Background _ child -> f child
 
 instance Eq2 DrawingF where
   liftEq2 eqA eqF d1 d2 = case (d1, d2) of
     (Text m1 s1, Text m2 s2) -> liftEq (liftEq eqA) m1 m2 && s1 == s2
     (Clip s1 c1, Clip s2 c2) -> liftEq eqA s1 s2 && eqF c1 c2
-    (Fill c1 r1, Fill c2 r2) -> liftEq eqA c1 c2 && liftEq eqA r1 r2
+    (Background v1 c1, Background v2 c2) -> liftEq eqA v1 v2 && eqF c1 c2
     _ -> False
 
 instance Eq a => Eq1 (DrawingF a) where
