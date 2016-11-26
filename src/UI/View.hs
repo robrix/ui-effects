@@ -32,7 +32,7 @@ renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
   Text s -> do
     maxSize <- liftFR GetMaxSize
     liftFL (Draw.Text maxSize s)
-  Label s -> liftFL (Draw.Text (pure Nothing) s)
+  Label s -> wrapL (Background (rgba 1 0 0 0) (liftFL (Draw.Text (pure Nothing) s)))
   List children -> maybe (pure 0) sconcat (nonEmpty (intersperse spacer children))
   Scroll axis child -> do
     Size maxW maxH <- liftFR GetMaxSize
