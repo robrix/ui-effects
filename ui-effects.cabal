@@ -27,6 +27,7 @@ library
                      , GL.Scalar
                      , GL.Setup
                      , GL.Shader
+                     , GL.Shader.Core
                      , UI.Drawing
                      , UI.Font
                      , UI.Geometry
