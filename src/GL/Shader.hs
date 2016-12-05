@@ -1,4 +1,4 @@
-{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
 module GL.Shader
 ( Var(Uniform)
 , varName
@@ -22,7 +22,7 @@ module GL.Shader
 import Control.Exception
 import Control.Monad (void)
 import Control.Monad.Free.Freer
-import Data.Foldable (toList, for_)
+import Data.Foldable (for_)
 import Data.Functor.Classes
 import Data.List (intersperse)
 import Data.Proxy
@@ -31,6 +31,7 @@ import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import GL.Exception
+import GL.Shader.Core
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.Matrix as Linear
@@ -242,13 +243,6 @@ checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLo
 
 -- Classes
 
-class GLSLValue v where
-  showsGLSLType :: Proxy v -> ShowS
-  showsGLSLVecType :: Proxy v -> ShowS
-  showsGLSLValue :: v -> ShowS
-  default showsGLSLValue :: Show v => v -> ShowS
-  showsGLSLValue = shows
-
 class IsShader t where
   type ShaderResult t :: *
 
@@ -338,20 +332,6 @@ instance Show1 ShaderF where
           showsTernaryWith sp1 sp2 sp3 name d x y z = showParen (d > 10) $ showString name . showChar ' ' . sp1 11 x . showChar ' ' . sp2 11 y . showChar ' ' . sp3 11 z
 
 
-instance GLSLValue () where
-  showsGLSLType _ = showString "void"
-  showsGLSLVecType _ = showString "void"
-  showsGLSLValue = const id
-
-instance GLSLValue Float where
-  showsGLSLType _ = showString "float"
-  showsGLSLVecType _ = showString "vec4"
-
-instance GLSLValue Bool where
-  showsGLSLType _ = showString "bool"
-  showsGLSLVecType _ = showString "bvec4"
-  showsGLSLValue v = showString $ if v then "true" else "false"
-
 instance GLSLValue a => GLSLValue (Shader a) where
   showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
   showsGLSLVecType _ = showsGLSLVecType (Proxy :: Proxy a)
@@ -361,10 +341,6 @@ instance GLSLValue a => GLSLValue (Var a) where
   showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
   showsGLSLVecType _ = showsGLSLVecType (Proxy :: Proxy a)
 
-instance GLSLValue a => GLSLValue (Linear.V4 a) where
-  showsGLSLType _ = showsGLSLVecType (Proxy :: Proxy a)
-  showsGLSLVecType _ = showString "mat4"
-  showsGLSLValue v = showsGLSLVecType (Proxy :: Proxy a) . showParen True (foldr (.) id (intersperse (showString ", ") (showsGLSLValue <$> toList v)))
 
 instance IsShader (Shader a) where
   type ShaderResult (Shader a) = a
