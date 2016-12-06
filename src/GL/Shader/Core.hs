@@ -6,6 +6,12 @@ import Data.List (intersperse)
 import Data.Proxy
 import qualified Linear.V4 as Linear
 
+data DeclF a where
+  In :: GLSLValue a => String -> DeclF a
+  Out :: GLSLValue a => String -> DeclF a
+  Uniform :: GLSLValue a => String -> DeclF a
+
+
 -- Classes
 
 class GLSLValue v where
