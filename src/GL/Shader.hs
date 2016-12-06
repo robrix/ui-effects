@@ -24,7 +24,6 @@ import Control.Monad (void)
 import Control.Monad.Free.Freer
 import Data.Foldable (for_)
 import Data.Functor.Classes
-import Data.Functor.Identity
 import Data.List (intersperse)
 import Data.Proxy
 import Foreign.C.String
@@ -49,49 +48,49 @@ varName (In s) = s
 varName (Out s) = s
 varName (Uniform s) = s
 
-data ShaderF (t :: * -> *) a where
+data ShaderF a where
   -- Binding
-  Bind :: Core.GLSLValue a => Var (Shader a) -> ShaderF t (Var (Shader a))
+  Bind :: Core.GLSLValue a => Var (Shader a) -> ShaderF (Var (Shader a))
 
   -- Functions
-  Function :: Core.GLSLValue a => String -> [a] -> a -> ShaderF t a
+  Function :: Core.GLSLValue a => String -> [a] -> a -> ShaderF a
 
   -- Accessors
-  Get :: Var (Shader a) -> ShaderF t a
-  Set :: Var a -> a -> ShaderF t a
+  Get :: Var (Shader a) -> ShaderF a
+  Set :: Var a -> a -> ShaderF a
 
   -- Literals
-  V4 :: Core.GLSLValue a => Linear.V4 a -> ShaderF t (Linear.V4 a)
+  V4 :: Core.GLSLValue a => Linear.V4 a -> ShaderF (Linear.V4 a)
 
   -- Arithmetic
-  Add :: a -> a -> ShaderF t a
-  Sub :: a -> a -> ShaderF t a
-  Mul :: a -> a -> ShaderF t a
-  Div :: a -> a -> ShaderF t a
-  Abs :: a -> ShaderF t a
-  Signum :: a -> ShaderF t a
+  Add :: a -> a -> ShaderF a
+  Sub :: a -> a -> ShaderF a
+  Mul :: a -> a -> ShaderF a
+  Div :: a -> a -> ShaderF a
+  Abs :: a -> ShaderF a
+  Signum :: a -> ShaderF a
 
   -- Matrix arithmetic
-  MulMV :: Shader (Linear.V4 a) -> Shader a -> ShaderF t a
+  MulMV :: Shader (Linear.V4 a) -> Shader a -> ShaderF a
 
   -- Trigonometric
-  Sin :: a -> ShaderF t a
-  Cos :: a -> ShaderF t a
-  Tan :: a -> ShaderF t a
-  ASin :: a -> ShaderF t a
-  ACos :: a -> ShaderF t a
-  ATan :: a -> ShaderF t a
-  SinH :: a -> ShaderF t a
-  CosH :: a -> ShaderF t a
-  TanH :: a -> ShaderF t a
-  ASinH :: a -> ShaderF t a
-  ACosH :: a -> ShaderF t a
-  ATanH :: a -> ShaderF t a
+  Sin :: a -> ShaderF a
+  Cos :: a -> ShaderF a
+  Tan :: a -> ShaderF a
+  ASin :: a -> ShaderF a
+  ACos :: a -> ShaderF a
+  ATan :: a -> ShaderF a
+  SinH :: a -> ShaderF a
+  CosH :: a -> ShaderF a
+  TanH :: a -> ShaderF a
+  ASinH :: a -> ShaderF a
+  ACosH :: a -> ShaderF a
+  ATanH :: a -> ShaderF a
 
-  Exp :: a -> ShaderF t a
-  Log :: a -> ShaderF t a
+  Exp :: a -> ShaderF a
+  Log :: a -> ShaderF a
 
-type Shader = Freer (ShaderF Identity)
+type Shader = Freer ShaderF
 
 data Vertex = Vertex { position :: Shader (Linear.V4 Float), pointSize :: Shader Float, clipDistance :: Shader [Float] }
   deriving Show
@@ -133,7 +132,7 @@ elaborateShaderUniforms shader = do
 
 uniformVars :: Shader a -> [UniformVar]
 uniformVars = iterFreer uniformVarsAlgebra . fmap (const [])
-  where uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF t x -> [UniformVar]
+  where uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF x -> [UniformVar]
         uniformVarsAlgebra run s = case s of
           Bind v -> run v
           Get var@(Uniform _) -> [ UniformVar var ]
@@ -162,7 +161,7 @@ data UniformVar where
 toGLSL :: Core.GLSLValue a => Shader a -> String
 toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap Core.showsGLSLValue
 
-toGLSLAlgebra :: forall t x. (x -> ShowS) -> ShaderF t x -> ShowS
+toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
 toGLSLAlgebra run shader = case shader of
   Bind var -> showVarDeclQualifier var . sp . Core.showsGLSLType (Proxy :: Proxy x) . sp . showString (varName var) . showChar ';' . nl . run var
 
@@ -291,9 +290,9 @@ instance Floating a => Floating (Shader a) where
   exp = wrap . Exp
   log = wrap . Log
 
-deriving instance Foldable (ShaderF t)
+deriving instance Foldable ShaderF
 
-instance Show1 (ShaderF t) where
+instance Show1 ShaderF where
   liftShowsPrec sp sl d shader = case shader of
     Bind v -> showsUnaryWith showsPrec "Bind" d v
 
