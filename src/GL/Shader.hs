@@ -14,7 +14,7 @@ module GL.Shader
 , toGLSL
 , GLShader(..)
 , withCompiledShaders
-, GLSLValue(..)
+, Core.GLSLValue(..)
 , IsShader
 , toShader
 ) where
@@ -32,7 +32,7 @@ import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import GL.Exception
-import GL.Shader.Core
+import qualified GL.Shader.Core as Core
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.Matrix as Linear
@@ -40,9 +40,9 @@ import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 
 data Var a where
-  In :: GLSLValue a => String -> Var (Shader a)
-  Out :: GLSLValue a => String -> Var (Shader a)
-  Uniform :: GLSLValue a => String -> Var (Shader a)
+  In :: Core.GLSLValue a => String -> Var (Shader a)
+  Out :: Core.GLSLValue a => String -> Var (Shader a)
+  Uniform :: Core.GLSLValue a => String -> Var (Shader a)
 
 varName :: Var a -> String
 varName (In s) = s
@@ -51,17 +51,17 @@ varName (Uniform s) = s
 
 data ShaderF (t :: * -> *) a where
   -- Binding
-  Bind :: GLSLValue a => Var (Shader a) -> ShaderF t (Var (Shader a))
+  Bind :: Core.GLSLValue a => Var (Shader a) -> ShaderF t (Var (Shader a))
 
   -- Functions
-  Function :: GLSLValue a => String -> [a] -> a -> ShaderF t a
+  Function :: Core.GLSLValue a => String -> [a] -> a -> ShaderF t a
 
   -- Accessors
   Get :: Var (Shader a) -> ShaderF t a
   Set :: Var a -> a -> ShaderF t a
 
   -- Literals
-  V4 :: GLSLValue a => Linear.V4 a -> ShaderF t (Linear.V4 a)
+  V4 :: Core.GLSLValue a => Linear.V4 a -> ShaderF t (Linear.V4 a)
 
   -- Arithmetic
   Add :: a -> a -> ShaderF t a
@@ -100,13 +100,13 @@ vertex :: Vertex
 vertex = Vertex (pure (Linear.V4 0 0 0 0)) (pure 0) (pure [])
 
 
-input :: GLSLValue a => String -> Shader (Var (Shader a))
+input :: Core.GLSLValue a => String -> Shader (Var (Shader a))
 input = liftF . Bind . In
 
-output :: GLSLValue a => String -> Shader (Var (Shader a))
+output :: Core.GLSLValue a => String -> Shader (Var (Shader a))
 output = liftF . Bind . Out
 
-function :: GLSLValue a => String -> [Shader a] -> Shader a -> Shader a
+function :: Core.GLSLValue a => String -> [Shader a] -> Shader a -> Shader a
 function name args body = wrap (Function name args body)
 
 get :: Var (Shader a) -> Shader a
@@ -115,7 +115,7 @@ get = liftF . Get
 set :: Var (Shader a) -> Shader a -> Shader a
 set var value = wrap (Set var value)
 
-v4 :: GLSLValue a => a -> a -> a -> a -> Shader (Linear.V4 a)
+v4 :: Core.GLSLValue a => a -> a -> a -> a -> Shader (Linear.V4 a)
 v4 x y z w = liftF (V4 (Linear.V4 x y z w))
 
 infixl 7 !*
@@ -147,7 +147,7 @@ elaborateVertexShader shader = elaborateShaderUniforms $ do
   function "main" [] . void $ set gl_Position pos
   where gl_Position = Out "gl_Position"
 
-elaborateShader :: GLSLValue a => Shader a -> Shader ()
+elaborateShader :: Core.GLSLValue a => Shader a -> Shader ()
 elaborateShader shader = elaborateShaderUniforms $ do
   out <- output "result"
   function "main" [] . void $ set out shader
@@ -156,25 +156,25 @@ elaborateShader shader = elaborateShaderUniforms $ do
 -- Compilation
 
 data UniformVar where
-  UniformVar :: GLSLValue a => Var (Shader a) -> UniformVar
+  UniformVar :: Core.GLSLValue a => Var (Shader a) -> UniformVar
 
 
-toGLSL :: GLSLValue a => Shader a -> String
-toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap showsGLSLValue
+toGLSL :: Core.GLSLValue a => Shader a -> String
+toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap Core.showsGLSLValue
 
 toGLSLAlgebra :: forall t x. (x -> ShowS) -> ShaderF t x -> ShowS
 toGLSLAlgebra run shader = case shader of
-  Bind var -> showVarDeclQualifier var . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString (varName var) . showChar ';' . nl . run var
+  Bind var -> showVarDeclQualifier var . sp . Core.showsGLSLType (Proxy :: Proxy x) . sp . showString (varName var) . showChar ';' . nl . run var
 
   Function name args body ->
-    showsGLSLType (Proxy :: Proxy x) . sp . showString name
-    . showParen True (foldr (.) id (intersperse (showString ", ") (if null args then [ showsGLSLType (Proxy :: Proxy ()) ] else run <$> args))) . sp
+    Core.showsGLSLType (Proxy :: Proxy x) . sp . showString name
+    . showParen True (foldr (.) id (intersperse (showString ", ") (if null args then [ Core.showsGLSLType (Proxy :: Proxy ()) ] else run <$> args))) . sp
     . showBrace True (nl . sp . sp . run body)
 
   Get v -> var v
   Set v value -> var v . sp . showChar '=' . sp . run value . showChar ';' . nl
 
-  V4 v -> showsGLSLValue v . run v
+  V4 v -> Core.showsGLSLValue v . run v
 
   Add a b -> op '+' a b
   Sub a b -> op '-' a b
@@ -333,21 +333,21 @@ instance Show1 (ShaderF t) where
           showsTernaryWith sp1 sp2 sp3 name d x y z = showParen (d > 10) $ showString name . showChar ' ' . sp1 11 x . showChar ' ' . sp2 11 y . showChar ' ' . sp3 11 z
 
 
-instance GLSLValue a => GLSLValue (Shader a) where
-  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
-  showsGLSLVecType _ = showsGLSLVecType (Proxy :: Proxy a)
+instance Core.GLSLValue a => Core.GLSLValue (Shader a) where
+  showsGLSLType _ = Core.showsGLSLType (Proxy :: Proxy a)
+  showsGLSLVecType _ = Core.showsGLSLVecType (Proxy :: Proxy a)
   showsGLSLValue _ = id
 
-instance GLSLValue a => GLSLValue (Var a) where
-  showsGLSLType _ = showsGLSLType (Proxy :: Proxy a)
-  showsGLSLVecType _ = showsGLSLVecType (Proxy :: Proxy a)
+instance Core.GLSLValue a => Core.GLSLValue (Var a) where
+  showsGLSLType _ = Core.showsGLSLType (Proxy :: Proxy a)
+  showsGLSLVecType _ = Core.showsGLSLVecType (Proxy :: Proxy a)
 
 
 instance IsShader (Shader a) where
   type ShaderResult (Shader a) = a
   toShader' = const
 
-instance (GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
+instance (Core.GLSLValue a, IsShader b) => IsShader (Var (Shader a) -> b) where
   type ShaderResult (Var (Shader a) -> b) = ShaderResult b
   toShader' f i = do
     var <- input ('i' : show i)
