@@ -41,6 +41,8 @@ data DeclF a where
   Uniform :: GLSLValue a => String -> DeclF a
   Function :: GLSLValue a => String -> [a] -> a -> DeclF a
 
+type Decl = Freer DeclF
+
 
 -- Classes
 
