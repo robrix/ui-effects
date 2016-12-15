@@ -73,6 +73,10 @@ instance Num a => Num (Expr a) where
   signum = wrap . Signum
   fromInteger = pure . fromInteger
 
+instance Fractional a => Fractional (Expr a) where
+  (/) = (wrap .) . Div
+  fromRational = pure . fromRational
+
 instance GLSLValue () where
   showsGLSLType _ = showString "void"
   showsGLSLVecType _ = showString "void"
