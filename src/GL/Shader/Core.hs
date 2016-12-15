@@ -7,6 +7,11 @@ import Data.List (intersperse)
 import Data.Proxy
 import qualified Linear.V4 as Linear
 
+data Var a where
+  In :: GLSLValue a => String -> Var a
+  Out :: GLSLValue a => String -> Var a
+  Uniform :: GLSLValue a => String -> Var a
+
 data ExprF a where
   V4 :: GLSLValue a => Linear.V4 a -> ExprF (Linear.V4 a)
 
@@ -36,9 +41,6 @@ data ExprF a where
 type Expr = Freer ExprF
 
 data DeclF a where
-  In :: GLSLValue a => String -> DeclF a
-  Out :: GLSLValue a => String -> DeclF a
-  Uniform :: GLSLValue a => String -> DeclF a
   Function :: GLSLValue a => String -> [a] -> a -> DeclF a
 
 type Decl = Freer DeclF
