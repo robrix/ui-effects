@@ -43,6 +43,8 @@ data ExprF a where
 type Expr = Freer ExprF
 
 data DeclF a where
+  Bind :: GLSLValue a => Var a -> DeclF (Var a)
+  
   Function :: GLSLValue a => String -> [a] -> a -> DeclF a
 
   Set :: Var a -> Expr a -> DeclF ()
