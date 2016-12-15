@@ -1,4 +1,4 @@
-{-# LANGUAGE DefaultSignatures, GADTs, ScopedTypeVariables #-}
+{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, ScopedTypeVariables #-}
 module GL.Shader.Core where
 
 import Control.Monad.Free.Freer
@@ -44,7 +44,7 @@ type Expr = Freer ExprF
 
 data DeclF a where
   Bind :: GLSLValue a => Var a -> DeclF (Var a)
-  
+
   Function :: GLSLValue a => String -> [a] -> a -> DeclF a
 
   Set :: Var a -> Expr a -> DeclF ()
@@ -63,6 +63,15 @@ class GLSLValue v where
 
 
 -- Instances
+
+instance Num a => Num (Expr a) where
+  (+) = (wrap .) . Add
+  (-) = (wrap .) . Sub
+  (*) = (wrap .) . Mul
+
+  abs = wrap . Abs
+  signum = wrap . Signum
+  fromInteger = pure . fromInteger
 
 instance GLSLValue () where
   showsGLSLType _ = showString "void"
