@@ -13,6 +13,8 @@ data Var a where
   Uniform :: GLSLValue a => String -> Var a
 
 data ExprF a where
+  Get :: Var a -> ExprF a
+
   V4 :: GLSLValue a => Linear.V4 a -> ExprF (Linear.V4 a)
 
   Add :: a -> a -> ExprF a
