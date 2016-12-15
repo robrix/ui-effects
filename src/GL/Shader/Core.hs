@@ -39,6 +39,7 @@ data DeclF a where
   In :: GLSLValue a => String -> DeclF a
   Out :: GLSLValue a => String -> DeclF a
   Uniform :: GLSLValue a => String -> DeclF a
+  Function :: GLSLValue a => String -> [a] -> a -> DeclF a
 
 
 -- Classes
