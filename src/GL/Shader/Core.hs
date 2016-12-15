@@ -45,6 +45,8 @@ type Expr = Freer ExprF
 data DeclF a where
   Function :: GLSLValue a => String -> [a] -> a -> DeclF a
 
+  Set :: Var a -> Expr a -> DeclF ()
+
 type Decl = Freer DeclF
 
 
