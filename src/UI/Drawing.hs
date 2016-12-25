@@ -68,9 +68,10 @@ drawingBackgroundRectAlgebra (Bidi (FittingState _ origin _) r) = case r of
   Pure size -> Left (Rect origin size)
   Free runF drawing -> case drawing of
     Text maxSize s -> runF (measureText (width maxSize) s)
-    Clip maxSize child -> bimap (Rect origin . clip maxSize . size) (Rect origin . clip maxSize . size) (runF child)
+    Clip maxSize child -> bimap (clipRect origin maxSize) (clipRect origin maxSize) (runF child)
     Background _ child -> Right (Rect origin (either size size (runF child)))
   where clip toSize size = min <$> size <*> toSize
+        clipRect origin toSize = Rect origin . clip toSize . size
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
