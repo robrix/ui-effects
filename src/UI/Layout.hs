@@ -104,6 +104,9 @@ layoutAlgebra (Bidi FittingState{..} layout) = case layout of
   _ -> Nothing
   where maxSize `encloses` size = and (maybe (const True) (>=) <$> maxSize <*> size)
 
+layoutBackgroundRectAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Either (Rect a) (Rect a))
+layoutBackgroundRectAlgebra = wrapAlgebra (Left . fromMaybe (Rect (Point 0 0) 0)) (either Just (const Nothing)) layoutAlgebra
+
 
 layoutRectanglesAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) [Rect a]
 layoutRectanglesAlgebra = wrapAlgebra catMaybes (fmap Just) (collect layoutAlgebra)
