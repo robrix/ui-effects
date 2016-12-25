@@ -12,6 +12,7 @@ module UI.Drawing
 , drawingRectAlgebra
 , drawingBackgroundRectAlgebra
 , renderingRectAlgebra
+, renderingBackgroundRectAlgebra
 , drawingCoalgebra
 , renderingCoalgebra
 , renderingRects
@@ -77,6 +78,11 @@ renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rec
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
   Pure size -> Just (Rect origin size)
   Free runF sum -> sumAlgebra drawingRectAlgebra layoutAlgebra $ hoistSum (Bidi a . Free runF) (Bidi a . Free runF) sum
+
+renderingBackgroundRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Either (Rect a) (Rect a))
+renderingBackgroundRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
+  Pure size -> Left (Rect origin size)
+  Free runF sum -> sumAlgebra drawingBackgroundRectAlgebra layoutBackgroundRectAlgebra $ hoistSum (Bidi a . Free runF) (Bidi a . Free runF) sum
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra = liftBidiCoalgebra drawingFCoalgebra
