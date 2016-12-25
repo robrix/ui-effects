@@ -10,6 +10,7 @@ module UI.Drawing
 , background
 , rgba
 , drawingRectAlgebra
+, drawingBackgroundRectAlgebra
 , renderingRectAlgebra
 , drawingCoalgebra
 , renderingCoalgebra
@@ -18,6 +19,7 @@ module UI.Drawing
 ) where
 
 import Control.Monad.Free.Freer
+import Data.Bifunctor
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
@@ -60,6 +62,15 @@ drawingRectAlgebra (Bidi (FittingState _ origin _) r) = case r of
     Text maxSize s -> Rect origin . size <$> runF (measureText (width maxSize) s)
     Clip size _ -> Just (Rect origin size)
     Background _ child -> runF child
+
+drawingBackgroundRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Either (Rect a) (Rect a))
+drawingBackgroundRectAlgebra (Bidi (FittingState _ origin _) r) = case r of
+  Pure size -> Left (Rect origin size)
+  Free runF drawing -> case drawing of
+    Text maxSize s -> runF (measureText (width maxSize) s)
+    Clip maxSize child -> bimap (Rect origin . clip maxSize . size) (Rect origin . clip maxSize . size) (runF child)
+    Background _ child -> Right (Rect origin (either size size (runF child)))
+  where clip toSize size = min <$> size <*> toSize
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
