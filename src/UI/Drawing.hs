@@ -16,11 +16,13 @@ module UI.Drawing
 , drawingCoalgebra
 , renderingCoalgebra
 , renderingRects
+, renderingBackgroundRects
 , module Layout
 ) where
 
 import Control.Monad.Free.Freer
 import Data.Bifunctor
+import Data.Either (rights)
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
@@ -95,6 +97,9 @@ renderingCoalgebra = liftBidiCoalgebra (liftSumCoalgebra drawingFCoalgebra layou
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
+
+renderingBackgroundRects :: Real a => Rendering a (Size a) -> [Rect a]
+renderingBackgroundRects = rights . hylo (collect renderingBackgroundRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
 
 
 -- Instances
