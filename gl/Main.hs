@@ -49,7 +49,7 @@ setup swap = do
   enable Blending
   setDepthFunc Always
   setBlendFactors SourceAlpha OneMinusSourceAlpha
-  setClearColour (Linear.V4 0 0 0 (1 :: Float))
+  setClearColour (rgba 0 0 0 1)
   matrix <- uniform
   xy <- uniform
   let vertexShader = toShader (\ p -> pure (vertex { position = get matrix !* get p }) :: Shader Vertex)
