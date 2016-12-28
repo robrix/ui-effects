@@ -41,7 +41,7 @@ renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
       Just Horizontal -> Size w (fromMaybe h maxH)
       Just Vertical -> Size (fromMaybe w maxW) h
       Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)
-  where spacer = pure (Size 0 3)
+  where spacer = pure (Size 5 3)
 
 
 -- Smart constructors
