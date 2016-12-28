@@ -55,7 +55,7 @@ setup swap = do
   let vertexShader = toShader (\ p -> pure (vertex { position = get matrix !* get p }) :: Shader Vertex)
   let fragmentShader = get xy
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
-  array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
+  array <- geometry (rectGeometry <$> renderingBackgroundRects (renderView view :: Rendering Float (Size Float)))
   liftIO (runIOState (Linear.V2 512 384 :: Linear.V2 Float) . forever $ do
     event <- send (waitEvent :: Prelude.IO Event)
     case eventPayload event of
