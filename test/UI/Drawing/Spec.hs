@@ -17,5 +17,5 @@ spec = do
     it "respects contained insets" $
       renderingBackgroundRects (wrapL (Background (rgba 1 1 1 1) (wrapR (Inset 10 (pure 10))))) `shouldBe` [ Rect (Point 0 0) (Size 30 30) ]
 
-    it "respects nesting" $
+    it "respects indirect nesting" $
       renderingBackgroundRects (wrapL (Background (rgba 1 1 1 1) (wrapR (Inset 10 (wrapL (Background (rgba 0 0 0 1) (pure 10))))))) `shouldBe` [ Rect (Point 0 0) (Size 30 30), Rect (Point 10 10) (Size 10 10) ]
