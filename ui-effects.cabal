@@ -46,12 +46,13 @@ library
                      , sdl2
   default-language:    Haskell2010
   default-extensions:  DeriveFoldable, DeriveFunctor, DeriveGeneric, DeriveTraversable
-  ghc-options:         -Wall -fno-warn-name-shadowing
+  ghc-options:         -Wall -fno-warn-name-shadowing -fno-warn-type-defaults
 
 executable ui-effects
   hs-source-dirs:      gl
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+                       -Wall -fno-warn-name-shadowing -fno-warn-type-defaults
   build-depends:       base
                      , effects
                      , gl
@@ -82,6 +83,7 @@ test-suite ui-effects-test
                      , linear
                      , ui-effects
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+                       -Wall -fno-warn-name-shadowing -fno-warn-type-defaults
   default-language:    Haskell2010
 
 source-repository head
