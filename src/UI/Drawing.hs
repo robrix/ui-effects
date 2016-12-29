@@ -17,6 +17,7 @@ module UI.Drawing
 , renderingCoalgebra
 , renderingRects
 , renderingBackgroundRects
+, renderingBackgroundRects'
 , module Layout
 ) where
 
@@ -99,7 +100,10 @@ renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
 
 renderingBackgroundRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingBackgroundRects = rights . hylo (collect renderingBackgroundRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
+renderingBackgroundRects = rights . renderingBackgroundRects'
+
+renderingBackgroundRects' :: Real a => Rendering a (Size a) -> [Either (Rect a) (Rect a)]
+renderingBackgroundRects' = hylo (collect renderingBackgroundRectAlgebra) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
 
 
 -- Instances
