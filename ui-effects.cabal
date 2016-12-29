@@ -73,6 +73,7 @@ test-suite ui-effects-test
                      , Control.Monad.Free.Freer.Spec
                      , GL.Shader.Spec
                      , Test.Hspec.LeanCheck
+                     , UI.Drawing.Spec
                      , UI.Layout.Spec
   build-depends:       base
                      , hspec
