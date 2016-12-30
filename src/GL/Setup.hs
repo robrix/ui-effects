@@ -22,6 +22,7 @@ import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
 import Control.Monad.Free.Freer
 import Control.Monad.IO.Class
+import Data.Functor.Classes
 import GL.Array
 import GL.Exception
 import qualified GL.Geometry as Geometry
@@ -33,6 +34,7 @@ import Graphics.GL.Types
 import qualified Linear.V4 as Linear
 import Prelude hiding (IO)
 import qualified Prelude
+import Text.Show (showListWith)
 
 data Flag = DepthTest | Blending
   deriving Show
@@ -160,3 +162,8 @@ compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL (Shader.ela
 
 instance MonadIO Setup where
   liftIO = liftF . RunIO
+
+instance Show Shader where
+  showsPrec d s = case s of
+    Vertex shader -> showsUnaryWith showsPrec "Vertex" d shader
+    Fragment shader -> showsUnaryWith (liftShowsPrec (const Shader.showsGLSLValue) (showListWith Shader.showsGLSLValue)) "Fragment" d shader
