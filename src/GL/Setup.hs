@@ -35,7 +35,9 @@ import Prelude hiding (IO)
 import qualified Prelude
 
 data Flag = DepthTest | Blending
+  deriving Show
 data Func = Less | LessEqual | Always
+  deriving Show
 data Factor
   = Zero
   | One
@@ -48,6 +50,7 @@ data Factor
   | SourceColour
   | OneMinusSourceAlpha
   | OneMinusSourceColour
+  deriving Show
 
 data Shader where
   Vertex :: Shader.Shader Shader.Vertex -> Shader
