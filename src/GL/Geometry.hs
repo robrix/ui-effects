@@ -5,6 +5,7 @@ import GL.Array
 import GL.Scalar
 
 data Mode = Points | Lines | LineLoop | LineStrip | Triangles | TriangleStrip
+  deriving Show
 
 data Geometry a where
   Geometry :: (Foldable v, GLScalar n) => Mode -> [v n] -> Geometry (v n)
@@ -17,3 +18,4 @@ data GeometryArray n = GeometryArray { geometryRanges :: [ArrayRange], geometryA
 -- Instances
 
 deriving instance Foldable Geometry
+deriving instance Show a => Show (Geometry a)
