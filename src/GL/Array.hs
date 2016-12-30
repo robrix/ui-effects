@@ -12,6 +12,7 @@ import Graphics.GL.Core41
 import Graphics.GL.Types
 
 newtype GLArray n = GLArray { unGLArray :: GLuint }
+  deriving Show
 
 withVertices :: forall v n a. (Foldable v, GLScalar n) => [v n] -> (GLArray n -> IO a) -> IO a
 withVertices vertices body = alloca $ \ p -> do
