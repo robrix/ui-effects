@@ -147,13 +147,14 @@ runSetupAlgebra run s = case s of
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
         sendIO io = send (io :: Prelude.IO ())
-        combineGeometry :: Geometry.Geometry (v n) -> ArrayVertices (v n) -> ArrayVertices (v n)
-        combineGeometry (Geometry.Geometry mode vertices) ArrayVertices{..} =
-          let count = length vertices
-          in ArrayVertices
-            (vertices ++ arrayVertices)
-            (prevIndex + count)
-            (Geometry.ArrayRange { mode = mode, firstVertexIndex = prevIndex, vertexCount = count } : arrayRanges)
+
+combineGeometry :: Geometry.Geometry (v n) -> ArrayVertices (v n) -> ArrayVertices (v n)
+combineGeometry (Geometry.Geometry mode vertices) ArrayVertices{..} =
+  let count = length vertices
+  in ArrayVertices
+    (vertices ++ arrayVertices)
+    (prevIndex + count)
+    (Geometry.ArrayRange { mode = mode, firstVertexIndex = prevIndex, vertexCount = count } : arrayRanges)
 
 compileShader :: Shader -> (GLenum, String)
 compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
