@@ -103,6 +103,7 @@ runSetupEffects :: Eff '[State Int, Prelude.IO] a -> Prelude.IO a
 runSetupEffects = runM . fmap fst . flip runState 0
 
 data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
+  deriving Show
 
 runSetupAlgebra :: forall a x. (x -> Eff '[State Int, Prelude.IO] a) -> SetupF x -> Eff '[State Int, Prelude.IO] a
 runSetupAlgebra run s = case s of
