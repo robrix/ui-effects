@@ -62,7 +62,7 @@ runDraw = iterFreerA $ \ rest d -> case d of
           LineLoop -> GL_LINE_LOOP
           LineStrip -> GL_LINE_STRIP
           Triangles -> GL_TRIANGLES
-          TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral (from + count))
+          TriangleStrip -> GL_TRIANGLE_STRIP) (fromIntegral from) (fromIntegral count)
 
 
 -- Instances
