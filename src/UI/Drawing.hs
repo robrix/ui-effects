@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances, GADTs #-}
 module UI.Drawing
-( Shape(..)
-, DrawingF(..)
+( DrawingF(..)
 , Drawing
 , Rendering
 , RenderingF
@@ -30,13 +29,10 @@ import Data.Functor.Foldable
 import Data.Functor.Sum
 import Data.Maybe (catMaybes)
 import Data.Semigroup (Semigroup(..))
-import qualified Linear.V2 as Linear
 import qualified Linear.V4 as Linear
 import UI.Layout as Layout
 import UI.Font
 import UI.Geometry
-
-data Shape a = Rectangle (Linear.V2 a) (Linear.V2 a)
 
 data DrawingF a f where
   Text :: Size (Maybe a) -> String -> DrawingF a (Size a)
