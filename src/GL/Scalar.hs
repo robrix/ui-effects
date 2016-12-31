@@ -5,7 +5,7 @@ import Foreign.Storable
 import Graphics.GL.Core41
 import Graphics.GL.Types
 
-class (Num n, Storable n) => GLScalar n where
+class (Real n, Storable n) => GLScalar n where
   glType :: Proxy n -> GLenum
 
 instance GLScalar Float where
