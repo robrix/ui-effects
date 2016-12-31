@@ -22,6 +22,7 @@ import Control.Monad.Effect.Internal
 import Control.Monad.Effect.State
 import Control.Monad.Free.Freer
 import Control.Monad.IO.Class
+import Data.Foldable (toList)
 import Data.Functor.Classes
 import GL.Array
 import GL.Exception
@@ -167,3 +168,18 @@ instance Show Shader where
   showsPrec d s = case s of
     Vertex shader -> showsUnaryWith showsPrec "Vertex" d shader
     Fragment shader -> showsUnaryWith (liftShowsPrec (const Shader.showsGLSLValue) (showListWith Shader.showsGLSLValue)) "Fragment" d shader
+
+instance Show1 SetupF where
+  liftShowsPrec _ _ d s = case s of
+    Flag flag enabled -> showsBinaryWith showsPrec showsPrec "Flag" d flag enabled
+    SetDepthFunc func -> showsUnaryWith showsPrec "SetDepthFunc" d func
+    SetBlendFactors source destination -> showsBinaryWith showsPrec showsPrec "SetBlendFactors" d source destination
+    SetClearColour colour -> showsUnaryWith showsPrec "SetClearColour" d (toFloat <$> colour)
+    Geometry meshes -> showsUnaryWith showsPrec "Geometry" d (toFloatGeometry <$> meshes)
+    BuildProgram shaders -> showsUnaryWith showsPrec "BuildProgram" d shaders
+    RunIO _ -> showString "RunIO _"
+    Uniform -> showString "Uniform"
+    where toFloat :: Real a => a -> Float
+          toFloat = (fromRational :: Rational -> Float) . toRational
+          toFloatGeometry :: Geometry.Geometry (v n) -> Geometry.Geometry [Float]
+          toFloatGeometry (Geometry.Geometry mode vertices) = Geometry.Geometry mode (fmap toFloat . toList <$> vertices)
