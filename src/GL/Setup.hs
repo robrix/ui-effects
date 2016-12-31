@@ -102,7 +102,7 @@ runSetup = runSetupEffects . iterFreerA runSetupAlgebra
 runSetupEffects :: Eff '[State Int, Prelude.IO] a -> Prelude.IO a
 runSetupEffects = runM . fmap fst . flip runState 0
 
-data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
+data ArrayVertices a = ArrayVertices { arrayVertices :: [a], nextIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
   deriving Show
 
 runSetupAlgebra :: forall a x. (x -> Eff '[State Int, Prelude.IO] a) -> SetupF x -> Eff '[State Int, Prelude.IO] a
@@ -153,8 +153,8 @@ combineGeometry (Geometry.Geometry mode vertices) ArrayVertices{..} =
   let count = length vertices
   in ArrayVertices
     (vertices ++ arrayVertices)
-    (prevIndex + count)
-    (Geometry.ArrayRange { mode = mode, firstVertexIndex = prevIndex, vertexCount = count } : arrayRanges)
+    (nextIndex + count)
+    (Geometry.ArrayRange { mode = mode, firstVertexIndex = nextIndex, vertexCount = count } : arrayRanges)
 
 compileShader :: Shader -> (GLenum, String)
 compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
