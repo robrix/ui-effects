@@ -108,7 +108,7 @@ instance Real a => Semigroup (Rendering a (Size a)) where
   (<>) top bottom = do
     Size w1 h1 <- top
     Size w2 h2 <- wrapR $ Offset (Point 0 h1) bottom
-    pure $ Size (max w1 w2) (h1 + h2)
+    pure $ Size (max w1 w2) h2
 
 instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
