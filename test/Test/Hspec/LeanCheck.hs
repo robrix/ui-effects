@@ -4,7 +4,6 @@ module Test.Hspec.LeanCheck
 ) where
 
 import Control.Exception
-import Control.Monad (join)
 import Data.Bifunctor (first)
 import Data.Maybe (listToMaybe)
 import GHC.Stack
@@ -39,7 +38,7 @@ instance Example Property where
       Nothing -> pure Success
 
 ioconcatMapT :: (a -> [[IO b]]) -> [[a]] -> [[IO b]]
-ioconcatMapT f xs = join (xs >>= fmap f)
+ioconcatMapT f = (>>= (>>= f))
 
 iocounterExamples :: IOTestable a => Int -> a -> IO [[String]]
 iocounterExamples n = fmap (fmap fst . filter (not . snd)) . sequenceA . take n . concat . ioresultiers
