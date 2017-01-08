@@ -1,7 +1,7 @@
 module UI.Layout.Spec where
 
 import Data.Maybe (fromMaybe, isJust)
-import Test.Hspec hiding (shouldBe)
+import Test.Hspec
 import Test.Hspec.LeanCheck
 import UI.Geometry
 import UI.Layout hiding (FittingState(..))

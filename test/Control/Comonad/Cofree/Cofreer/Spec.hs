@@ -1,7 +1,7 @@
 module Control.Comonad.Cofree.Cofreer.Spec where
 
 import Control.Comonad.Cofree.Cofreer
-import Test.Hspec hiding (shouldBe)
+import Test.Hspec
 import Test.Hspec.LeanCheck
 
 spec :: Spec

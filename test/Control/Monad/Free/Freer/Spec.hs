@@ -1,7 +1,7 @@
 module Control.Monad.Free.Freer.Spec where
 
 import Control.Monad.Free.Freer
-import Test.Hspec hiding (shouldBe)
+import Test.Hspec
 import Test.Hspec.LeanCheck
 
 spec :: Spec
