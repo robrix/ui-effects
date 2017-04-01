@@ -8,7 +8,6 @@ import Control.Monad.Effect.Internal
 import qualified Control.Monad.Effect.State as State
 import Control.Monad.IO.Class
 import GL.Draw
-import GL.Exception
 import GL.Geometry
 import GL.Program
 import GL.Scalar
