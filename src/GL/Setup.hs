@@ -31,8 +31,6 @@ import qualified GL.Shader as Shader
 import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.V4 as Linear
-import Prelude hiding (IO)
-import qualified Prelude
 
 data Flag = DepthTest | Blending
 data Func = Less | LessEqual | Always
@@ -90,15 +88,15 @@ uniform :: Shader.GLSLValue a => Setup (Shader.Var (Shader.Shader a))
 uniform = liftF Uniform
 
 
-runSetup :: Setup a -> Prelude.IO a
+runSetup :: Setup a -> IO a
 runSetup = runSetupEffects . iterFreerA runSetupAlgebra
 
-runSetupEffects :: Eff '[State Int, Prelude.IO] a -> Prelude.IO a
+runSetupEffects :: Eff '[State Int, IO] a -> IO a
 runSetupEffects = runM . fmap fst . flip runState 0
 
 data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
 
-runSetupAlgebra :: forall a x. (x -> Eff '[State Int, Prelude.IO] a) -> SetupF x -> Eff '[State Int, Prelude.IO] a
+runSetupAlgebra :: forall a x. (x -> Eff '[State Int, IO] a) -> SetupF x -> Eff '[State Int, IO] a
 runSetupAlgebra run s = case s of
   Flag f b -> do
     sendIO $ toggle b $ case f of
@@ -139,7 +137,7 @@ runSetupAlgebra run s = case s of
           SourceColour -> GL_SRC_COLOR
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
-        sendIO io = send (io :: Prelude.IO ())
+        sendIO io = send (io :: IO ())
         combineGeometry :: Geometry.Geometry (v n) -> ArrayVertices (v n) -> ArrayVertices (v n)
         combineGeometry (Geometry.Geometry mode vertices) ArrayVertices{..} =
           let count = length vertices

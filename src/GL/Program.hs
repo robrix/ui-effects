@@ -13,7 +13,6 @@ import Graphics.GL.Core41
 import Graphics.GL.Types
 import qualified Linear.V4 as Linear
 import qualified Linear.Matrix as Linear
-import Prelude hiding (IO)
 
 newtype GLProgram = GLProgram { unGLProgram :: GLuint }
   deriving Show

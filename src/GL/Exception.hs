@@ -11,10 +11,6 @@ import Foreign.Storable
 import GHC.Stack
 import Graphics.GL.Core41
 import Graphics.GL.Types
-import Prelude hiding (IO)
-import qualified System.IO as IO
-
-type IO a = HasCallStack => IO.IO a
 
 checkStatus
   :: (GLenum -> GLuint -> Ptr GLint -> IO ())

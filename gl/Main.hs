@@ -18,8 +18,6 @@ import qualified Linear.Affine as Linear
 import qualified Linear.Matrix as Linear
 import qualified Linear.V2 as Linear
 import qualified Linear.V4 as Linear
-import Prelude hiding (IO)
-import qualified Prelude
 import SDL.Event
 import SDL.Init
 import System.Exit
@@ -57,7 +55,7 @@ setup swap = do
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
   liftIO (runIOState (Linear.V2 512 384 :: Linear.V2 Float) . forever $ do
-    event <- send (waitEvent :: Prelude.IO Event)
+    event <- send (waitEvent :: IO Event)
     case eventPayload event of
       MouseMotionEvent m -> do
         let Linear.P p = fromIntegral <$> mouseMotionEventPos m :: Linear.Point Linear.V2 Float
@@ -70,7 +68,7 @@ setup swap = do
     pos <- State.get
     sendVoid $ runDraw (draw matrix xy pos program array)
     sendVoid swap)
-  where sendVoid io = send (io :: Prelude.IO ())
+  where sendVoid io = send (io :: IO ())
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
 draw matrix xy (Linear.V2 x y) program array = do
@@ -98,7 +96,7 @@ orthographic left right top bottom near far = Linear.V4
         ty = negate ((top + bottom) / (top - bottom))
         tz = negate ((far + near) / (far - near))
 
-type IOState s a = Eff '[State.State s, Prelude.IO] a
+type IOState s a = Eff '[State.State s, IO] a
 
-runIOState :: s -> IOState s a -> Prelude.IO a
+runIOState :: s -> IOState s a -> IO a
 runIOState s = runM . fmap fst . flip State.runState s

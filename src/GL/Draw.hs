@@ -10,7 +10,6 @@ import GL.Geometry
 import GL.Program
 import GL.Shader
 import Graphics.GL.Core41
-import Prelude hiding (IO)
 
 data Buffer = ColourBuffer | DepthBuffer | StencilBuffer
 
