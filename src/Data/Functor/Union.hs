@@ -23,6 +23,9 @@ send = liftF . inj
 sendIO :: InUnion fs IO => IO a -> Eff fs a
 sendIO = send
 
+
+-- Injection and projection
+
 class InUnion (fs :: [k -> *]) (f :: k -> *) where
   inj :: f a -> Union fs a
   prj :: Union fs a -> Maybe (f a)
