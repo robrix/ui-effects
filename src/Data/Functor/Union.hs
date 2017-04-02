@@ -39,3 +39,11 @@ instance {-# OVERLAPPABLE #-} InUnion fs f => InUnion (g ': fs) f where
   inj = There . inj
   prj (There fs) = prj fs
   prj _ = Nothing
+
+
+instance Functor f => Functor (Union '[f]) where
+  fmap f = Here . fmap f . strengthen
+
+instance (Functor f, Functor (Union (g ': hs))) => Functor (Union (f ': g ': hs)) where
+  fmap f (Here e) = Here (fmap f e)
+  fmap f (There t) = There (fmap f t)
