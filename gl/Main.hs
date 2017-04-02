@@ -94,7 +94,5 @@ orthographic left right top bottom near far = Linear.V4
         ty = negate ((top + bottom) / (top - bottom))
         tz = negate ((far + near) / (far - near))
 
-type IOState s a = Eff '[State.State s, IO] a
-
-runIOState :: s -> IOState s a -> IO a
+runIOState :: s -> Eff '[State.State s, IO] a -> IO a
 runIOState s = runM . hoistFreer lower . fmap fst . flip State.runState s
