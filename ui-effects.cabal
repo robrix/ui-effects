@@ -19,6 +19,7 @@ library
                      , Control.Monad.Free.Freer
                      , Data.Functor.Algebraic
                      , Data.Functor.Listable
+                     , Effect.State
                      , GL.Array
                      , GL.Draw
                      , GL.Exception
