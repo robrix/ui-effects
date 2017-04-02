@@ -11,6 +11,9 @@ data Union (fs :: [k -> *]) (a :: k) where
 runM :: Monad m => Freer m a -> m a
 runM = iterFreerA (>>=)
 
+lower :: Union '[f] a -> f a
+lower (Here f) = f
+lower _ = undefined
 
 class InUnion (fs :: [k -> *]) (f :: k -> *) where
   inj :: f a -> Union fs a
