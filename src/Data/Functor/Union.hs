@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleInstances, GADTs, MultiParamTypeClasses, PolyKinds, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, GADTs, MultiParamTypeClasses, PolyKinds, TypeOperators #-}
 module Data.Functor.Union where
 
 import Control.Monad.Free.Freer
@@ -16,6 +16,12 @@ runM = iterFreerA (>>=)
 lower :: Union '[f] a -> f a
 lower (Here f) = f
 lower _ = undefined
+
+send :: InUnion fs f => f a -> Eff fs a
+send = liftF . inj
+
+sendIO :: InUnion fs IO => IO a -> Eff fs a
+sendIO = send
 
 class InUnion (fs :: [k -> *]) (f :: k -> *) where
   inj :: f a -> Union fs a

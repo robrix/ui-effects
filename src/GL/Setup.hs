@@ -136,8 +136,6 @@ runSetupAlgebra s run = case s of
           SourceColour -> GL_SRC_COLOR
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
-        send = liftF . inj
-        sendIO io = send (io :: IO ())
         combineGeometry :: Geometry.Geometry (v n) -> ArrayVertices (v n) -> ArrayVertices (v n)
         combineGeometry (Geometry.Geometry mode vertices) ArrayVertices{..} =
           let count = length vertices

@@ -60,15 +60,13 @@ setup swap = do
         let Linear.P p = fromIntegral <$> mouseMotionEventPos m :: Linear.Point Linear.V2 Float
         State.put p
       QuitEvent -> do
-        sendVoid quit
-        sendVoid exitSuccess
+        sendIO quit
+        sendIO exitSuccess
       _ -> pure ()
-    sendVoid $ runInteraction event (clickable (Rect (Point 0 0) (Size 100 100) :: Rect Int) (pure ()))
+    sendIO $ runInteraction event (clickable (Rect (Point 0 0) (Size 100 100) :: Rect Int) (pure ()))
     pos <- State.get
-    sendVoid $ runDraw (draw matrix xy pos program array)
-    sendVoid swap)
-  where sendVoid io = send (io :: IO ())
-        send = liftF . inj
+    sendIO $ runDraw (draw matrix xy pos program array)
+    sendIO swap)
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
 draw matrix xy (Linear.V2 x y) program array = do
