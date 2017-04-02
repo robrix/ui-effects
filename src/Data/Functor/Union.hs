@@ -1,9 +1,16 @@
 {-# LANGUAGE DataKinds, FlexibleInstances, GADTs, MultiParamTypeClasses, PolyKinds, TypeOperators #-}
 module Data.Functor.Union where
 
+import Control.Monad.Free.Freer
+
 data Union (fs :: [k -> *]) (a :: k) where
   Here :: f a -> Union (f ': fs) a
   There :: Union fs a -> Union (f ': fs) a
+
+
+runM :: Monad m => Freer m a -> m a
+runM = iterFreerA (>>=)
+
 
 class InUnion (fs :: [k -> *]) (f :: k -> *) where
   inj :: f a -> Union fs a
