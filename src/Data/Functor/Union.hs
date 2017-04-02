@@ -47,3 +47,11 @@ instance Functor f => Functor (Union '[f]) where
 instance (Functor f, Functor (Union (g ': hs))) => Functor (Union (f ': g ': hs)) where
   fmap f (Here e) = Here (fmap f e)
   fmap f (There t) = There (fmap f t)
+
+instance Applicative f => Applicative (Union '[f]) where
+  pure = Here . pure
+  f <*> a = Here $ strengthen f <*> strengthen a
+
+instance Monad m => Monad (Union '[m]) where
+  return = pure
+  m >>= f = Here $ strengthen m >>= strengthen . f
