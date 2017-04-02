@@ -2,6 +2,7 @@
 module Data.Functor.Union where
 
 import Control.Monad.Free.Freer
+import Control.Monad.IO.Class
 
 data Union (fs :: [k -> *]) (a :: k) where
   Here :: f a -> Union (f ': fs) a
@@ -55,3 +56,6 @@ instance Applicative f => Applicative (Union '[f]) where
 instance Monad m => Monad (Union '[m]) where
   return = pure
   m >>= f = Here $ strengthen m >>= strengthen . f
+
+instance InUnion fs IO => MonadIO (Freer (Union fs)) where
+  liftIO = send
