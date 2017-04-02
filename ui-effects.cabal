@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Data.Functor.Algebraic
                      , Data.Functor.Listable
+                     , Data.Functor.Union
                      , Effect.State
                      , GL.Array
                      , GL.Draw
