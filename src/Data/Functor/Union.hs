@@ -7,6 +7,8 @@ data Union (fs :: [k -> *]) (a :: k) where
   Here :: f a -> Union (f ': fs) a
   There :: Union fs a -> Union (f ': fs) a
 
+type Eff fs = Freer (Union fs)
+
 
 runM :: Monad m => Freer m a -> m a
 runM = iterFreerA (>>=)
