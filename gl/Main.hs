@@ -3,10 +3,10 @@ module Main where
 
 import Control.Exception
 import Control.Monad
-import Control.Monad.Effect
-import Control.Monad.Effect.Internal
-import qualified Control.Monad.Effect.State as State
+import qualified Effect.State as State
+import Control.Monad.Free.Freer
 import Control.Monad.IO.Class
+import Data.Functor.Union
 import GL.Draw
 import GL.Geometry
 import GL.Program
@@ -68,6 +68,7 @@ setup swap = do
     sendVoid $ runDraw (draw matrix xy pos program array)
     sendVoid swap)
   where sendVoid io = send (io :: IO ())
+        send = liftF . inj
 
 draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
 draw matrix xy (Linear.V2 x y) program array = do
@@ -98,4 +99,4 @@ orthographic left right top bottom near far = Linear.V4
 type IOState s a = Eff '[State.State s, IO] a
 
 runIOState :: s -> IOState s a -> IO a
-runIOState s = runM . fmap fst . flip State.runState s
+runIOState s = runM . hoistFreer lower . fmap fst . flip State.runState s
