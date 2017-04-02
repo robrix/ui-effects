@@ -91,7 +91,7 @@ runSetup :: Setup a -> IO a
 runSetup = runSetupEffects . iterFreerA runSetupAlgebra
 
 runSetupEffects :: Eff '[State Int, IO] a -> IO a
-runSetupEffects = runM . hoistFreer lower . fmap fst . flip runState 0
+runSetupEffects = runM . hoistFreer strengthen . fmap fst . flip runState 0
 
 data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
 

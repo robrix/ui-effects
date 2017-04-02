@@ -95,4 +95,4 @@ orthographic left right top bottom near far = Linear.V4
         tz = negate ((far + near) / (far - near))
 
 runIOState :: s -> Eff '[State.State s, IO] a -> IO a
-runIOState s = runM . hoistFreer lower . fmap fst . flip State.runState s
+runIOState s = runM . hoistFreer strengthen . fmap fst . flip State.runState s

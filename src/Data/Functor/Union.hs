@@ -13,9 +13,9 @@ type Eff fs = Freer (Union fs)
 runM :: Monad m => Freer m a -> m a
 runM = iterFreerA (>>=)
 
-lower :: Union '[f] a -> f a
-lower (Here f) = f
-lower _ = undefined
+strengthen :: Union '[f] a -> f a
+strengthen (Here f) = f
+strengthen _ = undefined
 
 send :: InUnion fs f => f a -> Eff fs a
 send = liftF . inj
