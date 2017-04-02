@@ -130,8 +130,8 @@ elaborateShaderUniforms shader = do
 
 uniformVars :: Shader a -> [UniformVar]
 uniformVars = iterFreer uniformVarsAlgebra . fmap (const [])
-  where uniformVarsAlgebra :: (x -> [UniformVar]) -> ShaderF x -> [UniformVar]
-        uniformVarsAlgebra run s = case s of
+  where uniformVarsAlgebra :: ShaderF x -> (x -> [UniformVar]) -> [UniformVar]
+        uniformVarsAlgebra s run = case s of
           Bind v -> run v
           Get var@(Uniform _) -> [ UniformVar var ]
           Set var@(Uniform _) value -> UniformVar var : run value
@@ -159,8 +159,8 @@ data UniformVar where
 toGLSL :: GLSLValue a => Shader a -> String
 toGLSL = ($ "") . (showString "#version 410\n" .) . iterFreer toGLSLAlgebra . fmap showsGLSLValue
 
-toGLSLAlgebra :: forall x. (x -> ShowS) -> ShaderF x -> ShowS
-toGLSLAlgebra run shader = case shader of
+toGLSLAlgebra :: forall x. ShaderF x -> (x -> ShowS) -> ShowS
+toGLSLAlgebra shader run = case shader of
   Bind var -> showVarDeclQualifier var . sp . showsGLSLType (Proxy :: Proxy x) . sp . showString (varName var) . showChar ';' . nl . run var
 
   Function name args body ->

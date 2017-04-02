@@ -15,9 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Control.Comonad.Cofree.Cofreer
-                     , Control.Monad.Free.Freer
-                     , Data.Functor.Algebraic
+  exposed-modules:     Data.Functor.Algebraic
                      , Data.Functor.Listable
                      , Effect.State
                      , GL.Array
@@ -38,7 +36,7 @@ library
   build-depends:       base >= 4.7 && < 5
                      , comonad
                      , effects
-                     , free
+                     , freer-cofreer
                      , gl
                      , leancheck
                      , linear

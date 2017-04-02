@@ -96,8 +96,8 @@ runSetupEffects = runM . fmap fst . flip runState 0
 
 data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
 
-runSetupAlgebra :: forall a x. (x -> Eff '[State Int, IO] a) -> SetupF x -> Eff '[State Int, IO] a
-runSetupAlgebra run s = case s of
+runSetupAlgebra :: forall a x. SetupF x -> (x -> Eff '[State Int, IO] a) -> Eff '[State Int, IO] a
+runSetupAlgebra s run = case s of
   Flag f b -> do
     sendIO $ toggle b $ case f of
       DepthTest -> GL_DEPTH_TEST

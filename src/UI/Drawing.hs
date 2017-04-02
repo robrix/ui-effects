@@ -16,7 +16,8 @@ module UI.Drawing
 , module Layout
 ) where
 
-import Control.Monad.Free.Freer
+import Control.Monad.Free.Freer as Freer
+import Control.Monad.Trans.Free.Freer as FreerF
 import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable
@@ -41,7 +42,7 @@ type Rendering a = Freer (RenderingF a)
 type RenderingF a = Sum (DrawingF a) (LayoutF a)
 
 text :: Size (Maybe a) -> String -> Drawing a (Size a)
-text maxSize = Freer . Free pure . Text maxSize
+text maxSize = liftF . Text maxSize
 
 clip :: Size a -> Drawing a b -> Drawing a b
 clip size = wrap . Clip size
@@ -49,27 +50,27 @@ clip size = wrap . Clip size
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
 drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r of
-  Pure size -> Just size
-  Free runF drawing -> case drawing of
+  FreerF.Return size -> Just size
+  drawing `FreerF.Then` runF -> case drawing of
     Text maxSize s -> size <$> runF (measureText (width maxSize) s)
     Clip size _ -> Just size
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
-  Pure size -> Just (Rect origin size)
-  Free runF sum -> sumAlgebra drawingRectAlgebra layoutAlgebra $ hoistSum (Bidi a . Free runF) (Bidi a . Free runF) sum
+  FreerF.Return size -> Just (Rect origin size)
+  sum `FreerF.Then` runF -> sumAlgebra drawingRectAlgebra layoutAlgebra $ hoistSum (Bidi a . flip FreerF.Then runF) (Bidi a . flip FreerF.Then runF) sum
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra = liftBidiCoalgebra drawingFCoalgebra
 
 drawingFCoalgebra :: CoalgebraFragment (DrawingF a) (FittingState a) (Size a)
-drawingFCoalgebra state run = Free (run state)
+drawingFCoalgebra state run = flip FreerF.Then (run state)
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
 renderingCoalgebra = liftBidiCoalgebra (liftSumCoalgebra drawingFCoalgebra layoutFCoalgebra)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . runFreer
+renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . project
 
 
 -- Instances

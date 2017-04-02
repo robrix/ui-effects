@@ -3,7 +3,8 @@ module UI.Layout where
 
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
-import Control.Monad.Free.Freer
+import Control.Monad.Free.Freer as Freer
+import Control.Monad.Trans.Free.Freer as FreerF
 import Data.Fixed
 import Data.Functor.Algebraic
 import Data.Functor.Classes
@@ -86,7 +87,7 @@ fitLayout = fitLayoutWith layoutAlgebra
 
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
 layoutAlgebra (Bidi FittingState{..} layout) = case layout of
-  Pure size | maxSize `encloses` size -> Just $ case alignment of
+  FreerF.Return size | maxSize `encloses` size -> Just $ case alignment of
     Leading -> Rect origin minSize
     Trailing -> Rect origin { x = x origin + widthDiff} minSize
     Centre -> Rect origin { x = x origin + fromIntegral (widthDiff `div'` 2 :: Int)} minSize
@@ -94,7 +95,7 @@ layoutAlgebra (Bidi FittingState{..} layout) = case layout of
     where minSize = fullSize { width = width size }
           fullSize = fromMaybe <$> size <*> maxSize
           widthDiff = maybe 0 (+ negate (width size)) (width maxSize)
-  Free runF layout -> case layout of
+  layout `FreerF.Then` runF -> case layout of
     Inset by child -> Rect origin . (2 * by +) . size <$> runF child
     Offset by child -> Rect origin . (pointSize by +) . size <$> runF child
     GetMaxSize -> runF maxSize
@@ -115,7 +116,7 @@ data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point 
   deriving (Eq, Show)
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Bidi (FittingState Full (Point 0 0) maxSize) (runFreer layout))
+fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Bidi (FittingState Full (Point 0 0) maxSize) (project layout))
 
 layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Fitting (LayoutF a) a (Layout a (Size a)))
 layoutCoalgebra = liftBidiCoalgebra layoutFCoalgebra
@@ -126,7 +127,7 @@ layoutFCoalgebra state@FittingState{..} run layoutF = case layoutF of
   Offset by child -> wrapState (FittingState alignment (liftA2 (+) origin by) (subtractSize maxSize (pointSize by))) $ Offset by child
   GetMaxSize -> wrapState state GetMaxSize
   Align alignment child -> wrapState (state { alignment = alignment }) $ Align alignment child
-  where wrapState state = Free (run state)
+  where wrapState state = flip FreerF.Then (run state)
         subtractSize maxSize size = liftA2 (-) <$> maxSize <*> (Just <$> size)
         addSizeToPoint point = liftA2 (+) point . sizeExtent
 

@@ -42,6 +42,10 @@ packages:
     commit: cbc1b4198cce13aa62ea8882ef67b3ee94de0aa9
   extra-dep: true
 - location:
+    git: https://github.com/robrix/freer-cofreer.git
+    commit: 8953df8be30c9bf7983b91a44c6d83108e204393
+  extra-dep: true
+- location:
     git: https://github.com/robrix/leancheck.git
     commit: 2581ec98f55b640188163170b812a1d600827888
   extra-dep: true

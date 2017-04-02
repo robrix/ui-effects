@@ -37,7 +37,7 @@ drawGeometry = liftF . DrawGeometry
 
 
 runDraw :: Draw a -> IO a
-runDraw = iterFreerA $ \ rest d -> case d of
+runDraw = iterFreerA $ \ d rest -> case d of
   Clear buffers -> do
     glClear $ foldr (.|.) 0 ((\ b -> case b of
       ColourBuffer -> GL_COLOR_BUFFER_BIT

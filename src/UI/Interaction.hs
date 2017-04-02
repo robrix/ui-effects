@@ -21,8 +21,8 @@ clickable = (wrap .) . Clickable
 runInteraction :: Real a => Event -> Interaction a b -> IO b
 runInteraction event = iterFreerA (interactionAlgebra event)
 
-interactionAlgebra :: Real a => Event -> (x -> IO b) -> InteractionF a x -> IO b
-interactionAlgebra event run i = case i of
+interactionAlgebra :: Real a => Event -> InteractionF a x -> (x -> IO b) -> IO b
+interactionAlgebra event i run = case i of
   Clickable rect c -> do
     case eventPayload event of
       MouseButtonEvent m ->
