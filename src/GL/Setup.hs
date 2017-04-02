@@ -18,7 +18,6 @@ module GL.Setup
 ) where
 
 import Control.Monad.Free.Freer
-import Control.Monad.IO.Class
 import Data.Functor.Union
 import Effect.State
 import GL.Array
@@ -60,40 +59,46 @@ data SetupF a where
   RunIO :: IO a -> SetupF a
   Uniform :: Shader.GLSLValue a => SetupF (Shader.Var (Shader.Shader a))
 
-type Setup = Freer SetupF
+type Setup = Freer (Union '[SetupF, IO])
 
 enable :: Flag -> Setup ()
-enable = liftF . (`Flag` True)
+enable = send . (`Flag` True)
 
 disable :: Flag -> Setup ()
-disable = liftF . (`Flag` False)
+disable = send . (`Flag` False)
 
 setClearColour :: Linear.V4 Float -> Setup ()
-setClearColour = liftF . SetClearColour
+setClearColour = send . SetClearColour
 
 setDepthFunc :: Func -> Setup ()
-setDepthFunc = liftF . SetDepthFunc
+setDepthFunc = send . SetDepthFunc
 
 setBlendFactors :: Factor -> Factor -> Setup ()
-setBlendFactors = (liftF .) . SetBlendFactors
+setBlendFactors = (send .) . SetBlendFactors
 
 geometry ::  (Foldable v, GLScalar n) => [Geometry.Geometry (v n)] -> Setup (Geometry.GeometryArray n)
-geometry = liftF . Geometry
+geometry = send . Geometry
 
 buildProgram :: [Shader] -> Setup GLProgram
-buildProgram = liftF . BuildProgram
+buildProgram = send . BuildProgram
 
 uniform :: Shader.GLSLValue a => Setup (Shader.Var (Shader.Shader a))
-uniform = liftF Uniform
+uniform = send Uniform
 
 
 runSetup :: Setup a -> IO a
-runSetup = runSetupEffects . iterFreerA runSetupAlgebra
+runSetup = runSetupEffects . iterFreerA (hoistAlgebra runSetupAlgebra)
 
 runSetupEffects :: Eff '[State Int, IO] a -> IO a
 runSetupEffects = runM . hoistFreer strengthen . fmap fst . flip runState 0
 
 data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
+
+hoistAlgebra :: (forall x. SetupF x -> (x -> Eff '[State Int, IO] a) -> Eff '[State Int, IO] a) -> Union '[SetupF, IO] x -> (x -> Eff '[State Int, IO] a) -> Eff '[State Int, IO] a
+hoistAlgebra alg union yield = case union of
+  Here setup -> alg setup yield
+  There t -> There t `Then` yield
+
 
 runSetupAlgebra :: forall a x. SetupF x -> (x -> Eff '[State Int, IO] a) -> Eff '[State Int, IO] a
 runSetupAlgebra s run = case s of
@@ -147,9 +152,3 @@ runSetupAlgebra s run = case s of
 compileShader :: Shader -> (GLenum, String)
 compileShader (Vertex shader) = (GL_VERTEX_SHADER, Shader.toGLSL (Shader.elaborateVertexShader shader))
 compileShader (Fragment shader) = (GL_FRAGMENT_SHADER, Shader.toGLSL (Shader.elaborateShader shader))
-
-
--- Instances
-
-instance MonadIO Setup where
-  liftIO = liftF . RunIO
