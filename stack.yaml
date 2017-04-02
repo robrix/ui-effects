@@ -38,10 +38,6 @@ resolver: lts-8.5
 packages:
 - '.'
 - location:
-    git: https://github.com/robrix/effects.git
-    commit: cbc1b4198cce13aa62ea8882ef67b3ee94de0aa9
-  extra-dep: true
-- location:
     git: https://github.com/robrix/freer-cofreer.git
     commit: 8953df8be30c9bf7983b91a44c6d83108e204393
   extra-dep: true
