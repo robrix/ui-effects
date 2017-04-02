@@ -17,11 +17,10 @@ module GL.Setup
 , runSetup
 ) where
 
-import Control.Monad.Effect
-import Control.Monad.Effect.Internal
-import Control.Monad.Effect.State
 import Control.Monad.Free.Freer
 import Control.Monad.IO.Class
+import Data.Functor.Union
+import Effect.State
 import GL.Array
 import GL.Exception
 import qualified GL.Geometry as Geometry
@@ -92,7 +91,7 @@ runSetup :: Setup a -> IO a
 runSetup = runSetupEffects . iterFreerA runSetupAlgebra
 
 runSetupEffects :: Eff '[State Int, IO] a -> IO a
-runSetupEffects = runM . fmap fst . flip runState 0
+runSetupEffects = runM . hoistFreer lower . fmap fst . flip runState 0
 
 data ArrayVertices a = ArrayVertices { arrayVertices :: [a], prevIndex :: Int, arrayRanges :: [Geometry.ArrayRange] }
 
@@ -137,6 +136,7 @@ runSetupAlgebra s run = case s of
           SourceColour -> GL_SRC_COLOR
           OneMinusSourceAlpha -> GL_ONE_MINUS_SRC_ALPHA
           OneMinusSourceColour -> GL_ONE_MINUS_SRC_COLOR
+        send = liftF . inj
         sendIO io = send (io :: IO ())
         combineGeometry :: Geometry.Geometry (v n) -> ArrayVertices (v n) -> ArrayVertices (v n)
         combineGeometry (Geometry.Geometry mode vertices) ArrayVertices{..} =
