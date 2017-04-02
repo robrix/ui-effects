@@ -24,6 +24,10 @@ send = liftF . inj
 sendIO :: InUnion fs IO => IO a -> Eff fs a
 sendIO = send
 
+hoistUnion :: (f a -> g a) -> Union (f ': fs) a -> Union (g ': fs) a
+hoistUnion f (Here e) = Here (f e)
+hoistUnion _ (There t) = There t
+
 
 -- Injection and projection
 
