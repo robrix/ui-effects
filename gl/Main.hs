@@ -56,7 +56,7 @@ setup swap = do
   let fragmentShader = get xy
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
-  runIOState (Linear.V2 512 384 :: Linear.V2 Float) . forever $ do
+  fmap fst . flip State.runState (Linear.V2 512 384 :: Linear.V2 Float) . forever $ do
     event <- waitEvent
     case eventPayload event of
       MouseMotionEvent m -> do
@@ -96,6 +96,3 @@ orthographic left right top bottom near far = Linear.V4
   where tx = negate ((right + left) / (right - left))
         ty = negate ((top + bottom) / (top - bottom))
         tz = negate ((far + near) / (far - near))
-
-runIOState :: InUnion fs IO => s -> Eff (State.State s ': fs) a -> Eff fs a
-runIOState s = fmap fst . flip State.runState s
