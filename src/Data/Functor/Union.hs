@@ -19,7 +19,7 @@ type Eff fs = Freer (Union fs)
 
 
 runM :: Monad m => Freer m a -> m a
-runM = iterFreerA (>>=)
+runM = foldFreer id
 
 foldFreer :: Monad m => (forall x. f x -> m x) -> Freer f a -> m a
 foldFreer f = iterFreerA ((>>=) . f)
