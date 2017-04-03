@@ -1,7 +1,7 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, RankNTypes, TypeOperators #-}
 module Main where
 
-import Control.Exception
+import qualified Control.Exception as E
 import Control.Monad
 import qualified Effect.State as State
 import Control.Monad.Free.Freer
@@ -27,11 +27,14 @@ import UI.View
 import UI.Window
 
 main :: IO ()
-main = runWindow "UI" (runSetup . setup)
+main = runM . hoistFreer strengthen $ runWindow "UI" (runSetup . setup)
   `catch`
-    (putStrLn . displayException :: SomeException -> IO ())
+    (liftIO . (putException :: E.SomeException -> IO ()))
   `finally`
-    exitSuccess
+    liftIO exitSuccess
+
+putException :: (MonadIO m, E.Exception e) => e -> m ()
+putException = liftIO . putStrLn . E.displayException
 
 rectGeometry :: GLScalar a => Rect a -> Geometry (Linear.V4 a)
 rectGeometry (Rect (Point x y) (Size w h)) = Geometry TriangleStrip
@@ -40,7 +43,7 @@ rectGeometry (Rect (Point x y) (Size w h)) = Geometry TriangleStrip
   , Linear.V4 (x + w)  y      0 1
   , Linear.V4 (x + w) (y + h) 0 1 ]
 
-setup :: IO () -> Setup a
+setup :: InUnion fs IO => Eff fs () -> Eff (Setup ': fs) a
 setup swap = do
   enable DepthTest
   enable Blending
@@ -53,22 +56,22 @@ setup swap = do
   let fragmentShader = get xy
   program <- buildProgram [ Vertex vertexShader, Fragment fragmentShader ]
   array <- geometry (rectGeometry <$> renderingRects (renderView view :: Rendering Float (Size Float)))
-  liftIO (runIOState (Linear.V2 512 384 :: Linear.V2 Float) . forever $ do
-    event <- send (waitEvent :: IO Event)
+  runIOState (Linear.V2 512 384 :: Linear.V2 Float) . forever $ do
+    event <- waitEvent
     case eventPayload event of
       MouseMotionEvent m -> do
         let Linear.P p = fromIntegral <$> mouseMotionEventPos m :: Linear.Point Linear.V2 Float
         State.put p
       QuitEvent -> do
-        sendIO quit
+        quit
         sendIO exitSuccess
       _ -> pure ()
-    sendIO $ runInteraction event (clickable (Rect (Point 0 0) (Size 100 100) :: Rect Int) (pure ()))
+    runInteraction event (clickable (Rect (Point 0 0) (Size 100 100) :: Rect Int) (pure ()))
     pos <- State.get
-    sendIO $ runDraw (draw matrix xy pos program array)
-    sendIO swap)
+    runDraw (draw matrix xy pos program array)
+    hoistFreer (weaken1 . weaken1) swap
 
-draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.V2 Float -> GLProgram -> GeometryArray Float -> Draw ()
+draw :: Var (Shader (Linear.M44 Float)) -> Var (Shader (Linear.V4 Float)) -> Linear.V2 Float -> GLProgram -> GeometryArray Float -> Eff (Draw ': fs) ()
 draw matrix xy (Linear.V2 x y) program array = do
   clear [ ColourBuffer, DepthBuffer ]
 
@@ -94,5 +97,5 @@ orthographic left right top bottom near far = Linear.V4
         ty = negate ((top + bottom) / (top - bottom))
         tz = negate ((far + near) / (far - near))
 
-runIOState :: s -> Eff '[State.State s, IO] a -> IO a
-runIOState s = runM . hoistFreer strengthen . fmap fst . flip State.runState s
+runIOState :: InUnion fs IO => s -> Eff (State.State s ': fs) a -> Eff fs a
+runIOState s = fmap fst . flip State.runState s

@@ -1,8 +1,9 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleContexts, GADTs #-}
 module UI.Interaction where
 
 import Control.Monad
 import Control.Monad.Free.Freer
+import Data.Functor.Union
 import qualified Linear.Affine as Linear
 import qualified Linear.V2 as Linear
 import SDL.Event
@@ -18,16 +19,16 @@ clickable :: Rect a -> Interaction a b -> Interaction a b
 clickable = (wrap .) . Clickable
 
 
-runInteraction :: Real a => Event -> Interaction a b -> IO b
+runInteraction :: (InUnion fs IO, Real a) => Event -> Interaction a b -> Eff fs b
 runInteraction event = iterFreerA (interactionAlgebra event)
 
-interactionAlgebra :: Real a => Event -> InteractionF a x -> (x -> IO b) -> IO b
+interactionAlgebra :: (InUnion fs IO, Real a) => Event -> InteractionF a x -> (x -> Eff fs b) -> Eff fs b
 interactionAlgebra event i run = case i of
   Clickable rect c -> do
     case eventPayload event of
       MouseButtonEvent m ->
         when (rect `containsPoint` toPoint (mouseButtonEventPos m)) $
-          putStrLn $ if mouseButtonEventMotion m == Pressed
+          sendIO $ putStrLn $ if mouseButtonEventMotion m == Pressed
             then "down"
             else "up"
       _ -> pure ()

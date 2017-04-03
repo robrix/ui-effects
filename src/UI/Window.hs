@@ -1,21 +1,22 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleContexts, GADTs #-}
 module UI.Window
 ( runWindow
 , SDLException(..)
 ) where
 
-import Control.Concurrent
-import Control.Exception
+import qualified Control.Exception as E
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Bits
 import Data.Foldable
+import Data.Functor.Union
 import Data.Typeable
 import Data.Word
-import Foreign.C.String
+import qualified Foreign.C.String as C
 import Foreign.Ptr
 import qualified SDL.Raw as SDL
 
-runWindow :: String -> (IO () -> IO a) -> IO ()
+runWindow :: InUnion fs IO => String -> (Eff fs () -> Eff fs a) -> Eff fs ()
 runWindow name draw = runInBoundThread $ withCString name $ \ name -> do
   _ <- SDL.init SDL.SDL_INIT_EVERYTHING >>= checkWhen (< 0)
 
@@ -46,35 +47,35 @@ runWindow name draw = runInBoundThread $ withCString name $ \ name -> do
           , SDL.SDL_WINDOW_RESIZABLE
           , SDL.SDL_WINDOW_ALLOW_HIGHDPI ]
 
-ignoreEventsOfTypes :: [Word32] -> IO ()
+ignoreEventsOfTypes :: MonadIO m => [Word32] -> m ()
 ignoreEventsOfTypes = traverse_ (\ t -> SDL.eventState t 0 >>= checkWhen (/= 0))
 
-withWindow :: CString -> Word32 -> (SDL.Window -> IO a) -> IO a
+withWindow :: InUnion fs IO => C.CString -> Word32 -> (SDL.Window -> Eff fs a) -> Eff fs a
 withWindow name flags = bracket
   (SDL.createWindow name SDL.SDL_WINDOWPOS_CENTERED SDL.SDL_WINDOWPOS_CENTERED (fromInteger w) (fromInteger h) flags >>= checkNonNull)
   SDL.destroyWindow
   where (w, h) = (1024, 768)
 
-withContext :: SDL.Window -> (SDL.GLContext -> IO a) -> IO a
+withContext :: InUnion fs IO => SDL.Window -> (SDL.GLContext -> Eff fs a) -> Eff fs a
 withContext window = bracket
   (SDL.glCreateContext window >>= checkNonNull)
   SDL.glDeleteContext
 
-checkWhen :: (a -> Bool) -> a -> IO a
+checkWhen :: MonadIO m => (a -> Bool) -> a -> m a
 checkWhen predicate value = do
   when (predicate value) checkSDLError
   pure value
 
-checkNonNull :: Ptr a -> IO (Ptr a)
+checkNonNull :: MonadIO m => Ptr a -> m (Ptr a)
 checkNonNull = checkWhen (== nullPtr)
 
-checkSDLError :: IO ()
+checkSDLError :: MonadIO m => m ()
 checkSDLError = do
   msg <- SDL.getError >>= peekCString
   SDL.clearError
-  when (msg /= "") $ throw $ SDLException msg
+  when (msg /= "") $ E.throw $ SDLException msg
 
-set :: SDL.GLattr -> Int -> IO ()
+set :: MonadIO m => SDL.GLattr -> Int -> m ()
 set attribute value = do
   result <- SDL.glSetAttribute attribute (fromIntegral value)
   _ <- checkWhen (< 0) result
@@ -83,4 +84,4 @@ set attribute value = do
 newtype SDLException = SDLException String
   deriving (Show, Typeable)
 
-instance Exception SDLException
+instance E.Exception SDLException

@@ -1,12 +1,9 @@
-{-# LANGUAGE FlexibleInstances, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, RankNTypes #-}
 module GL.Program where
 
-import Control.Exception (bracket)
 import Data.Foldable (for_, toList)
-import Foreign.C.String
-import Foreign.Marshal.Alloc
+import Data.Functor.Union
 import Foreign.Ptr
-import Foreign.Storable
 import GL.Exception
 import GL.Shader
 import Graphics.GL.Core41
@@ -19,12 +16,12 @@ newtype GLProgram = GLProgram { unGLProgram :: GLuint }
 
 newtype GLUniform a = GLUniform { unGLUniform :: GLint }
 
-withProgram :: (GLProgram -> IO a) -> IO a
+withProgram :: InUnion fs IO => (GLProgram -> Eff fs a) -> Eff fs a
 withProgram = bracket
   (GLProgram <$> glCreateProgram)
   (glDeleteProgram . unGLProgram)
 
-withLinkedProgram :: [GLShader] -> (GLProgram -> IO a) -> IO a
+withLinkedProgram :: InUnion fs IO => [GLShader] -> (GLProgram -> Eff fs a) -> Eff fs a
 withLinkedProgram shaders body = withProgram $ \ (GLProgram program) -> do
   for_ shaders (glAttachShader program . unGLShader)
   glLinkProgram program
@@ -33,16 +30,16 @@ withLinkedProgram shaders body = withProgram $ \ (GLProgram program) -> do
   body p
 
 
-withBuiltProgram :: [(GLenum, String)] -> (GLProgram -> IO a) -> IO a
+withBuiltProgram :: InUnion fs IO => [(GLenum, String)] -> (GLProgram -> Eff fs a) -> Eff fs a
 withBuiltProgram sources body = withCompiledShaders sources (`withLinkedProgram` body)
 
 
-checkProgram :: GLProgram -> IO GLProgram
+checkProgram :: InUnion fs IO => GLProgram -> Eff fs GLProgram
 checkProgram = fmap GLProgram . checkStatus glGetProgramiv glGetProgramInfoLog Other GL_LINK_STATUS . unGLProgram
 
 
 class GLProgramUniform t where
-  setUniformValue :: GLProgram -> Var (Shader t) -> t -> IO ()
+  setUniformValue :: InUnion fs IO => GLProgram -> Var (Shader t) -> t -> Eff fs ()
 
 instance GLProgramUniform (Linear.V4 Float) where
   setUniformValue program var (Linear.V4 x y z w)= do

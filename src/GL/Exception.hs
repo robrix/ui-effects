@@ -1,24 +1,23 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 module GL.Exception where
 
 import Control.Exception
 import Control.Monad
+import Data.Functor.Union
 import Data.Typeable
-import Foreign.C.String
-import Foreign.Marshal.Alloc
 import Foreign.Ptr
-import Foreign.Storable
 import GHC.Stack
 import Graphics.GL.Core41
 import Graphics.GL.Types
 
 checkStatus
-  :: (GLenum -> GLuint -> Ptr GLint -> IO ())
-  -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> IO ())
+  :: InUnion fs IO
+  => (GLenum -> GLuint -> Ptr GLint -> Eff fs ())
+  -> (GLuint -> GLsizei -> Ptr GLsizei -> Ptr GLchar -> Eff fs ())
   -> (String -> GLError)
   -> GLenum
   -> GLuint
-  -> IO GLuint
+  -> Eff fs GLuint
 checkStatus get getLog error status object = do
   success <- alloca $ \ p -> do
     get object status p
@@ -33,7 +32,7 @@ checkStatus get getLog error status object = do
     throw $ GLException (error log) callStack
   pure object
 
-checkGLError :: IO ()
+checkGLError :: InUnion fs IO => Eff fs ()
 checkGLError = glGetError >>= \ e -> case e of
   GL_NO_ERROR -> pure ()
   GL_INVALID_ENUM -> throw $ GLException InvalidEnum callStack
@@ -43,7 +42,7 @@ checkGLError = glGetError >>= \ e -> case e of
   GL_OUT_OF_MEMORY -> throw $ GLException OutOfMemory callStack
   _ -> throw $ GLException (Other "Unknown") callStack
 
-checkingGLError :: IO a -> IO a
+checkingGLError :: InUnion fs IO => Eff fs a -> Eff fs a
 checkingGLError action = do
   result <- action
   checkGLError

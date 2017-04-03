@@ -1,19 +1,18 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
 module GL.Array where
 
 import Data.Foldable (for_, toList)
+import Data.Functor.Union
 import Data.List (uncons)
 import Data.Proxy
-import Foreign.Marshal.Alloc
 import Foreign.Ptr
-import Foreign.Storable
 import GL.Scalar
 import Graphics.GL.Core41
 import Graphics.GL.Types
 
 newtype GLArray n = GLArray { unGLArray :: GLuint }
 
-withVertices :: forall v n a. (Foldable v, GLScalar n) => [v n] -> (GLArray n -> IO a) -> IO a
+withVertices :: forall v n a fs. (InUnion fs IO, Foldable v, GLScalar n) => [v n] -> (GLArray n -> Eff fs a) -> Eff fs a
 withVertices vertices body = alloca $ \ p -> do
   glGenBuffers 1 p
   vbo <- peek p

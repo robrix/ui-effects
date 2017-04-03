@@ -1,4 +1,4 @@
-{-# LANGUAGE DefaultSignatures, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances, GADTs, RankNTypes, ScopedTypeVariables, StandaloneDeriving, TypeFamilies #-}
 module GL.Shader
 ( Var(Uniform)
 , varName
@@ -19,17 +19,14 @@ module GL.Shader
 , toShader
 ) where
 
-import Control.Exception
 import Control.Monad (void)
 import Control.Monad.Free.Freer
 import Data.Foldable (toList, for_)
 import Data.Functor.Classes
+import Data.Functor.Union
 import Data.List (intersperse)
 import Data.Proxy
-import Foreign.C.String
-import Foreign.Marshal.Alloc
 import Foreign.Ptr
-import Foreign.Storable
 import GL.Exception
 import Graphics.GL.Core41
 import Graphics.GL.Types
@@ -215,12 +212,12 @@ toGLSLAlgebra shader run = case shader of
 
 newtype GLShader = GLShader { unGLShader :: GLuint }
 
-withShader :: GLenum -> (GLShader -> IO a) -> IO a
+withShader :: InUnion fs IO => GLenum -> (GLShader -> Eff fs a) -> Eff fs a
 withShader shaderType = bracket
   (GLShader <$> glCreateShader shaderType)
   (glDeleteShader . unGLShader)
 
-withCompiledShader :: GLenum -> String -> (GLShader -> IO a) -> IO a
+withCompiledShader :: InUnion fs IO => GLenum -> String -> (GLShader -> Eff fs a) -> Eff fs a
 withCompiledShader shaderType source body = withShader shaderType $ \ (GLShader shader) -> do
     withCString source $ \ source ->
       alloca $ \ p -> do
@@ -230,12 +227,12 @@ withCompiledShader shaderType source body = withShader shaderType $ \ (GLShader 
     s <- checkShader source (GLShader shader)
     body s
 
-withCompiledShaders :: [(GLenum, String)] -> ([GLShader] -> IO a) -> IO a
+withCompiledShaders :: InUnion fs IO => [(GLenum, String)] -> ([GLShader] -> Eff fs a) -> Eff fs a
 withCompiledShaders sources body = go sources []
   where go [] shaders = body shaders
         go ((t, source):xs) shaders = withCompiledShader t source (\ shader -> go xs (shader : shaders))
 
-checkShader :: String -> GLShader -> IO GLShader
+checkShader :: InUnion fs IO => String -> GLShader -> Eff fs GLShader
 checkShader source = fmap GLShader . checkStatus glGetShaderiv glGetShaderInfoLog (Source source) GL_COMPILE_STATUS . unGLShader
 
 
