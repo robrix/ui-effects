@@ -55,6 +55,10 @@ type family Superset (fs :: [k]) (gs :: [k]) :: Constraint where
   Superset fs (f ': gs) = (InUnion fs f, Superset fs gs)
   Superset fs '[] = ()
 
+type family Map (f :: k -> l) (as :: [k]) :: [l] where
+  Map f (a ': as) = f a ': Map f as
+  Map _ '[] = '[]
+
 
 -- Injection and projection
 
