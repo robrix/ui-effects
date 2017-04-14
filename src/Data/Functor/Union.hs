@@ -24,6 +24,9 @@ data Product (fs :: [*]) where
 
 infixr 5 :.
 
+wrapU :: InUnion fs f => f (Freer (Union fs) a) -> Freer (Union fs) a
+wrapU = wrap . inj
+
 runM :: Monad m => Freer m a -> m a
 runM = foldFreer id
 
