@@ -77,6 +77,11 @@ instance {-# OVERLAPPABLE #-} InUnion fs f => InUnion (g ': fs) f where
   prj _ = Nothing
 
 
+class Case (fs :: [k -> *]) where
+  type Patterns fs (a :: k) b :: [*]
+  caseU :: Union fs a -> Product (Patterns fs a b) -> b
+
+
 instance Functor f => Functor (Union '[f]) where
   fmap f = Here . fmap f . strengthen
 
