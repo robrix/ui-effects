@@ -18,6 +18,11 @@ data Union (fs :: [k -> *]) (a :: k) where
 type Eff fs = Freer (Union fs)
 
 
+data Product (fs :: [*]) where
+  Nil :: Product '[]
+  (:.) :: a -> Product as -> Product (a ': as)
+
+
 runM :: Monad m => Freer m a -> m a
 runM = foldFreer id
 
