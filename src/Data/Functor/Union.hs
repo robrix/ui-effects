@@ -92,6 +92,13 @@ instance Case '[] where
   caseU _ _ = error "case analysis on empty union"
 
 
+instance (Foldable f, Foldable (Union fs)) => Foldable (Union (f ': fs)) where
+  foldMap f (Here r) = foldMap f r
+  foldMap f (There r) = foldMap f r
+
+instance Foldable (Union '[]) where
+  foldMap _ _ = mempty
+
 instance Functor f => Functor (Union '[f]) where
   fmap f = Here . fmap f . strengthen
 
