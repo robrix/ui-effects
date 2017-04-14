@@ -22,6 +22,7 @@ data Product (fs :: [*]) where
   Nil :: Product '[]
   (:.) :: a -> Product as -> Product (a ': as)
 
+infixr 5 :.
 
 runM :: Monad m => Freer m a -> m a
 runM = foldFreer id
