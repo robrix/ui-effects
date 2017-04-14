@@ -81,6 +81,15 @@ class Case (fs :: [k -> *]) where
   type Patterns fs (a :: k) b :: [*]
   caseU :: Union fs a -> Product (Patterns fs a b) -> b
 
+instance Case fs => Case (f ': fs) where
+  type Patterns (f ': fs) a b = (f a -> b) ': Patterns fs a b
+  caseU (Here f) (here :. _) = here f
+  caseU (There fs) (_ :. there) = caseU fs there
+
+instance Case '[] where
+  type Patterns '[] a b = '[]
+  caseU _ _ = error "case analysis on empty union"
+
 
 instance Functor f => Functor (Union '[f]) where
   fmap f = Here . fmap f . strengthen
