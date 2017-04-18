@@ -1,9 +1,10 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
 module UI.View where
 
-import Data.Functor.Algebraic
+import Control.Monad.Free.Freer
 import Data.Functor.Classes
 import Data.Functor.Foldable
+import Data.Functor.Union
 import Data.List (intersperse)
 import Data.List.NonEmpty (nonEmpty)
 import Data.Maybe (fromMaybe)
@@ -27,20 +28,20 @@ data Axis = Horizontal | Vertical
 type View = Fix ViewF
 
 
-renderView :: Real a => View -> Rendering a (Size a)
-renderView = cata $ \ view -> wrapR . Inset (Size 5 3) $ case view of
+renderView :: forall fs a. (InUnion fs (LayoutF a), InUnion fs (DrawingF a), Real a) => View -> Freer (Union fs) (Size a)
+renderView = cata $ \ view -> inset (Size 5 3 :: Size a) $ case view of
   Text s -> do
-    maxSize <- liftFR GetMaxSize
-    liftFL (Draw.Text maxSize s)
-  Label s -> liftFL (Draw.Text (pure Nothing) s)
+    maxSize <- getMaxSize
+    Draw.text maxSize s
+  Label s -> Draw.text (pure Nothing) s
   List children -> maybe (pure 0) sconcat (nonEmpty (intersperse spacer children))
   Scroll axis child -> do
-    Size maxW maxH <- liftFR GetMaxSize
+    Size maxW maxH <- getMaxSize
     Size w h <- child
-    wrapL (Clip (case axis of
+    clip (case axis of
       Just Horizontal -> Size w (fromMaybe h maxH)
       Just Vertical -> Size (fromMaybe w maxW) h
-      Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child)
+      Nothing -> fromMaybe <$> Size w h <*> Size maxW maxH) child
   where spacer = pure (Size 0 3)
 
 

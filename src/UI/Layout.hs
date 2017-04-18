@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, GADTs, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TypeOperators #-}
 module UI.Layout where
 
 import Control.Applicative
@@ -10,6 +10,7 @@ import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (unfold)
 import Data.Functor.Listable
+import Data.Functor.Union
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Semigroup
 import Data.Typeable
@@ -30,25 +31,25 @@ type ALayout a b = Cofreer (FreerF (LayoutF a) b)
 
 -- Smart constructors
 
-inset :: Size a -> Layout a b -> Layout a b
-inset by = wrap . Inset by
+inset :: InUnion fs (LayoutF a) => Size a -> Freer (Union fs) b -> Freer (Union fs) b
+inset by = wrapU . Inset by
 
-offset :: Point a -> Layout a b -> Layout a b
-offset by = wrap . Offset by
+offset :: InUnion fs (LayoutF a) => Point a -> Freer (Union fs) b -> Freer (Union fs) b
+offset by = wrapU . Offset by
 
-resizeable :: (Size (Maybe a) -> Layout a b) -> Layout a b
+resizeable :: InUnion fs (LayoutF a) => (Size (Maybe a) -> Freer (Union fs) b) -> Freer (Union fs) b
 resizeable = (getMaxSize >>=)
 
-getMaxSize :: Layout a (Size (Maybe a))
-getMaxSize = liftF GetMaxSize
+getMaxSize :: InUnion fs (LayoutF a) => Freer (Union fs) (Size (Maybe a))
+getMaxSize = inj GetMaxSize `Freer.Then` return
 
-stack :: Real a => Layout a (Size a) -> Layout a (Size a) -> Layout a (Size a)
+stack :: (InUnion fs (LayoutF a), Real a) => Freer (Union fs) (Size a) -> Freer (Union fs) (Size a) -> Freer (Union fs) (Size a)
 stack top bottom = do
   Size w1 h1 <- top
   Size w2 h2 <- offset (Point 0 h1) bottom
-  pure $ Size (max w1 w2) h2
+  pure $ Size (max w1 w2) (h1 + h2)
 
-adjacent :: Real a => Layout a (Size a) -> Layout a (Size a) -> Layout a (Size a)
+adjacent :: (InUnion fs (LayoutF a), Real a) => Freer (Union fs) (Size a) -> Freer (Union fs) (Size a) -> Freer (Union fs) (Size a)
 adjacent left right = do
   Size w1 h1 <- left
   Size w2 h2 <- offset (Point w1 0) right
@@ -134,7 +135,7 @@ layoutFCoalgebra state@FittingState{..} run layoutF = case layoutF of
 
 -- Instances
 
-instance Real a => Semigroup (Layout a (Size a)) where
+instance (InUnion fs (LayoutF a), Real a) => Semigroup (Freer (Union fs) (Size a)) where
   (<>) = stack
 
 deriving instance Foldable (LayoutF a)

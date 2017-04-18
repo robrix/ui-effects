@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GADTs #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, GADTs #-}
 module UI.Drawing
 ( Shape(..)
 , Colour(..)
@@ -20,10 +20,9 @@ import Control.Monad.Free.Freer as Freer
 import Control.Monad.Trans.Free.Freer as FreerF
 import Data.Functor.Algebraic
 import Data.Functor.Classes
-import Data.Functor.Foldable
-import Data.Functor.Sum
+import Data.Functor.Foldable hiding (Nil)
+import Data.Functor.Union
 import Data.Maybe (catMaybes)
-import Data.Semigroup (Semigroup(..))
 import qualified Linear.V2 as Linear
 import UI.Layout as Layout
 import UI.Font
@@ -39,13 +38,13 @@ data DrawingF a f where
 
 type Drawing a = Freer (DrawingF a)
 type Rendering a = Freer (RenderingF a)
-type RenderingF a = Sum (DrawingF a) (LayoutF a)
+type RenderingF a = Union '[DrawingF a, LayoutF a]
 
-text :: Size (Maybe a) -> String -> Drawing a (Size a)
-text maxSize = liftF . Text maxSize
+text :: InUnion fs (DrawingF a) => Size (Maybe a) -> String -> Freer (Union fs) (Size a)
+text maxSize str = inj (Text maxSize str) `Freer.Then` return
 
-clip :: Size a -> Drawing a b -> Drawing a b
-clip size = wrap . Clip size
+clip :: InUnion fs (DrawingF a) => Size a -> Freer (Union fs) b -> Freer (Union fs) b
+clip size drawing = wrapU (Clip size drawing)
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
@@ -58,7 +57,10 @@ drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r o
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
 renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
   FreerF.Return size -> Just (Rect origin size)
-  sum `FreerF.Then` runF -> sumAlgebra drawingRectAlgebra layoutAlgebra $ hoistSum (Bidi a . flip FreerF.Then runF) (Bidi a . flip FreerF.Then runF) sum
+  union `FreerF.Then` continue -> caseU union
+    $  (\ d -> drawingRectAlgebra (Bidi a (d `FreerF.Then` continue)))
+    :. (\ l -> layoutAlgebra (Bidi a (l `FreerF.Then` continue)))
+    :. Nil
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
 drawingCoalgebra = liftBidiCoalgebra drawingFCoalgebra
@@ -67,19 +69,16 @@ drawingFCoalgebra :: CoalgebraFragment (DrawingF a) (FittingState a) (Size a)
 drawingFCoalgebra state run = flip FreerF.Then (run state)
 
 renderingCoalgebra :: Real a => Coalgebra (Fitting (RenderingF a) a) (Fitting (RenderingF a) a (Rendering a (Size a)))
-renderingCoalgebra = liftBidiCoalgebra (liftSumCoalgebra drawingFCoalgebra layoutFCoalgebra)
+renderingCoalgebra = liftBidiCoalgebra (\ state run union -> caseU union
+  $  (\ d -> hoistFreerF inj (drawingFCoalgebra state run d))
+  :. (\ l -> hoistFreerF inj (layoutFCoalgebra state run l))
+  :. Nil)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
 renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . project
 
 
 -- Instances
-
-instance Real a => Semigroup (Rendering a (Size a)) where
-  (<>) top bottom = do
-    Size w1 h1 <- top
-    Size w2 h2 <- wrapR $ Offset (Point 0 h1) bottom
-    pure $ Size (max w1 w2) (h1 + h2)
 
 instance Show a => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
