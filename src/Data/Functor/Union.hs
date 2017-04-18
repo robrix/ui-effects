@@ -5,6 +5,7 @@ import qualified Control.Concurrent as CC
 import qualified Control.Exception as E
 import Control.Monad.Free.Freer
 import Control.Monad.IO.Class
+import Data.Functor.Classes
 import Data.Kind
 import qualified Foreign.C.String as C
 import Foreign.Ptr
@@ -93,6 +94,11 @@ instance Case fs => Case (f ': fs) where
 instance Case '[] where
   type Patterns '[] a b = '[]
   caseU _ _ = error "case analysis on empty union"
+
+
+instance (Show1 f, Show1 (Union fs)) => Show1 (Union (f ': fs)) where
+  liftShowsPrec sp sl d (Here f) = showsUnaryWith (liftShowsPrec sp sl) "inj" d f
+  liftShowsPrec sp sl d (There t) = liftShowsPrec sp sl d t
 
 
 instance (Foldable f, Foldable (Union fs)) => Foldable (Union (f ': fs)) where
