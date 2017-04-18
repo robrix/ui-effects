@@ -22,7 +22,7 @@ import Data.Functor.Algebraic
 import Data.Functor.Classes
 import Data.Functor.Foldable hiding (Nil)
 import Data.Functor.Union
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import qualified Linear.V2 as Linear
 import UI.Layout as Layout
 import UI.Font
@@ -80,12 +80,12 @@ renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectA
 
 -- Instances
 
-instance Show a => Show1 (DrawingF a) where
+instance (Real a, Show a) => Show1 (DrawingF a) where
   liftShowsPrec sp _ d drawing = case drawing of
-    Text size string -> showsBinaryWith showsPrec showsPrec "Text" d size string
+    Text size string -> showsBinaryWith showsPrec showsPrec "Text" d size string . showChar ' ' . sp d (fromMaybe <$> measureText (width size) string <*> size)
     Clip size f -> showsBinaryWith showsPrec sp "Clip" d size f
 
-instance (Show a, Show b) => Show (DrawingF a b) where
+instance (Real a, Show a, Show b) => Show (DrawingF a b) where
   showsPrec = liftShowsPrec showsPrec showList
 
 instance Real a => Foldable (DrawingF a) where
