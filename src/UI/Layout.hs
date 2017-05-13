@@ -3,6 +3,7 @@ module UI.Layout where
 
 import Control.Applicative
 import Control.Comonad.Cofree.Cofreer
+import Control.Comonad.Trans.Cofree
 import Control.Monad.Free.Freer as Freer
 import Control.Monad.Trans.Free.Freer as FreerF
 import Data.Fixed
@@ -87,7 +88,7 @@ fitLayout :: Real a => Size (Maybe a) -> Layout a (Size a) -> Maybe (Rect a)
 fitLayout = fitLayoutWith layoutAlgebra
 
 layoutAlgebra :: Real a => Algebra (Fitting (LayoutF a) a) (Maybe (Rect a))
-layoutAlgebra (Bidi FittingState{..} layout) = case layout of
+layoutAlgebra (FittingState{..} :< layout) = case layout of
   FreerF.Return size | maxSize `encloses` size -> Just $ case alignment of
     Leading -> Rect origin minSize
     Trailing -> Rect origin { x = x origin + widthDiff} minSize
@@ -117,7 +118,7 @@ data FittingState a = FittingState { alignment :: !Alignment, origin :: !(Point 
   deriving (Eq, Show)
 
 fitLayoutWith :: Real a => Algebra (Fitting (LayoutF a) a) b -> Size (Maybe a) -> Layout a (Size a) -> b
-fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (Bidi (FittingState Full (Point 0 0) maxSize) (project layout))
+fitLayoutWith algebra maxSize layout = hylo algebra layoutCoalgebra (FittingState Full (Point 0 0) maxSize :< project layout)
 
 layoutCoalgebra :: Real a => Coalgebra (Fitting (LayoutF a) a) (Fitting (LayoutF a) a (Layout a (Size a)))
 layoutCoalgebra = liftBidiCoalgebra layoutFCoalgebra

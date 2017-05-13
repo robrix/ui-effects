@@ -37,6 +37,7 @@ library
   build-depends:       base >= 4.7 && < 5
                      , comonad
                      , exceptions
+                     , free
                      , freer-cofreer
                      , gl
                      , leancheck

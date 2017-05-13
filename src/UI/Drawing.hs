@@ -16,6 +16,7 @@ module UI.Drawing
 , module Layout
 ) where
 
+import Control.Comonad.Trans.Cofree
 import Control.Monad.Free.Freer as Freer
 import Control.Monad.Trans.Free.Freer as FreerF
 import Data.Functor.Algebraic
@@ -48,18 +49,18 @@ clip size drawing = wrapU (Clip size drawing)
 
 
 drawingRectAlgebra :: Real a => Algebra (Fitting (DrawingF a) a) (Maybe (Rect a))
-drawingRectAlgebra (Bidi (FittingState _ origin _) r) = Rect origin <$> case r of
+drawingRectAlgebra (FittingState _ origin _ :< r) = Rect origin <$> case r of
   FreerF.Return size -> Just size
   drawing `FreerF.Then` runF -> case drawing of
     Text maxSize s -> size <$> runF (measureText (width maxSize) s)
     Clip size _ -> Just size
 
 renderingRectAlgebra :: Real a => Algebra (Fitting (RenderingF a) a) (Maybe (Rect a))
-renderingRectAlgebra (Bidi a@(FittingState _ origin _) r) = case r of
+renderingRectAlgebra (a@(FittingState _ origin _) :< r) = case r of
   FreerF.Return size -> Just (Rect origin size)
   union `FreerF.Then` continue -> caseU union
-    $  (\ d -> drawingRectAlgebra (Bidi a (d `FreerF.Then` continue)))
-    :. (\ l -> layoutAlgebra (Bidi a (l `FreerF.Then` continue)))
+    $  (\ d -> drawingRectAlgebra (a :< (d `FreerF.Then` continue)))
+    :. (\ l -> layoutAlgebra (a :< (l `FreerF.Then` continue)))
     :. Nil
 
 drawingCoalgebra :: Coalgebra (Fitting (DrawingF a) a) (Fitting (DrawingF a) a (Drawing a (Size a)))
@@ -75,7 +76,7 @@ renderingCoalgebra = liftBidiCoalgebra (\ state run union -> caseU union
   :. Nil)
 
 renderingRects :: Real a => Rendering a (Size a) -> [Rect a]
-renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . Bidi (FittingState Full (pure 0) (pure Nothing)) . project
+renderingRects = hylo (wrapAlgebra catMaybes (fmap Just) (collect renderingRectAlgebra)) renderingCoalgebra . (FittingState Full (pure 0) (pure Nothing) :<) . project
 
 
 -- Instances

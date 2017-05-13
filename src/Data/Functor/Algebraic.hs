@@ -2,6 +2,7 @@
 module Data.Functor.Algebraic where
 
 import Control.Comonad.Cofree.Cofreer
+import Control.Comonad.Trans.Cofree
 import Control.Monad.Free.Freer as Freer
 import Control.Monad.Trans.Free.Freer as FreerF
 import Data.Foldable (fold)
@@ -11,10 +12,7 @@ type Algebra functor result = functor result -> result
 type Coalgebra functor seed = seed -> functor seed
 
 -- | A datatype for use as the interim structure in bidirectional computations represented as hylomorphisms.
-data Bidi f a b = Bidi
-  { bidiState :: a
-  , bidiF :: f b }
-  deriving (Eq, Foldable, Functor, Show)
+type Bidi = CofreeF
 
 
 collect :: (Foldable f, Functor f) => Algebra f a -> Algebra f [a]
@@ -33,12 +31,12 @@ coannotating coalgebra seed = case seed of
   f `Freer.Then` run -> run <$> f
 
 annotatingBidi :: Algebra (Bidi (FreerF f c) b) a -> Algebra (Bidi (FreerF f c) b) (Cofreer (FreerF f c) a)
-annotatingBidi algebra base = Cofree (algebra (extract <$> base)) (bidiF base) id
+annotatingBidi algebra base = Cofree (algebra (extract <$> base)) (tailF base) id
 
 
 type CoalgebraFragment functor seed pure = (forall b x. seed -> (seed -> x -> b) -> functor x -> FreerF functor pure b)
 
 liftBidiCoalgebra :: CoalgebraFragment f seed a -> Coalgebra (Bidi (FreerF f a) seed) (Bidi (FreerF f a) seed (Freer f a))
-liftBidiCoalgebra fragment (Bidi state f) = Bidi state $ case f of
+liftBidiCoalgebra fragment (state :< f) = state :< case f of
   FreerF.Return a -> FreerF.Return a
-  functor `FreerF.Then` runF -> fragment state (\ state -> Bidi state . project . runF) functor
+  functor `FreerF.Then` runF -> fragment state (\ state -> (state :<) . project . runF) functor
