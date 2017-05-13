@@ -5,7 +5,8 @@ import Data.Foldable
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import UI.Geometry
-import Opentype.Fileformat
+import Opentype.Fileformat hiding (nameID)
+import qualified Opentype.Fileformat as O
 
 data Typeface = Typeface { typefaceName :: String, typefaceUnderlying :: OpentypeFont }
 
@@ -17,8 +18,14 @@ readTypeface path = (toTypeface <$> readOTFile path) `catch` (\ (SomeException _
           name <- opentypeFontName font
           pure $ Typeface name font
 
+data NameID = Copyright | FamilyName | SubfamilyName | UniqueID | FullName | Version | PostScriptName | Trademark | ManufacturerName | Designer | Description | VendorURL | DesignerURL | LicenseDescription | LicenseURL | Reserved | TypographicFamilyName | TypographicSubfamilyName | CompatibleFullName | SampleText | PostScriptCIDFindFontName | WWSFamilyName | WWSSubfamilyName | LightBackgroundPalette | DarkBackgroundPalette | VariationsPostScriptNamePrefix
+  deriving (Bounded, Enum, Eq, Show)
+
 opentypeFontName :: OpentypeFont -> Maybe String
-opentypeFontName o = T.unpack . T.decodeUtf16BE . nameString <$> find ((== 1) . nameID) (nameRecords (nameTable o))
+opentypeFontName o = T.unpack . T.decodeUtf16BE . nameString <$> find ((== FullName) . nameID) (nameRecords (nameTable o))
+
+nameID :: NameRecord -> NameID
+nameID = toEnum . fromIntegral . O.nameID
 
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
