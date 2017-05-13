@@ -138,9 +138,6 @@ bracket before after thing = inj (E.bracket (return before) (return . (>>= after
 finally :: InUnion fs IO => Eff fs a -> Eff fs b -> Eff fs a
 finally thing ender = inj (E.finally (return thing) (return ender)) `Then` id
 
-throwIO :: (MonadIO m, E.Exception e) => e -> m a
-throwIO = liftIO . E.throwIO
-
 peek :: (MonadIO m, S.Storable a) => Ptr a -> m a
 peek = liftIO . S.peek
 
