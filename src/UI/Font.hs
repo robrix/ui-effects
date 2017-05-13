@@ -32,3 +32,7 @@ measureStringForWidth maxW s = Size maxW (height line * fromInteger (ceiling (to
 
 measureText :: Real a => Maybe a -> String -> Size a
 measureText = maybe measureString measureStringForWidth
+
+
+instance Show Typeface where
+  showsPrec d (Typeface name _) = showParen (d > 10) $ showString "Typeface { typefaceName = " . shows name . showString ", typefaceUnderlying = _ }"
