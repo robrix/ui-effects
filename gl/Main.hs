@@ -27,11 +27,12 @@ import UI.View
 import UI.Window
 
 main :: IO ()
-main = runM . hoistFreer strengthen $ runWindow "UI" (runSetup . setup)
-  `catch`
-    (liftIO . (putStrLn . E.displayException :: E.SomeException -> IO ()))
-  `finally`
-    liftIO exitSuccess
+main = do
+  runM . hoistFreer strengthen $ runWindow "UI" (runSetup . setup)
+    `catch`
+      (\ (E.SomeException e) -> liftIO (putStrLn (E.displayException e)))
+    `finally`
+      liftIO exitSuccess
 
 rectGeometry :: GLScalar a => Rect a -> Geometry (Linear.V4 a)
 rectGeometry (Rect (Point x y) (Size w h)) = Geometry TriangleStrip
