@@ -24,10 +24,10 @@ data NameID = Copyright | FamilyName | SubfamilyName | UniqueID | FullName | Ver
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 opentypeFontName :: OpentypeFont -> Maybe String
-opentypeFontName o = T.unpack . T.decodeUtf16BE . nameString <$> find ((== FullName) . nameID) (nameRecords (nameTable o))
+opentypeFontName o = T.unpack . T.decodeUtf16BE . nameString <$> find ((== Just FullName) . nameID) (nameRecords (nameTable o))
 
-nameID :: NameRecord -> NameID
-nameID = toEnum . fromIntegral . O.nameID
+nameID :: NameRecord -> Maybe NameID
+nameID = safeToEnum . fromIntegral . O.nameID
 
 safeToEnum :: forall n. (Bounded n, Enum n, Ord n) => Int -> Maybe n
 safeToEnum n = do
