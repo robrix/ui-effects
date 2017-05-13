@@ -1,10 +1,24 @@
 module UI.Font where
 
+import Control.Exception
+import Data.Foldable
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import UI.Geometry
+import Opentype.Fileformat
 
-newtype Typeface = Typeface { typefaceName :: String }
+data Typeface = Typeface { typefaceName :: String, typefaceUnderlying :: OpentypeFont }
 
 data Font = Font { fontFace :: Typeface, fontSize :: Int }
+
+readTypeface :: FilePath -> IO (Maybe Typeface)
+readTypeface path = (toTypeface <$> readOTFile path) `catch` (\ (SomeException _) -> return Nothing)
+  where toTypeface font = do
+          name <- opentypeFontName font
+          pure $ Typeface name font
+
+opentypeFontName :: OpentypeFont -> Maybe String
+opentypeFontName o = T.unpack . T.decodeUtf16BE . nameString <$> find ((== 1) . nameID) (nameRecords (nameTable o))
 
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
