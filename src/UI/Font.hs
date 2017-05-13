@@ -6,9 +6,9 @@ import Control.Monad
 import Data.Foldable
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import UI.Geometry
 import Opentype.Fileformat hiding (nameID)
 import qualified Opentype.Fileformat as O
+import UI.Geometry
 
 data Typeface = Typeface { typefaceName :: String, typefaceUnderlying :: OpentypeFont }
 
