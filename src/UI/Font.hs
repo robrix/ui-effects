@@ -88,10 +88,20 @@ compilePath = go . fmap (word16Bytes . fromIntegral)
 word16Bytes :: Word16 -> [Word8]
 word16Bytes x = [ fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8 ]
 
+word32Bytes :: Word32 -> [Word8]
+word32Bytes x = [ fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8, fromIntegral $ (x .&. 0xFF0000) `shiftR` 16, fromIntegral $ (x .&. 0xFF000000) `shiftR` 24 ]
+
 
 compileGlyphPaths :: Glyph Int -> [Word8]
 compileGlyphPaths = (>>= compilePath) . glyphPaths
 
+
+compileGlyphsForChars :: Typeface -> [Char] -> [Word8]
+compileGlyphsForChars face chars = header ++ glyphHeaders ++ (charsGlyphsAndPaths >>= \ (_, _, path) -> path)
+  where charsGlyphsAndPaths = zip chars (glyphsForChars face chars) >>= \ (char, glyph) -> (,,) char <$> toList glyph <*> fmap compileGlyphPaths (toList glyph)
+        header = word16Bytes (unitsPerEm face) ++ word16Bytes (fromIntegral (ascent face)) ++ word16Bytes (fromIntegral (descent face)) ++ word16Bytes (fromIntegral (length charsGlyphsAndPaths))
+        glyphHeaders = snd (foldl compileGlyphHeader (0, id) charsGlyphsAndPaths) []
+        compileGlyphHeader (offset, makeList) (char, glyph, path) = (offset + fromIntegral (length path), makeList . (++ (word16Bytes (fromIntegral (ord char)) ++ word16Bytes (advanceWidth glyph) ++ word32Bytes offset ++ word16Bytes (fromIntegral (length path)))))
 
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
