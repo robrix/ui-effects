@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveFunctor, ScopedTypeVariables #-}
 module UI.Font where
 
 import Control.Exception
@@ -57,6 +57,9 @@ safeToEnum n = do
   guard (n < fromEnum (maxBound :: n))
   guard (n > fromEnum (minBound :: n))
   pure (toEnum n)
+
+data Path n = M n n (Path n) | L n n (Path n) | Q n n n n (Path n) | Z
+  deriving (Eq, Functor, Show)
 
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
