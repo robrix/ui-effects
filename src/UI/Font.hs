@@ -11,7 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Word
 import Data.Vector ((!?))
-import Opentype.Fileformat hiding (nameID, unitsPerEm)
+import Opentype.Fileformat hiding (nameID, unitsPerEm, ascent, descent)
 import qualified Opentype.Fileformat as O
 import UI.Geometry
 
@@ -45,6 +45,12 @@ glyphsForChars (Typeface _ o) chars = map (>>= (glyphs !?) . fromIntegral) glyph
 
 unitsPerEm :: Typeface -> Int
 unitsPerEm = fromIntegral . O.unitsPerEm . headTable . typefaceUnderlying
+
+ascent :: Typeface -> Int
+ascent = fromIntegral . O.ascent . hheaTable . typefaceUnderlying
+
+descent :: Typeface -> Int
+descent = fromIntegral . O.descent . hheaTable . typefaceUnderlying
 
 safeToEnum :: forall n. (Bounded n, Enum n, Ord n) => Int -> Maybe n
 safeToEnum n = do
