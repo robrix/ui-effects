@@ -76,8 +76,8 @@ glyphPaths :: Glyph Int -> [Path FWord]
 glyphPaths (Glyph { glyphOutlines = GlyphContours contours _ }) = fmap contourToPath contours
 glyphPaths _ = []
 
-compilePath :: Path FWord -> [Word8]
-compilePath = go . fmap (word16Bytes . fromIntegral)
+encodePath :: Path FWord -> [Word8]
+encodePath = go . fmap (word16Bytes . fromIntegral)
   where go path = case path of
           M x y       rest -> moveTo  : x ++ y             ++ go rest
           L x y       rest -> lineTo  : x ++ y             ++ go rest
@@ -92,16 +92,16 @@ word32Bytes :: Word32 -> [Word8]
 word32Bytes x = [ fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8, fromIntegral $ (x .&. 0xFF0000) `shiftR` 16, fromIntegral $ (x .&. 0xFF000000) `shiftR` 24 ]
 
 
-compileGlyphPaths :: Glyph Int -> [Word8]
-compileGlyphPaths = (>>= compilePath) . glyphPaths
+encodeGlyphPaths :: Glyph Int -> [Word8]
+encodeGlyphPaths = (>>= encodePath) . glyphPaths
 
 
-compileGlyphsForChars :: Typeface -> [Char] -> [Word8]
-compileGlyphsForChars face chars = header ++ glyphHeaders ++ (charsGlyphsAndPaths >>= \ (_, _, path) -> path)
-  where charsGlyphsAndPaths = zip chars (glyphsForChars face chars) >>= \ (char, glyph) -> (,,) char <$> toList glyph <*> fmap compileGlyphPaths (toList glyph)
+encodeGlyphsForChars :: Typeface -> [Char] -> [Word8]
+encodeGlyphsForChars face chars = header ++ glyphHeaders ++ (charsGlyphsAndPaths >>= \ (_, _, path) -> path)
+  where charsGlyphsAndPaths = zip chars (glyphsForChars face chars) >>= \ (char, glyph) -> (,,) char <$> toList glyph <*> fmap encodeGlyphPaths (toList glyph)
         header = word16Bytes (unitsPerEm face) ++ word16Bytes (fromIntegral (ascent face)) ++ word16Bytes (fromIntegral (descent face)) ++ word16Bytes (fromIntegral (length charsGlyphsAndPaths))
-        glyphHeaders = snd (foldl compileGlyphHeader (0, id) charsGlyphsAndPaths) []
-        compileGlyphHeader (offset, makeList) (char, glyph, path) = (offset + fromIntegral (length path), makeList . (++ (word16Bytes (fromIntegral (ord char)) ++ word16Bytes (advanceWidth glyph) ++ word32Bytes offset ++ word16Bytes (fromIntegral (length path)))))
+        glyphHeaders = snd (foldl encodeGlyphHeader (0, id) charsGlyphsAndPaths) []
+        encodeGlyphHeader (offset, makeList) (char, glyph, path) = (offset + fromIntegral (length path), makeList . (++ (word16Bytes (fromIntegral (ord char)) ++ word16Bytes (advanceWidth glyph) ++ word32Bytes offset ++ word16Bytes (fromIntegral (length path)))))
 
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
