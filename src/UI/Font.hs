@@ -78,10 +78,10 @@ glyphPaths _ = []
 compilePath :: Path FWord -> [Word8]
 compilePath = go . fmap toBytes
   where go path = case path of
-          M (x1, x2) (y1, y2) rest -> moveTo : x1 : x2 : y1 : y2 : go rest
-          L (x1, x2) (y1, y2) rest -> lineTo : x1 : x2 : y1 : y2 : go rest
+          M (x1, x2) (y1, y2)                       rest -> moveTo  : x1 : x2 : y1 : y2                         : go rest
+          L (x1, x2) (y1, y2)                       rest -> lineTo  : x1 : x2 : y1 : y2                         : go rest
           Q (x1, x2) (y1, y2) (x'1, x'2) (y'1, y'2) rest -> curveTo : x1 : x2 : y1 : y2 : x'1 : x'2 : y'1 : y'2 : go rest
-          Z -> [close]
+          Z                                              -> close   : []
         [moveTo, lineTo, curveTo, close] = [0..3]
         toBytes x = (fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8)
 
