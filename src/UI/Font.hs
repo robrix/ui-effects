@@ -45,8 +45,8 @@ glyphsForChars (Typeface _ o) chars = map (>>= (glyphs !?) . fromIntegral) glyph
         QuadTables _ (GlyfTable glyphs) = outlineTables o
         viablePlatform p = cmapPlatform p == UnicodePlatform || cmapPlatform p == MicrosoftPlatform && cmapEncoding p == 1
 
-unitsPerEm :: Typeface -> Int
-unitsPerEm = fromIntegral . O.unitsPerEm . headTable . typefaceUnderlying
+unitsPerEm :: Typeface -> Word16
+unitsPerEm = O.unitsPerEm . headTable . typefaceUnderlying
 
 ascent :: Typeface -> Int16
 ascent = O.ascent . hheaTable . typefaceUnderlying
