@@ -3,6 +3,7 @@ module UI.Font where
 
 import Control.Exception
 import Control.Monad
+import Data.Bits
 import Data.Char
 import Data.Foldable
 import qualified Data.Map as Map
@@ -73,6 +74,17 @@ contourToPath (p@(CurvePoint x y _) : rest) = makePath Z
 glyphPaths :: Glyph Int -> [Path FWord]
 glyphPaths (Glyph { glyphOutlines = GlyphContours contours _ }) = fmap contourToPath contours
 glyphPaths _ = []
+
+compilePath :: Path FWord -> [Word8]
+compilePath = go . fmap toBytes
+  where go path = case path of
+          M (x1, x2) (y1, y2) rest -> moveTo : x1 : x2 : y1 : y2 : go rest
+          L (x1, x2) (y1, y2) rest -> lineTo : x1 : x2 : y1 : y2 : go rest
+          Q (x1, x2) (y1, y2) (x'1, x'2) (y'1, y'2) rest -> curveTo : x1 : x2 : y1 : y2 : x'1 : x'2 : y'1 : y'2 : go rest
+          Z -> [close]
+        [moveTo, lineTo, curveTo, close] = [0..3]
+        toBytes x = (fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8)
+
 
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
