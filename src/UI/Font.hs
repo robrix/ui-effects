@@ -70,6 +70,10 @@ contourToPath (p@(CurvePoint x y _) : rest) = fromIntegral <$> makePath Z
         pathFor (CurvePoint x y False) (CurvePoint x' y' False) = Q x y (x + ((x' - x) `div` 2)) (y + ((y' - y) `div` 2))
         pathFor (CurvePoint x y False) (CurvePoint x' y' True)  = Q x y x' y'
 
+glyphPaths :: Glyph Int -> [Path Int]
+glyphPaths (Glyph { glyphOutlines = GlyphContours contours _ }) = fmap contourToPath contours
+glyphPaths _ = []
+
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
   where (fontW, fontH) = (5, 8)
