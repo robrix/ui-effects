@@ -3,9 +3,14 @@ module UI.Font where
 
 import Control.Exception
 import Control.Monad
+import Data.Char
 import Data.Foldable
+import qualified Data.Map as Map
+import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import Data.Word
+import Data.Vector ((!?))
 import Opentype.Fileformat hiding (nameID)
 import qualified Opentype.Fileformat as O
 import UI.Geometry
@@ -28,6 +33,14 @@ opentypeFontName o = T.unpack . T.decodeUtf16BE . nameString <$> find ((== Just 
 
 nameID :: NameRecord -> Maybe NameID
 nameID = safeToEnum . fromIntegral . O.nameID
+
+glyphsForChars :: Typeface -> [Char] -> [Maybe (Glyph Int)]
+glyphsForChars (Typeface _ o) chars = map (>>= (glyphs !?) . fromIntegral) glyphIDs
+  where glyphIDs = fromMaybe (Nothing <$ chars) $ do
+          cmap <- find ((== UnicodePlatform) . cmapPlatform) (getCmaps (cmapTable o))
+          Just $ lookupAll (glyphMap cmap) (fmap (fromIntegral . ord :: Char -> Word32) chars)
+        lookupAll = fmap . flip Map.lookup
+        QuadTables _ (GlyfTable glyphs) = outlineTables o
 
 safeToEnum :: forall n. (Bounded n, Enum n, Ord n) => Int -> Maybe n
 safeToEnum n = do

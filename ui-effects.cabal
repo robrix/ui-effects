@@ -36,6 +36,7 @@ library
                      , UI.Window
   build-depends:       base >= 4.7 && < 5
                      , comonad
+                     , containers
                      , exceptions
                      , free
                      , freer-cofreer
@@ -46,6 +47,7 @@ library
                      , recursion-schemes
                      , sdl2
                      , text
+                     , vector
   default-language:    Haskell2010
   default-extensions:  DeriveFoldable, DeriveFunctor, DeriveGeneric, DeriveTraversable
   ghc-options:         -Wall -fno-warn-name-shadowing
