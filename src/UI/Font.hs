@@ -76,14 +76,16 @@ glyphPaths (Glyph { glyphOutlines = GlyphContours contours _ }) = fmap contourTo
 glyphPaths _ = []
 
 compilePath :: Path FWord -> [Word8]
-compilePath = go . fmap toBytes
+compilePath = go . fmap (word16Bytes . fromIntegral)
   where go path = case path of
           M (x1, x2) (y1, y2)                       rest -> moveTo  : x1 : x2 : y1 : y2                         : go rest
           L (x1, x2) (y1, y2)                       rest -> lineTo  : x1 : x2 : y1 : y2                         : go rest
           Q (x1, x2) (y1, y2) (x'1, x'2) (y'1, y'2) rest -> curveTo : x1 : x2 : y1 : y2 : x'1 : x'2 : y'1 : y'2 : go rest
           Z                                              -> close   : []
         [moveTo, lineTo, curveTo, close] = [0..3]
-        toBytes x = (fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8)
+
+word16Bytes :: Word16 -> (Word8, Word8)
+word16Bytes x = (fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8)
 
 
 compileGlyph :: Glyph Int -> [Word8]
