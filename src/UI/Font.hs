@@ -11,7 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Word
 import Data.Vector ((!?))
-import Opentype.Fileformat hiding (nameID)
+import Opentype.Fileformat hiding (nameID, unitsPerEm)
 import qualified Opentype.Fileformat as O
 import UI.Geometry
 
@@ -42,6 +42,9 @@ glyphsForChars (Typeface _ o) chars = map (>>= (glyphs !?) . fromIntegral) glyph
         lookupAll = fmap . flip Map.lookup
         QuadTables _ (GlyfTable glyphs) = outlineTables o
         viablePlatform p = cmapPlatform p == UnicodePlatform || cmapPlatform p == MicrosoftPlatform && cmapEncoding p == 1
+
+unitsPerEm :: Typeface -> Int
+unitsPerEm = fromIntegral . O.unitsPerEm . headTable . typefaceUnderlying
 
 safeToEnum :: forall n. (Bounded n, Enum n, Ord n) => Int -> Maybe n
 safeToEnum n = do
