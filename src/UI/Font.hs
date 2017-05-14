@@ -61,16 +61,16 @@ safeToEnum n = do
 data Path n = M n n (Path n) | L n n (Path n) | Q n n n n (Path n) | Z
   deriving (Eq, Functor, Show)
 
-contourToPath :: [CurvePoint] -> Path Int
+contourToPath :: [CurvePoint] -> Path FWord
 contourToPath [] = Z
-contourToPath (p@(CurvePoint x y _) : rest) = fromIntegral <$> makePath Z
+contourToPath (p@(CurvePoint x y _) : rest) = makePath Z
   where (makePath, _) = (foldl (\ (makePath, prev) point -> (makePath . pathFor prev point, point)) (M x y, p) rest)
         pathFor (CurvePoint _ _ True)  (CurvePoint _ _ False)   = id
         pathFor (CurvePoint _ _ True)  (CurvePoint x y True)    = L x y
         pathFor (CurvePoint x y False) (CurvePoint x' y' False) = Q x y (x + ((x' - x) `div` 2)) (y + ((y' - y) `div` 2))
         pathFor (CurvePoint x y False) (CurvePoint x' y' True)  = Q x y x' y'
 
-glyphPaths :: Glyph Int -> [Path Int]
+glyphPaths :: Glyph Int -> [Path FWord]
 glyphPaths (Glyph { glyphOutlines = GlyphContours contours _ }) = fmap contourToPath contours
 glyphPaths _ = []
 
