@@ -37,10 +37,11 @@ nameID = safeToEnum . fromIntegral . O.nameID
 glyphsForChars :: Typeface -> [Char] -> [Maybe (Glyph Int)]
 glyphsForChars (Typeface _ o) chars = map (>>= (glyphs !?) . fromIntegral) glyphIDs
   where glyphIDs = fromMaybe (Nothing <$ chars) $ do
-          cmap <- find ((== UnicodePlatform) . cmapPlatform) (getCmaps (cmapTable o))
+          cmap <- find viablePlatform (getCmaps (cmapTable o))
           Just $ lookupAll (glyphMap cmap) (fmap (fromIntegral . ord :: Char -> Word32) chars)
         lookupAll = fmap . flip Map.lookup
         QuadTables _ (GlyfTable glyphs) = outlineTables o
+        viablePlatform p = cmapPlatform p == UnicodePlatform || cmapPlatform p == MicrosoftPlatform && cmapEncoding p == 1
 
 safeToEnum :: forall n. (Bounded n, Enum n, Ord n) => Int -> Maybe n
 safeToEnum n = do
