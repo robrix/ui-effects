@@ -88,8 +88,9 @@ word16Bytes :: Word16 -> (Word8, Word8)
 word16Bytes x = (fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8)
 
 
-compileGlyph :: Glyph Int -> [Word8]
-compileGlyph = (>>= compilePath) . glyphPaths
+compileGlyphPaths :: Glyph Int -> [Word8]
+compileGlyphPaths = (>>= compilePath) . glyphPaths
+
 
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
