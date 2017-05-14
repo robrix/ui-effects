@@ -86,6 +86,9 @@ compilePath = go . fmap toBytes
         toBytes x = (fromIntegral $ x .&. 0xFF, fromIntegral $ (x .&. 0xFF00) `shiftR` 8)
 
 
+compileGlyph :: Glyph Int -> [Word8]
+compileGlyph = (>>= compilePath) . glyphPaths
+
 measureString :: Num a => String -> Size a
 measureString s = Size (fromIntegral (length s) * fontW) lineH
   where (fontW, fontH) = (5, 8)
