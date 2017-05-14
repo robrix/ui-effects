@@ -6,6 +6,7 @@ import Control.Monad
 import Data.Bits
 import Data.Char
 import Data.Foldable
+import Data.Int
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
@@ -47,11 +48,11 @@ glyphsForChars (Typeface _ o) chars = map (>>= (glyphs !?) . fromIntegral) glyph
 unitsPerEm :: Typeface -> Int
 unitsPerEm = fromIntegral . O.unitsPerEm . headTable . typefaceUnderlying
 
-ascent :: Typeface -> Int
-ascent = fromIntegral . O.ascent . hheaTable . typefaceUnderlying
+ascent :: Typeface -> Int16
+ascent = O.ascent . hheaTable . typefaceUnderlying
 
-descent :: Typeface -> Int
-descent = fromIntegral . O.descent . hheaTable . typefaceUnderlying
+descent :: Typeface -> Int16
+descent = O.descent . hheaTable . typefaceUnderlying
 
 safeToEnum :: forall n. (Bounded n, Enum n, Ord n) => Int -> Maybe n
 safeToEnum n = do
